@@ -3,10 +3,10 @@
 > Live checks of external facts before code relies on them (data sources §9). Newest phase first;
 > one entry per VS item. Keys were never printed or saved; fixtures are real answers, trimmed.
 
-**P0 status (2026-10-01):** done without keys: VS-01, VS-02, VS-03, VS-04, VS-10 (TRON).
-**Waiting for the owner's keys:** VS-05 (TronGrid key limits), VS-06 (HyperSync query), VS-10 (BSC
-first activity). No keys were in the environment. **VS-08 and VS-09 dropped** with Eagle Virtual
-(D-033); their entries stay below as a record. VS-15 (EVM freeze index) added for P2 (D-034).
+**P0 status (2026-10-01): complete.** VS-01 to VS-06 and VS-10 confirmed, VS-05, VS-06 and the BSC
+half of VS-10 with the owner's TronGrid key and HyperSync token (loaded through `amlcheck.config`, never
+printed). **VS-08 and VS-09 dropped** with Eagle Virtual (D-033); their entries stay below as a record.
+VS-07 (P6), VS-11 to VS-14 (later phases) and VS-15 (EVM freeze index, P2, D-034) are not P0 items.
 
 | VS | Result | Differs from docs | Question |
 |---|---|---|---|
@@ -14,11 +14,11 @@ first activity). No keys were in the environment. **VS-08 and VS-09 dropped** wi
 | VS-02 | Confirmed | No | — |
 | VS-03 | Confirmed | No | — |
 | VS-04 | Confirmed, plus a uniqueness problem | Yes: transfer identity depends on whose history is read | Q-17 |
-| VS-05 | Partial (no key) | Keyless 429 has no `Retry-After` | Q-18 |
-| VS-06 | Partial (no token) | No | — |
+| VS-05 | Confirmed with key | Key limit 15/s; over it a 30 s suspension, no `Retry-After` | Q-18, Q-20 |
+| VS-06 | Confirmed with token | Small: header format, `rollback_guard`, budget shared across hosts | — |
 | VS-08 | Dropped (D-033) | Was: `CLEAR` can come with chains behind (spec 1.3.0) | Q-19 (superseded) |
 | VS-09 | Dropped (D-033) | — | — |
-| VS-10 | TRON confirmed; BSC pending | `create_time` absent on contract-created contracts | — |
+| VS-10 | Confirmed (both chains) | `create_time` absent on contract-created contracts | — |
 
 ---
 
@@ -103,17 +103,47 @@ twice or merge two.
 **Differs from docs/04-data-sources.md:** the Retry-After policy (D-011) assumes the header exists; here it
 doesn't. Unknown yet whether keyed answers carry it.
 **What this changes:** `net/http.py` needs a rule for a 429/403 without `Retry-After`. Raised as **Q-18**.
-**Pending:** limits on the owner's key and the keyed 403/429 answer. Needs `AMLCHECK_TRONGRID_API_KEY`.
 **Fixtures:** `tests/fixtures/trongrid/rate_limited_429_no_key.json`
+
+**With the owner's key (2026-10-01, `TRON-PRO-API-KEY` header):**
+- A normal answer carries no rate-limit headers (only `X-Trace-Id`), so the limit can't be read live.
+- 20 sequential calls: all OK (about 0.7 s each on this connection). 40 calls 20 at a time (~21/s
+  attempted): 27 OK, 13 refused.
+- Refusal: `429`, `Content-Type: application/json`, **no `Retry-After`, no rate-limit headers**, body
+  `{"Error":"The key exceeds the frequency limit(15), and the query server is suspended for 30 s"}`.
+  No 403 seen.
+- **The key's limit is 15 requests/s, and going over suspends the key for 30 s**, not 5 s as without a key.
+**Differs from docs/04-data-sources.md:** limits were unknown; now 15/s and a 30 s suspension. D-031 ("wait
+5 s once") would wait too little and then fail.
+**What this changes:** `[tron] requests_per_second` stays 10 (below 15); the refusal rule needs a
+revisit. Raised as **Q-20**. Data sources §6 updated. Calls used: 61.
+**Fixtures:** `tests/fixtures/trongrid/rate_limited_with_key.json`
 
 ## VS-06 · HyperSync query shape, log index, budget headers
 **Checked:** 2026-10-01, against `https://bsc.hypersync.xyz` and `https://56.hypersync.xyz` (no token)
 **Found:** `GET /height` → `{"height": 125089212}` on both hosts without a token. `POST /query` without a
 token → `401` `{"error":"Your token is malformed. API Tokens can be created at https://app.envio.dev/api-tokens. …"}`.
-**Differs from docs/04-data-sources.md:** none so far (the token page is now `app.envio.dev/api-tokens`).
-**Pending:** query shape for Transfer logs by topic1/topic2, log index field, budget headers. Needs
-`AMLCHECK_HYPERSYNC_TOKEN`.
-**Fixtures:** `tests/fixtures/hypersync/query_401_no_token.json`
+**With the owner's token (2026-10-01, `Authorization: Bearer`):**
+- Query shape that works: `{"from_block", "to_block", "logs": [{"address": [USDT], "topics": [[Transfer],
+  [addr32], []]}, {"address": [USDT], "topics": [[Transfer], [], [addr32]]}], "field_selection": {"block":
+  ["number", "timestamp"], "log": ["block_number", "log_index", "transaction_hash", "address", "topic0",
+  "topic1", "topic2", "data"]}}`. Two log selections are OR-ed: sent and received in one query.
+- Answer: `archive_height`, `data[]` (batches of `blocks`, `logs`), `next_block`, `rollback_guard`,
+  `total_execution_time`. Logs carry `log_index`, `transaction_hash`, `block_number`, `topic1`/`topic2`
+  (32-byte padded), `data` (hex amount, 18 decimals). Block `timestamp` is hex (`"0x6abe3f7b"`).
+- Paging: a busy hot wallet over 2,000 blocks returned 1,033 logs in 7 batches and stopped with
+  `next_block` short of `to_block` (continue from it).
+- Budget: `x-ratelimit-cost: 1000`, `x-ratelimit-limit: 30000, 30000;w=60`, `x-ratelimit-remaining`,
+  `x-ratelimit-reset` (seconds). **The budget is per token across `bsc.` and `56.` hosts.** The 30th
+  query in a window → `429`, empty body, no `Retry-After`, `remaining: 0`, `reset: 43`.
+- Speed: 180 days of a wallet with 221 transfers, 1 query, 7.8 s. BSC pace 0.450 s/block over 1M blocks.
+- `https://56.hypersync.xyz` accepts the same token.
+**Differs from docs/04-data-sources.md:** small: limit header now `30000, 30000;w=60`; new `rollback_guard`
+field; budget shared between hosts (the fallback host is not extra budget).
+**What this changes:** the pacer (T-1.02) reads `remaining`/`reset` and treats both hosts as one budget.
+Data sources §7 updated. Queries used: 38.
+**Fixtures:** `tests/fixtures/hypersync/query_401_no_token.json`, `query_usdt_transfers_by_address.json`,
+`rate_limited_429.json`
 
 ## VS-08 · Eagle Virtual: spec version, plans, credit line, usage, chains
 **Checked:** 2026-10-01, against `https://eaglevirtual.com/v1/openapi.json`, `/pricing`
@@ -174,6 +204,9 @@ already fits the "certifying as safe" rule.
 never-activated one.
 **What this changes:** first activity on TRON = earliest of `create_time` (when present) and the first
 USDT transfer. Data sources §6 updated.
-**Pending (BSC):** first transaction / first log scan. Needs `AMLCHECK_HYPERSYNC_TOKEN`.
+**Found (BSC, HyperSync, 2026-10-01):** one query from block 0 with `transactions: [{"from": [a]},
+{"to": [a]}]` and the two Transfer-log selections (any token) returns the earliest hit first. Active
+wallet: first activity block 50,980,453 (a transaction), 1 query, 10.7 s. Never-used address: whole
+chain scanned, 2 queries, 11.7 s, no hit.
 **Fixtures:** `tests/fixtures/trongrid/getaccount_active.json`, `getaccount_contract_no_create_time.json`,
 `getaccount_never_activated.json` (permissions and resources removed)

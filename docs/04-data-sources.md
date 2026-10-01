@@ -95,7 +95,7 @@ log (VS-08, VS-09) for the record.
 | Fact | Detail |
 |---|---|
 | Auth | Header `TRON-PRO-API-KEY`; works without a key but IP-limited |
-| Limits | **Not published.** Set per key in the console. Rate-limited answers are **429 or 403** — treat both the same; read limits from config |
+| Limits | **Not published**, set per key in the console. Owner's key (VS-05, 2026-10-01): **15 requests/s**; over it → `429`, body `{"Error":"The key exceeds the frequency limit(15), and the query server is suspended for 30 s"}`, **no `Retry-After` and no rate-limit headers**, key suspended 30 s. Without a key: 1 request/s, suspended 5 s. Treat 403 like 429; read the limit from config (Q-20) |
 | Transfers | `GET /v1/accounts/{address}/transactions/trc20?contract_address=…&only_confirmed=true&min_timestamp=…&order_by=block_timestamp,desc&limit=200`, paged via `meta.links.next`. Rows: `transaction_id`, `block_timestamp` (ms), `from`, `to`, `value`, `type`, `token_info`. **No block number, no event index** (VS-04). One transaction can hold several USDT transfers, and which of them a history shows depends on whose history it is (Q-17) |
 | Account | `POST /wallet/getaccount` → `create_time` (ms); `{}` when never activated. USDT can arrive at a never-activated address. A contract created by a contract has **no** `create_time` (VS-10) |
 | Contract calls | `POST /wallet/triggerconstantcontract`; `POST /wallet/getcontract` for contract detection |
@@ -108,14 +108,14 @@ log (VS-08, VS-09) for the record.
 | Fact | Detail |
 |---|---|
 | Endpoint | `POST https://bsc.hypersync.xyz/query` (also `https://56.hypersync.xyz` — use as DNS fallback) |
-| Auth | `Authorization: Bearer <token>`, free token at `https://envio.dev/app/api-tokens`. No token → 401 |
+| Auth | `Authorization: Bearer <token>`, free token at `https://app.envio.dev/api-tokens`. No token → 401. `GET /height` needs no token |
 | Height | `GET /height` → `{"height": N}` |
-| Answer | `data[]` batches of `blocks`, `logs`, `transactions`; `next_block`, `archive_height`. **Block timestamps are hex strings**; topics in `topic1`/`topic2` |
+| Answer | `data[]` batches of `blocks`, `logs`, `transactions`; `next_block`, `archive_height`, `rollback_guard`, `total_execution_time`. **Block timestamps are hex strings**; topics in `topic1`/`topic2`; logs carry `log_index` (VS-06) |
 | Order | **Oldest first only.** For newest-first reading, query block windows from the head down |
 | Paging | Stops near ~1,000 logs or a few seconds of work; continue from `next_block`. No progress / no `next_block` → error |
-| **Budget (free plan, 2026-09-30)** | ~30 queries per minute: `x-ratelimit-limit: 30000;w=60`, `x-ratelimit-cost: 1000` per query, `x-ratelimit-remaining`, `x-ratelimit-reset`. Refusal = 429 with empty body and **no** `Retry-After`. The cost header read `0` the day before — **pace from the headers, don't hard-code** |
+| **Budget (free plan, checked 2026-10-01)** | 30 queries per minute: `x-ratelimit-limit: 30000, 30000;w=60`, `x-ratelimit-cost: 1000` per query, `x-ratelimit-remaining`, `x-ratelimit-reset` (seconds to the next window). **One budget per token across `bsc.` and `56.` hosts.** Refusal = 429 with empty body and **no** `Retry-After`, but `remaining: 0` and `reset` present. The cost header read `0` on 2026-09-29 — **pace from the headers, don't hard-code** |
 | Completeness | 20 of 20 random real transfers found; rows matched raw logs field for field (hash, log index, block, time, from, to, amount) |
-| Speed | Quiet wallet's 180 days: 2 requests, 2.5 s. Busy wallet's newest 5,000: ~13.5 s. First-activity scan from block 0: 0.3–21 s |
+| Speed | Quiet wallet's 180 days: 1–2 queries, 2.5–8 s (221 transfers: 1 query, 7.8 s on 2026-10-01). Busy wallet's newest 5,000: ~13.5 s. First-activity scan from block 0: 1 query, 10.7 s (active wallet); 2 queries, 11.7 s (never used) |
 | Terms | Data "as is", UK law |
 | BSC pace | ~0.45 s per block (find a window's first block from the pace, check against headers) |
 

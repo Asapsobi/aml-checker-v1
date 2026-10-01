@@ -1,0 +1,13 @@
+{
+ "status": 429,
+ "headers": {
+  "x-ratelimit-cost": "1000",
+  "x-ratelimit-limit": "30000, 30000;w=60",
+  "x-ratelimit-remaining": "0",
+  "x-ratelimit-reset": "43",
+  "date": "Thu, 01 Oct 2026 11:26:17 GMT",
+  "connection": "close",
+  "content-length": "0"
+ },
+ "body": ""
+}
