@@ -10,8 +10,9 @@ Window meaning:
 
 A read of `[S, U]` with a limit:
 1. computes the gaps in coverage (incomplete windows count from just after their `since`);
-2. fetches gaps newest first, each with just enough limit to fill the answer, and stops once more
-   than `limit` transfers in the range are already stored (the answer is then known to be partial);
+2. fetches gaps newest first, each with just enough limit to hold `limit + 1` transfers, and stops
+   once more than `limit` transfers in the range are already stored (the answer is then known to be
+   partial, and a repeated read needn't ask the provider again);
 3. answers from the database: the newest `limit` non-zero transfers in `[S, U]`, `complete` only if
    nothing was left out (never a silently partial history, PRD F2.4).
 With `until=None` a cached tail younger than `[cache] target_ttl_seconds` counts as current (D-028).
@@ -122,11 +123,13 @@ class TransferCache:
             if self._count(chain, norm, gap.end, end, exclusive_start=False) > limit:
                 incomplete = True  # more than `limit` already stored: no need to ask
                 break
+            # One more than needed: a full read then stores `limit + 1`, which proves the window
+            # has more, so the next read needn't ask again.
             fetched = await source.fetch(
                 norm,
                 gap.start,
                 gap.end,
-                max(1, limit - newer),
+                max(1, limit + 1 - newer),
                 first_activity=want_first,
             )
             self._store(chain, norm, gap, fetched, now)

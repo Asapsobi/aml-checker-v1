@@ -108,7 +108,7 @@ async def test_at03_second_read_asks_only_the_gap(tmp_path: Path) -> None:
     cache = make(tmp_path, src)
     h1 = await cache.history(ME, at(0), None, 100)
     assert [t.time for t in h1.transfers] == [at(900), at(500), at(100)]
-    assert src.asked == [(at(0), at(1_000), 100, False)]
+    assert src.asked == [(at(0), at(1_000), 101, False)]  # limit + 1
     src.transfers.append(tr(1_500, 4))
     clock.now = at(2_000)
     h2 = await cache.history(ME, at(0), None, 100)
@@ -158,14 +158,14 @@ async def test_at04_limit_marks_incomplete_and_stays_honest(tmp_path: Path) -> N
     assert [t.time for t in h.transfers] == [at(1_000), at(900), at(800)]
     row = cache._conn.execute("SELECT since, complete FROM history_windows").fetchone()
     assert row[1] == 0
-    h2 = await cache.history(ME, at(0), at(5_000), 3)  # one small probe of the older part
-    assert src.asked[1][2] == 1
+    h2 = await cache.history(ME, at(0), at(5_000), 3)  # limit + 1 stored: more is known
+    assert len(src.asked) == 1
     assert h2.transfers == h.transfers
     assert not h2.complete
     h3 = await cache.history(ME, at(0), at(5_000), 50)  # a bigger limit reads the rest
     assert h3.complete
     assert len(h3.transfers) == 10
-    assert src.asked[-1][:2] == (at(0), at(800))
+    assert src.asked[-1][:2] == (at(0), at(700))
 
 
 # AT-05: 0-value transfers dropped and counted.
