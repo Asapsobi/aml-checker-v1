@@ -4,6 +4,7 @@ from pathlib import Path
 import pytest
 
 from amlcheck.storage.db import (
+    APPLICATION_ID,
     MigrationError,
     connect,
     load_migrations,
@@ -21,8 +22,8 @@ def mig_dir(tmp_path: Path, files: dict[str, str]) -> Path:
     return d
 
 
-def test_connect_uses_wal(tmp_path: Path) -> None:
-    conn = connect(tmp_path / "sub" / "a.db")
+def test_open_db_uses_wal(tmp_path: Path) -> None:
+    conn = open_db(tmp_path / "sub" / "a.db")
     assert conn.execute("PRAGMA journal_mode").fetchone()[0] == "wal"
     assert conn.execute("PRAGMA foreign_keys").fetchone()[0] == 1
 
@@ -91,6 +92,35 @@ def test_bad_migration_sets_refused(tmp_path: Path, files: dict[str, str]) -> No
 
 def test_newer_db_refused(tmp_path: Path) -> None:
     conn = sqlite3.connect(tmp_path / "a.db")
+    conn.execute(f"PRAGMA application_id = {APPLICATION_ID}")
     conn.execute("PRAGMA user_version = 99")
     with pytest.raises(MigrationError, match="newer"):
         migrate(conn, [])
+
+
+def test_new_db_is_marked_as_ours(tmp_path: Path) -> None:
+    conn = open_db(tmp_path / "a.db")
+    assert conn.execute("PRAGMA application_id").fetchone()[0] == APPLICATION_ID
+
+
+@pytest.mark.parametrize(
+    "setup",
+    [
+        # The older amlcheck's DB: tables, user_version 4, no application_id.
+        "CREATE TABLE checks (id INTEGER); PRAGMA user_version = 4;",
+        "CREATE TABLE anything (x TEXT);",
+        "PRAGMA application_id = 12345;",
+    ],
+)
+def test_foreign_db_refused_untouched(tmp_path: Path, setup: str) -> None:
+    path = tmp_path / "a.db"
+    raw = sqlite3.connect(path)
+    raw.executescript(setup)
+    before = raw.execute("PRAGMA user_version").fetchone()[0]
+    raw.close()
+    with pytest.raises(MigrationError, match="not created by this amlcheck"):
+        open_db(path)
+    raw = sqlite3.connect(path)
+    assert raw.execute("PRAGMA user_version").fetchone()[0] == before
+    assert raw.execute("PRAGMA application_id").fetchone()[0] != APPLICATION_ID
+    assert raw.execute("PRAGMA journal_mode").fetchone()[0] == "delete"

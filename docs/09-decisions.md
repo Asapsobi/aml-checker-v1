@@ -180,3 +180,16 @@
   indexes. Being local data, the index also flags BSC counterparties (methodology §3.3) and trace
   terminals (§7.5 test 3), which the Free-plan API could not. Other issuers (AUSD, XUSD, USD0, …) are
   not covered.
+
+### D-035 · Refuse databases this amlcheck did not create
+- **Status:** Proposed
+- **Date:** 2026-10-01 · **Phase:** P0
+- **Context:** An older tool also called amlcheck keeps its DB at `~/.amlcheck/amlcheck.db` (our
+  default home, D-020) with `user_version` 4. From P1 on, our runner would read it as our schema and
+  run later migrations on it.
+- **Decision:** A new DB is marked with `PRAGMA application_id = 0x616D6C63` ("amlc"). The runner
+  refuses any DB without that mark that has tables or a non-zero `user_version`, and changes nothing.
+- **Alternatives:** A different default home (diverges from D-020 and the docs); trusting
+  `user_version` alone (the clash above).
+- **Consequences:** `amlcheck status` exits 1 with a clear message while the old DB sits in
+  `~/.amlcheck/`. The owner moves it or sets `AMLCHECK_HOME`.

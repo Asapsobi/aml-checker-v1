@@ -16,6 +16,10 @@ from pathlib import Path
 
 _NAME = re.compile(r"^(\d{4})_[a-z0-9_]+\.sql$")
 
+#: Marks a DB created by this amlcheck (D-035). An older tool of the same name keeps its own DB in
+#: `~/.amlcheck/` with `user_version` 4; without the mark, P1–P4 would read it as our schema 4.
+APPLICATION_ID = 0x616D6C63  # "amlc"
+
 
 class MigrationError(Exception):
     pass
@@ -29,10 +33,13 @@ class Migration:
 
 
 def connect(path: Path) -> sqlite3.Connection:
-    """Open in autocommit mode with WAL, foreign keys and a busy timeout (architecture §5)."""
+    """Open in autocommit mode with foreign keys and a busy timeout (architecture §5).
+
+    Nothing persistent is changed here: `migrate()` switches on WAL only once the DB is known to be
+    ours (D-035), so a refused DB is left exactly as it was.
+    """
     path.parent.mkdir(parents=True, exist_ok=True)
     conn = sqlite3.connect(path, isolation_level=None, timeout=30.0)
-    conn.execute("PRAGMA journal_mode=WAL")
     conn.execute("PRAGMA foreign_keys=ON")
     conn.execute("PRAGMA synchronous=NORMAL")
     return conn
@@ -61,9 +68,26 @@ def schema_version(conn: sqlite3.Connection) -> int:
     return int(row[0])
 
 
+def _claim(conn: sqlite3.Connection) -> None:
+    """Mark an empty DB as ours; refuse any DB this amlcheck did not create."""
+    app_id = int(conn.execute("PRAGMA application_id").fetchone()[0])
+    if app_id == APPLICATION_ID:
+        return
+    empty = conn.execute("SELECT count(*) FROM sqlite_master").fetchone()[0] == 0
+    if app_id == 0 and empty and schema_version(conn) == 0:
+        conn.execute(f"PRAGMA application_id = {APPLICATION_ID}")
+        return
+    raise MigrationError(
+        "this database was not created by this amlcheck (it may belong to an older amlcheck); "
+        "point AMLCHECK_HOME at another folder or move the old one away"
+    )
+
+
 def migrate(conn: sqlite3.Connection, migrations: list[Migration] | None = None) -> list[str]:
     """Apply missing migrations. Returns the names applied (empty when already up to date)."""
     migrations = load_migrations() if migrations is None else migrations
+    _claim(conn)
+    conn.execute("PRAGMA journal_mode=WAL")
     latest = len(migrations)
     current = schema_version(conn)
     if current > latest:

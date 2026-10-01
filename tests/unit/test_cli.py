@@ -1,4 +1,5 @@
 import json
+import sqlite3
 from importlib.metadata import version
 from pathlib import Path
 
@@ -70,3 +71,13 @@ def test_config_env_override(home: Path, tmp_path: Path, monkeypatch: pytest.Mon
 def test_no_args_shows_help(home: Path) -> None:
     r = runner.invoke(app, [])
     assert "status" in r.output
+
+
+def test_status_refuses_foreign_db(home: Path) -> None:
+    home.mkdir()
+    raw = sqlite3.connect(home / "amlcheck.db")
+    raw.executescript("CREATE TABLE checks (id INTEGER); PRAGMA user_version = 4;")
+    raw.close()
+    r = runner.invoke(app, ["status"])
+    assert r.exit_code == 1
+    assert "not created by this amlcheck" in r.output
