@@ -4,8 +4,33 @@
 address classification, risk scoring and a recorded decision trail. Local-first, built on RPC
 providers and indexers, no own nodes.
 
-> **Status:** specification only. The product is built from these docs with Claude Code, phase by
-> phase, starting at P0.
+> **Status:** P0 (foundations) in progress. The product is built from these docs with Claude Code,
+> phase by phase.
+
+## Setup
+
+Needs [uv](https://docs.astral.sh/uv/) and Python 3.12+ (uv installs it if missing).
+
+```bash
+uv sync                      # install into .venv
+uv run amlcheck --version
+uv run amlcheck status       # creates ~/.amlcheck/ and the database
+```
+
+| What | Where | Override |
+|---|---|---|
+| Data, database, logs | `~/.amlcheck/` | `AMLCHECK_HOME` |
+| Config | `~/.amlcheck/config.toml` (optional: every key has a default) | `AMLCHECK_CONFIG` |
+| Keys | environment, then `./.env`, then `~/.amlcheck/.env` | — |
+
+1. Copy [`.env.example`](.env.example) to `.env` and fill in the keys. Never commit it.
+2. Optionally copy [`config.example.toml`](config.example.toml) to `~/.amlcheck/config.toml` and keep
+   only the keys you change. Unknown keys and invalid values are refused, so a typo can't silently
+   fall back to a default.
+3. Try it without touching real data: `AMLCHECK_HOME=$(mktemp -d) uv run amlcheck status`.
+
+Development checks: `uv run pytest -q`, `uv run ruff check .`, `uv run ruff format --check .`,
+`uv run mypy`.
 
 ## Document pack
 
