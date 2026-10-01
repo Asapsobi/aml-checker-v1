@@ -51,7 +51,6 @@ class Freshness(_Section):
 
     sanctions_max_age_hours: PosInt = 48
     tron_index_max_lag_minutes: PosInt = 60
-    evm_index_max_lag_minutes: PosInt = 60  # D-034
 
 
 class Network(_Section):

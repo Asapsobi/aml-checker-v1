@@ -6,7 +6,8 @@
 **P0 status (2026-10-01): complete.** VS-01 to VS-06 and VS-10 confirmed, VS-05, VS-06 and the BSC
 half of VS-10 with the owner's TronGrid key and HyperSync token (loaded through `amlcheck.config`, never
 printed). **VS-08 and VS-09 dropped** with Eagle Virtual (D-033); their entries stay below as a record.
-VS-07 (P6), VS-11 to VS-14 (later phases) and VS-15 (EVM freeze index, P2, D-034) are not P0 items.
+VS-07 (P6) and VS-11 to VS-14 (later phases) are not P0 items. VS-15 (EVM freeze index) was started in P2 and stopped
+with the scope (D-039); its partial findings are at the end.
 
 | VS | Result | Differs from docs | Question |
 |---|---|---|---|
@@ -210,3 +211,36 @@ wallet: first activity block 50,980,453 (a transaction), 1 query, 10.7 s. Never-
 chain scanned, 2 queries, 11.7 s, no hit.
 **Fixtures:** `tests/fixtures/trongrid/getaccount_active.json`, `getaccount_contract_no_create_time.json`,
 `getaccount_never_activated.json` (permissions and resources removed)
+
+---
+
+## VS-15 · Tether and Circle freeze contracts on other EVM chains (stopped: out of v1 scope)
+**Checked:** 2026-10-01, contract identity by `eth_call` on public RPCs (publicnode, drpc for Polygon);
+events via HyperSync (`<chain>.hypersync.xyz`, owner's token) with topic0 for
+`AddedBlackList`/`RemovedBlackList`/`DestroyedBlackFunds`, `BlockPlaced`/`BlockReleased`/`DestroyedBlockedFunds`,
+`Blacklisted`/`UnBlacklisted`, full history.
+**Status:** stopped by the owner as too wide for v1 (D-039). Kept for a later version; not used by code.
+**Found (complete history unless marked):**
+
+| Chain | Contract | Token | Freeze events |
+|---|---|---|---|
+| Ethereum | `0xdAC17F95…831ec7` | USDT (Tether, not a proxy) | not counted: the address is **not indexed** (no `topic1`; it is in `data`) and the large answer broke off mid-read |
+| Ethereum | `0xA0b86991…06eB48` | USDC (proxy) | `Blacklisted` 900, `UnBlacklisted` 226 (5 queries, 50 s) |
+| Arbitrum | `0xFd086bC7…FcbB9` | USD₮0 (proxy) | `BlockPlaced` 37, `DestroyedBlockedFunds` 5 |
+| Arbitrum | `0xaf88d065…5831` | USDC (proxy) | `Blacklisted` 585, `UnBlacklisted` 93 |
+| Base | `0x833589fC…02913` | USDC (proxy) | `Blacklisted` 596, `UnBlacklisted` 93 |
+| Optimism | `0x94b008aA…e58e58` | USDT (not a proxy) | **none**: a bridged copy that can't freeze |
+| Optimism | `0x0b2C639c…6Ff85` | USDC (proxy) | `Blacklisted` 572, `UnBlacklisted` 93 |
+| Polygon | `0xc2132D05…58e8F` | USDT0 | `BlockPlaced` 5, `BlockReleased` 1, `DestroyedBlockedFunds` 2 |
+| Polygon | `0x3c499c54…c3359` | USDC | not counted (answer broke off) |
+| Avalanche | `0x9702230A…4A8c7` | USDt "TetherToken" (proxy) | `BlockPlaced` 16, `BlockReleased` 2, `DestroyedBlockedFunds` 9 |
+| Avalanche | `0xB97EF9Ef…48a6E` | USDC (proxy) | `Blacklisted` 578, `UnBlacklisted` 96 |
+
+- **Tether's newer deployments (USDT0, Avalanche) use `BlockPlaced`/`BlockReleased`/`DestroyedBlockedFunds`,
+  not `AddedBlackList`.** A later index must read both families.
+- Every chain answered with the BSC token. In this sandbox the system resolver could not resolve
+  `eth.hypersync.xyz`, `1.hypersync.xyz` or `42161.hypersync.xyz` (public DNS could); named hosts
+  (`arbitrum.`, `base.`, …) worked. An environment quirk here, not a provider fact.
+**Differs from docs/04-data-sources.md:** the doc listed only `AddedBlackList`-style events for Tether.
+**What this changes:** nothing in v1 (D-039). Input for a later version.
+**Fixtures:** none saved (not used by code).

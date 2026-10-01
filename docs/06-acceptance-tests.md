@@ -16,15 +16,15 @@
 | AT-08 | P2 | Mixed-case EVM address with a bad EIP-55 checksum | Error |
 | AT-09 | P2 | Valid TRON address, all sources clean | `NO_HITS`, disclaimer printed, audit record written, exit 0 |
 | AT-10 | P2 | Address in the OFAC fixture (listed under another currency label) | `BLOCK`, R-SAN-01 with entry ID and entity name, exit 5 |
-| AT-11 | P2 | BSC target whose latest EVM-index event is an add (Tether on Ethereum, Circle on another chain) | `BLOCK`, R-FRZ-01 naming chain, token and tx |
-| AT-12 | P2 | EVM index: add followed by removal, no later add | `REVIEW`, R-FRZ-02 |
-| AT-13 | P2 | EVM index can't be refreshed for one chain and lags it > 60 min | `INCOMPLETE`, R-SYS-01 naming the chain |
+| AT-11 | P2 | ~~BSC target frozen on another EVM chain~~ | Dropped with the EVM index (D-039) |
+| AT-12 | P2 | ~~EVM index: add then removal~~ | Dropped (D-039); R-FRZ-02 is covered on TRON by AT-17 |
+| AT-13 | P2 | TRON freeze index can't be refreshed and lags the chain > 60 min | `INCOMPLETE`, R-SYS-01 naming the source |
 | AT-14 | P2 | 429 with `Retry-After: 3`, then OK | Waits, succeeds. With `Retry-After: 30` → `INCOMPLETE` |
 | AT-15 | P2 | Sanctions snapshot downloaded 49 h ago | `INCOMPLETE` unless a BLOCK finding exists |
-| AT-16 | P2 | OFAC hit **and** EVM freeze index down | `BLOCK` (precedence) |
+| AT-16 | P2 | OFAC hit **and** TRON freeze index down | `BLOCK` (precedence) |
 | AT-17 | P2 | TRON index: latest event `AddedBlackList` | `BLOCK`; `RemovedBlackList` after it → `REVIEW` R-FRZ-02 |
 | AT-18 | P2 | TRON contract `deprecated()` returns true | Freeze index source `error` → `INCOMPLETE` |
-| AT-19 | P2 | Any BSC check | Token freeze source `skipped` with reason; can end `NO_HITS` |
+| AT-19 | P2 | Any BSC check | Token freeze source `skipped` with reason, incl. that other chains are not checked in v1; can end `NO_HITS` |
 | AT-20 | P2 | Tamper one `checks` row | `audit verify` reports the break at that record |
 | AT-21 | P2 | New snapshot with 30% fewer addresses | Rejected, previous snapshot kept, warning logged |
 | AT-22 | P3 | Fixture: target received 1,200 USDT from a frozen address | `REVIEW`, R-EXP-01 with tx evidence |

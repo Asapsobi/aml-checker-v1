@@ -96,13 +96,12 @@ CREATE TABLE sanctioned_addresses (
 );
 CREATE INDEX sanctioned_by_address ON sanctioned_addresses (address_norm, snapshot_id);
 
--- Local index of issuer blacklist events (Tether USDT on TRON).
+-- Local index of issuer blacklist events (Tether USDT on TRON; v1 has no other index, D-039).
 CREATE TABLE issuer_events (
     chain           TEXT    NOT NULL,
     token_contract  TEXT    NOT NULL,
     address_norm    TEXT    NOT NULL,
-    event_type      TEXT    NOT NULL,          -- Tether: AddedBlackList | RemovedBlackList | DestroyedBlackFunds;
-                                               -- Circle: Blacklisted | UnBlacklisted (D-034)
+    event_type      TEXT    NOT NULL,          -- AddedBlackList | RemovedBlackList | DestroyedBlackFunds
     amount          TEXT,                      -- DestroyedBlackFunds balance
     tx_hash         TEXT    NOT NULL,
     event_index     INTEGER NOT NULL,

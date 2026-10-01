@@ -60,7 +60,6 @@ aml-checker-v1/
 │   │   ├── base.py              SourceAdapter protocol, failed()
 │   │   ├── sanctions.py         OFAC download, parse, snapshots, adapter (F3)
 │   │   ├── tron_freeze.py       Tether event index + isBlackListed adapter (F4)
-│   │   ├── evm_freeze.py        Tether/Circle blacklist index on EVM chains via HyperSync (F4.3)
 │   │   ├── bsc_freeze.py        always-skipped adapter with reason (F4.4)
 │   │   ├── exposure.py          1-hop walk adapter: R-EXP-01/02, R-HEU-01..05 (F5)
 │   │   └── heuristics.py        pure pattern functions (pass-through, busiest window)
@@ -233,7 +232,7 @@ lock ─► each own wallet: new inbound transfers since monitor_state
 
 | Section | Holds |
 |---|---|
-| `[freshness]` | sanctions max age, TRON and EVM freeze index max lag |
+| `[freshness]` | sanctions max age, TRON index max lag |
 | `[network]` | timeout, max Retry-After |
 | `[rules]` | severity overrides |
 | `[exposure]` | lookback, max transfers, flagged inflow share |

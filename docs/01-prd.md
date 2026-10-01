@@ -224,7 +224,7 @@ definitions and thresholds: [methodology §2–§4](02-methodology.md).
 |---|---|
 | F4.1 | TRON: local index of Tether USDT contract events (blacklist added/removed, funds destroyed), refreshed incrementally on every TRON check and by `sync` |
 | F4.2 | Live spot-check `isBlackListed` for the target on TRON |
-| F4.3 | EVM: local index of Tether USDT and Circle USDC blacklist events on the EVM chains verified in VS-15, read through HyperSync and refreshed incrementally; a `0x` target listed on any of them → R-FRZ-01 on BSC (D-010, D-034). A chain that can't be refreshed and lags > 60 min → INCOMPLETE |
+| F4.3 | ~~EVM freeze index~~ Not in v1 (D-039): v1 covers TRC20 and BEP20 only. BEP20 USDT can't freeze, so BSC freeze checks are `skipped` (F4.4) and every BSC result says freezes on other chains are not checked |
 | F4.4 | BEP20 USDT on BSC has no freeze function: the token freeze check reports `skipped`, and every BSC result says so |
 | F4.5 | No third-party AML, screening or freeze API: freeze data comes only from issuer contracts, read through RPC providers and indexers (D-033) |
 

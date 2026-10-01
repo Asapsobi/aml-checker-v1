@@ -39,7 +39,7 @@ def test_defaults_match_methodology() -> None:
     assert s.trace.max_nodes == 40
     assert s.trace.coverage_share == Decimal("0.8")
     assert s.score.review_at == 0
-    assert s.freshness.evm_index_max_lag_minutes == 60
+    assert s.freshness.tron_index_max_lag_minutes == 60
 
 
 def test_valid_overrides_load(tmp_path: Path) -> None:
@@ -69,7 +69,7 @@ flagged_inflow_share = 0.1
         ("[exposure]\nlookback_days = -1\n", "[exposure] lookback_days"),
         ('[exposure]\nlookback_days = "lots"\n', "[exposure] lookback_days"),
         ("[exposure]\nflagged_inflow_share = 1.5\n", "[exposure] flagged_inflow_share"),
-        ("[freshness]\nevm_index_max_lag_minutes = 0\n", "[freshness] evm_index_max_lag_minutes"),
+        ("[freshness]\ntron_index_max_lag_minutes = 0\n", "[freshness] tron_index_max_lag_minutes"),
         ('[eagle_virtual]\nbase_url = "x"\n', "eagle_virtual: unknown key"),  # D-033
         ('[rules.severity]\n"R-XYZ-01" = "BLOCK"\n', "unknown rule 'R-XYZ-01'"),
         ('[rules.severity]\n"R-SYS-01" = "REVIEW"\n', "R-SYS-01 is fixed"),

@@ -48,9 +48,9 @@
 | T-2.03 | `core/audit.py`: canonical JSON, append, verify, "hash only when set" | M | T-2.02 | AT-20 |
 | T-2.04 | `core/rules.py` + `core/verdict.py`: IDs, defaults, overrides, fixed rules, R-SYS-01 | M | T-0.03 | Verdict precedence tests; AT-16 |
 | T-2.05 | `screening/sanctions.py`: download, parse every digital-currency id, snapshot, sanity check, adapter, staleness | L | T-2.02 | AT-10, AT-15, AT-21 |
-| T-2.06 | `screening/tron_freeze.py`: event indexer (incremental, confirmed only, `deprecated()` check), `isBlackListed`, adapter | L | T-2.02, T-1.04 | AT-17, AT-18 |
-| T-2.07 | `screening/evm_freeze.py`: Tether/Circle blacklist index on the VS-15 chains via HyperSync (incremental, per-chain lag, confirmed blocks only), adapter for `0x` targets | L | T-1.02, T-2.02, VS-15 | AT-11, AT-12, AT-13, AT-14 |
-| T-2.08 | `screening/bsc_freeze.py`: always skipped with reason | S | T-0.03 | AT-19 |
+| T-2.06 | `screening/tron_freeze.py`: event indexer (incremental, confirmed only, `deprecated()` check, lag → stale), `isBlackListed`, adapter | L | T-2.02, T-1.04 | AT-13, AT-17, AT-18 |
+| T-2.07 | ~~`screening/evm_freeze.py`~~ Dropped (D-039): v1 covers TRC20 and BEP20 only | — | — | — |
+| T-2.08 | `screening/bsc_freeze.py`: always skipped with reason (BEP20 USDT can't freeze; other chains not checked in v1) | S | T-0.03 | AT-19 |
 | T-2.09 | `core/engine.py`: concurrent sources, timeouts → `failed()`, rules, verdict, audit append before output | M | T-2.03…T-2.08 | AT-09, AT-16 |
 | T-2.10 | CLI `check` (human + `--json`, exit codes, disclaimer), `sync`, `status`, `audit list/verify` | M | T-2.09 | CLI tests |
 | T-2.11 | Live: OFAC-listed, Tether-frozen, never-used addresses on both chains | S | T-2.10 | `acceptance-results.md` |
