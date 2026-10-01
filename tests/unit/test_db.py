@@ -143,3 +143,20 @@ def test_0001_cache_schema(tmp_path: Path) -> None:
     assert pk("contracts") == ["chain", "address_norm"]
     indexes = {r[1] for r in conn.execute("PRAGMA index_list(transfers)")}
     assert {"transfers_in", "transfers_out"} <= indexes
+
+
+def test_transaction_commits_or_rolls_back(tmp_path: Path) -> None:
+    from amlcheck.storage.db import transaction
+
+    conn = open_db(tmp_path / "a.db")
+    with transaction(conn):
+        conn.execute("INSERT INTO contracts VALUES ('bsc', '0x1', 1, 't', 's')")
+
+    def failing_write() -> None:
+        with transaction(conn):
+            conn.execute("INSERT INTO contracts VALUES ('bsc', '0x2', 1, 't', 's')")
+            raise RuntimeError("boom")
+
+    with pytest.raises(RuntimeError):
+        failing_write()
+    assert [r[0] for r in conn.execute("SELECT address_norm FROM contracts")] == ["0x1"]
