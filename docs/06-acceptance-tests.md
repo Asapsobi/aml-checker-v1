@@ -16,12 +16,12 @@
 | AT-08 | P2 | Mixed-case EVM address with a bad EIP-55 checksum | Error |
 | AT-09 | P2 | Valid TRON address, all sources clean | `NO_HITS`, disclaimer printed, audit record written, exit 0 |
 | AT-10 | P2 | Address in the OFAC fixture (listed under another currency label) | `BLOCK`, R-SAN-01 with entry ID and entity name, exit 5 |
-| AT-11 | P2 | Freeze vendor returns `FROZEN` | `BLOCK`, R-FRZ-01 naming chain, token and tx |
-| AT-12 | P2 | Freeze vendor returns `UNFROZEN` | `REVIEW`, R-FRZ-02 |
-| AT-13 | P2 | Freeze vendor returns `null` (chain not vouched) | `INCOMPLETE`, R-SYS-01 naming the chain |
+| AT-11 | P2 | BSC target whose latest EVM-index event is an add (Tether on Ethereum, Circle on another chain) | `BLOCK`, R-FRZ-01 naming chain, token and tx |
+| AT-12 | P2 | EVM index: add followed by removal, no later add | `REVIEW`, R-FRZ-02 |
+| AT-13 | P2 | EVM index can't be refreshed for one chain and lags it > 60 min | `INCOMPLETE`, R-SYS-01 naming the chain |
 | AT-14 | P2 | 429 with `Retry-After: 3`, then OK | Waits, succeeds. With `Retry-After: 30` → `INCOMPLETE` |
 | AT-15 | P2 | Sanctions snapshot downloaded 49 h ago | `INCOMPLETE` unless a BLOCK finding exists |
-| AT-16 | P2 | OFAC hit **and** freeze vendor down | `BLOCK` (precedence) |
+| AT-16 | P2 | OFAC hit **and** EVM freeze index down | `BLOCK` (precedence) |
 | AT-17 | P2 | TRON index: latest event `AddedBlackList` | `BLOCK`; `RemovedBlackList` after it → `REVIEW` R-FRZ-02 |
 | AT-18 | P2 | TRON contract `deprecated()` returns true | Freeze index source `error` → `INCOMPLETE` |
 | AT-19 | P2 | Any BSC check | Token freeze source `skipped` with reason; can end `NO_HITS` |

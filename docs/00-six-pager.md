@@ -166,7 +166,7 @@ usable free tier. We have identified, and measured, where each one stops.
 | US sanctions list | Free | — |
 | TRON chain data (TronGrid) | Free key | Very high volume |
 | BSC chain data (Envio HyperSync) | Free plan, about 30 queries a minute | Deep traces at high volume may need a paid tier |
-| Freeze history (Eagle Virtual) | Free plan, 1,000 checks a day | More than ~1,000 checks a day, or to drop the attribution line |
+| Freeze history (own index of Tether and Circle contracts) | Free: same HyperSync plan | Only if the free budget can't keep the index current |
 | Fallback BSC data (Etherscan Lite) | $49 a month | Only if HyperSync becomes unusable |
 | Development | Claude Code subscription + owner review time | — |
 

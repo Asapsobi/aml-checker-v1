@@ -9,7 +9,7 @@ Project memory for Claude Code. Keep it short; details live in `docs/`.
 up to 3 hops, classifies unknown addresses, scores risk, and records operator decisions.
 Built **from scratch** here, phase by phase (P0–P11).
 
-**Hard constraints:** no own nodes (RPC providers / indexers only) · intelligence only on our
+**Hard constraints:** no own nodes (RPC providers / indexers only) · no third-party AML APIs · intelligence only on our
 counterparties and what their traces reach · local-first, SQLite · internal use only.
 
 ## Where things are
@@ -49,8 +49,8 @@ AMLCHECK_HOME=$(mktemp -d) uv run amlcheck check <address>   # live run, never t
 5. **Inferred ≠ fact.** Classifications never produce BLOCK; always show confidence.
 6. **Deterministic.** Same cache + config ⇒ same output. Sort everything with a tie-break; time only
    from the injected clock.
-7. **Licences.** Never store freeze-vendor answers beyond the 15-min cache. No label data without a
-   recorded licence.
+7. **Sources and licences.** Only public lists and RPC providers / indexers: no third-party AML,
+   screening or freeze API (D-033). No label data without a recorded licence.
 8. **No secrets in the repo.** Keys only in `.env` (never read it; use `.env.example`).
 9. **Ambiguity ⇒ ask.** Add to `docs/10-open-questions.md` with a proposed answer, keep building what
    isn't blocked. Real choices ⇒ add a decision to `docs/09-decisions.md`.

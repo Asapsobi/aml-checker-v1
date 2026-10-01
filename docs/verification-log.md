@@ -3,9 +3,10 @@
 > Live checks of external facts before code relies on them (data sources §9). Newest phase first;
 > one entry per VS item. Keys were never printed or saved; fixtures are real answers, trimmed.
 
-**P0 status (2026-10-01):** done without keys: VS-01, VS-02, VS-03, VS-04, VS-08 (spec), VS-09,
-VS-10 (TRON). **Waiting for the owner's keys:** VS-05 (TronGrid key limits), VS-06 (HyperSync query),
-VS-08 (`/v1/usage`, `/v1/chains`), VS-10 (BSC first activity). No keys were in the environment.
+**P0 status (2026-10-01):** done without keys: VS-01, VS-02, VS-03, VS-04, VS-10 (TRON).
+**Waiting for the owner's keys:** VS-05 (TronGrid key limits), VS-06 (HyperSync query), VS-10 (BSC
+first activity). No keys were in the environment. **VS-08 and VS-09 dropped** with Eagle Virtual
+(D-033); their entries stay below as a record. VS-15 (EVM freeze index) added for P2 (D-034).
 
 | VS | Result | Differs from docs | Question |
 |---|---|---|---|
@@ -15,8 +16,8 @@ VS-08 (`/v1/usage`, `/v1/chains`), VS-10 (BSC first activity). No keys were in t
 | VS-04 | Confirmed, plus a uniqueness problem | Yes: transfer identity depends on whose history is read | Q-17 |
 | VS-05 | Partial (no key) | Keyless 429 has no `Retry-After` | Q-18 |
 | VS-06 | Partial (no token) | No | — |
-| VS-08 | Partial (spec only) | Yes: `CLEAR` can come with chains behind (spec 1.3.0) | Q-19 |
-| VS-09 | Confirmed | Wording: our cache and counterparty limits are our policy, not the vendor's terms | — |
+| VS-08 | Dropped (D-033) | Was: `CLEAR` can come with chains behind (spec 1.3.0) | Q-19 (superseded) |
+| VS-09 | Dropped (D-033) | — | — |
 | VS-10 | TRON confirmed; BSC pending | `create_time` absent on contract-created contracts | — |
 
 ---

@@ -2,7 +2,8 @@
 
 Locations (D-020): data in `AMLCHECK_HOME` (default `~/.amlcheck`), config in `AMLCHECK_CONFIG`
 (default `<home>/config.toml`). Keys never live in config: they come from the environment, then
-`./.env`, then `<home>/.env`, and are kept out of the config hash.
+`./.env`, then `<home>/.env`, and are kept out of the config hash. Only RPC provider and indexer
+keys exist: no third-party AML API (D-033).
 
 Unknown keys and invalid values are refused at load (AT-02), so a typo can't silently fall back to a
 default.
@@ -50,6 +51,7 @@ class Freshness(_Section):
 
     sanctions_max_age_hours: PosInt = 48
     tron_index_max_lag_minutes: PosInt = 60
+    evm_index_max_lag_minutes: PosInt = 60  # D-034
 
 
 class Network(_Section):
@@ -195,16 +197,6 @@ class Ofac(_Section):
     min_kept_share: Share = Decimal("0.8")  # PRD F3.4: > 20% fewer addresses → rejected
 
 
-class EagleVirtual(_Section):
-    """Data sources §5, D-008, D-025 (Free plan)."""
-
-    base_url: str = "https://eaglevirtual.com"
-    requests_per_second: PosFloat = 1.0
-    daily_limit: PosInt = 1000
-    quota_warn_share: Share = Decimal("0.8")
-    cache_ttl_seconds: Annotated[int, Field(gt=0, le=900)] = 900  # PRD F4.5: ≤ 15 min, licence
-
-
 class Tron(_Section):
     """Data sources §3, §6. TronGrid limits are per key and unpublished: set them here."""
 
@@ -235,7 +227,6 @@ class Settings(_Section):
     monitor: Monitor = Monitor()
     operator: Operator = Operator()
     ofac: Ofac = Ofac()
-    eagle_virtual: EagleVirtual = EagleVirtual()
     tron: Tron = Tron()
     bsc: Bsc = Bsc()
 
@@ -263,14 +254,12 @@ class Secrets:
 
     trongrid_api_key: str | None = None
     hypersync_token: str | None = None
-    eagle_virtual_keys: tuple[str, ...] = ()
     api_token: str | None = None
 
     def __repr__(self) -> str:
         shown = {
             "trongrid_api_key": bool(self.trongrid_api_key),
             "hypersync_token": bool(self.hypersync_token),
-            "eagle_virtual_keys": len(self.eagle_virtual_keys),
             "api_token": bool(self.api_token),
         }
         return f"Secrets({shown})"
@@ -279,7 +268,6 @@ class Secrets:
 SECRET_VARS = {
     "trongrid_api_key": "AMLCHECK_TRONGRID_API_KEY",
     "hypersync_token": "AMLCHECK_HYPERSYNC_TOKEN",
-    "eagle_virtual_keys": "AMLCHECK_EAGLE_VIRTUAL_KEYS",
     "api_token": "AMLCHECK_API_TOKEN",
 }
 
@@ -336,10 +324,8 @@ def load_secrets(
                 return value.strip()
         return None
 
-    evk = get(SECRET_VARS["eagle_virtual_keys"]) or ""
     return Secrets(
         trongrid_api_key=get(SECRET_VARS["trongrid_api_key"]),
         hypersync_token=get(SECRET_VARS["hypersync_token"]),
-        eagle_virtual_keys=tuple(k.strip() for k in evk.split(",") if k.strip()),
         api_token=get(SECRET_VARS["api_token"]),
     )

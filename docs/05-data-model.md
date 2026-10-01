@@ -110,7 +110,8 @@ CREATE TABLE issuer_events (
     chain           TEXT    NOT NULL,
     token_contract  TEXT    NOT NULL,
     address_norm    TEXT    NOT NULL,
-    event_type      TEXT    NOT NULL,          -- AddedBlackList | RemovedBlackList | DestroyedBlackFunds
+    event_type      TEXT    NOT NULL,          -- Tether: AddedBlackList | RemovedBlackList | DestroyedBlackFunds;
+                                               -- Circle: Blacklisted | UnBlacklisted (D-034)
     amount          TEXT,                      -- DestroyedBlackFunds balance
     tx_hash         TEXT    NOT NULL,
     event_index     INTEGER NOT NULL,
@@ -414,4 +415,3 @@ CREATE TABLE api_requests (
 | `classifications` | Latest per address and type forever; older may be pruned |
 | `traces` | Forever when linked to a check; others for `[cache] history_keep_days` |
 | `transfers`, `history_windows` | Cache: pruned for addresses outside registry, entities, labels and own wallets after `history_keep_days` (30) |
-| Third-party freeze answers | `http_cache` only, ≤ 15 min. Never copied into any other table |

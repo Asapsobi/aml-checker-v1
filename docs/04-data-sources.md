@@ -3,7 +3,7 @@
 > Every external source the product uses, what is known about it, and what must be verified live before
 > code relies on it. Facts below were checked by hand between **2026-09-28 and 2026-09-30**. Providers
 > change: **P0 re-verifies every row marked "verify"** and records the result in
-> `docs/verification-log.md` (VS-01 … VS-14, below).
+> `docs/verification-log.md` (VS-01 … VS-15, below).
 
 ---
 
@@ -16,7 +16,8 @@
 | Sanctions, second opinion | Chainalysis free sanctions API | — | **Not available**: sign-up now leads to a paid product |
 | Sanctions, aggregated | OpenSanctions | Paid for commercial use (CC BY-NC 4.0) | **Out** unless a licence is bought |
 | Issuer freezes, TRON | Tether USDT contract events via TronGrid | Free | Use (local index) |
-| Issuer freezes, all chains | Eagle Virtual API | Free plan; Business for volume | Use for the **target address only** |
+| Issuer freezes, EVM chains | Tether USDT and Circle USDC blacklist events, read through Envio HyperSync | Free plan (same token as BSC data) | Use (local index, D-034). Verify contracts, events and chains (VS-15) |
+| Issuer freezes, third-party API | Eagle Virtual and similar AML / freeze APIs | — | **Out** (D-033): only RPC providers and indexers |
 | TRON chain data | TronGrid | Free with key; limits per key | Use |
 | BSC chain data | Envio HyperSync | Free plan with token | Use |
 | BSC chain data, paid fallback | Etherscan V2 (Lite plan) | $49/month | Fallback only, owner decision |
@@ -68,27 +69,26 @@
 | Functions | Standard Binance BEP20Token template: BEP-20 basics + `mint`, `burn`, ownership |
 | **Freeze capability** | **None.** No freeze, blacklist, pause or seize function, no blacklist event |
 | Consequence | Token-level freeze check is always `skipped` on BSC; every BSC result says so |
-| Other stablecoins on BSC | Some *can* freeze (seen via Eagle Virtual: AUSD, XUSD, USD0). Out of scope as tokens, but freezes of the same `0x` address count under R-FRZ-01 |
+| Other stablecoins on BSC | Some *can* freeze (AUSD, XUSD, USD0). Out of scope as tokens. Freezes of the same `0x` address by Tether or Circle on other EVM chains count under R-FRZ-01 (D-010, §5) |
 
 ---
 
-## 5. Eagle Virtual (issuer freeze history)
+## 5. EVM issuer freeze index (Tether, Circle)
+
+The same private key controls a `0x` address on every EVM chain, so a freeze by Tether or Circle on any
+EVM chain blocks a BSC check (D-010). BEP20 USDT itself can't freeze (§4), so this index is the only
+freeze source for BSC. Built from issuer contract events through HyperSync, like the TRON index (D-034).
+Third-party freeze APIs are out (D-033); what P0 found about Eagle Virtual is kept in the verification
+log (VS-08, VS-09) for the record.
 
 | Fact | Detail |
 |---|---|
-| Spec | Public OpenAPI at `https://eaglevirtual.com/v1/openapi.json` |
-| Auth | `Authorization: Bearer ev_live_…` |
-| Check | `GET /v1/check/{address}` → `verdict` ∈ `CLEAR`, `FROZEN`, `SEIZED`, `UNFROZEN`, or `null` with `verdict_reason: "coverage_unvouched"`. **Since API 1.3.0 (2026-09-28) a `CLEAR` can come with chains behind**, named in `coverage.not_vouched_for[]` (`chain_id`, `reason`); `null` only when none of the address's chains is current (VS-08, Q-19) |
-| Details | `GET /v1/address/{address}` → `restriction_records[]` with chain, token, company, event kind, block, tx hash. One more call: read only when the verdict is not `CLEAR` |
-| Usage | `GET /v1/usage` (free): plan, calls today, daily limit, credit line requirement |
-| Coverage | ~41 chains incl. BNB Chain (56) and TRON. A `0x` address is answered for **every** EVM chain at once |
-| Free plan | 1 key, 1,000 checks/day (per account), 1 request/s |
-| Business plan | 5 keys, 25,000 checks/day each, 10 requests/s, no credit line |
-| Errors | 400 (not an address, free), 401, 403, 429 (`Retry-After`), 503 ("we do not answer from stale data") |
-| **Licence** | Free plan must show the credit line from the `x-ev-credit-line` header ("Data from Eagle Virtual"). **Resale, bulk redistribution, reconstructing the dataset, bundling into a product for third parties or training a model needs a written agreement.** Data must not be presented as certifying an address safe (terms and data licence effective 2026-09-29, VS-09). Our own rules on top (D-008): don't store answers beyond a short cache, don't screen counterparties with it on the Free plan |
-| Freshness | At most ~1 day behind chain (observed) |
-
----
+| Tether USDT, Ethereum | `0xdAC17F958D2ee523a2206206994597C13D831ec7`; events `AddedBlackList(address)`, `RemovedBlackList(address)`, `DestroyedBlackFunds(address,uint256)` — **verify** (VS-15) |
+| Circle USDC, Ethereum | `0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48` (proxy); events `Blacklisted(address indexed)`, `UnBlacklisted(address indexed)` — **verify** (VS-15) |
+| Other EVM chains | Which chains carry native Tether or Circle contracts with blacklist events, and their addresses — **verify** (VS-15). Bridged copies that can't freeze are skipped |
+| Access | HyperSync per-chain endpoints (`https://<chain>.hypersync.xyz`), event logs filtered by contract and topic0 — **verify** that the BSC token works on each (VS-15) |
+| Size | Full event history per contract and how long a first sync takes — **measure** (VS-15) |
+| Freshness | Refreshed incrementally on every BSC check and by `sync`; a chain lagging > 60 min that can't be refreshed → `stale` |
 
 ## 6. TronGrid (TRON chain data)
 
@@ -149,10 +149,11 @@ as a fixture) in `docs/verification-log.md`, and raises a question for any chang
 | VS-05 | TronGrid limits on the owner's key; 403/429 behaviour | P1 |
 | VS-06 | HyperSync query shape for USDT `Transfer` logs by address (topic1/topic2), log index field, budget headers | P1 |
 | VS-07 | HyperSync incremental read cost (from a block) and a 31-address trace budget estimate | P6 |
-| VS-08 | Eagle Virtual spec version, plans, credit line, `/v1/usage`, chain list incl. BSC and TRON | P2 |
-| VS-09 | Eagle Virtual licence terms (internal use, storage, bundling) | P2 |
+| VS-08 | ~~Eagle Virtual spec version, plans, credit line, `/v1/usage`, chain list~~ Dropped (D-033) | — |
+| VS-09 | ~~Eagle Virtual licence terms~~ Dropped (D-033) | — |
 | VS-10 | First-activity definitions: TRON `getaccount.create_time` vs first transfer; BSC first tx/log scan | P3 |
 | VS-11 | UK OFSI list: crypto addresses present? format? licence? | P2 (optional) |
 | VS-12 | A free BSC JSON-RPC endpoint for `eth_getCode` without a key, and its limits | P5 |
 | VS-13 | TRON contract detection via `getcontract` (answer for a wallet vs a contract) | P5 |
 | VS-14 | Licence of any label pack before import | P4 |
+| VS-15 | EVM freeze index: Tether and Circle contracts and blacklist events per EVM chain; HyperSync endpoint per chain with the same token; event counts and first-sync time | P2 |

@@ -1,6 +1,6 @@
 """`amlcheck status`: where amlcheck keeps its data and whether it is usable.
 
-Grows in P2 with source freshness (sanctions age, TRON index lag, freeze-vendor usage).
+Grows in P2 with source freshness (sanctions age, TRON and EVM freeze index lag).
 """
 
 from __future__ import annotations

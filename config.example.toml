@@ -7,6 +7,7 @@
 [freshness]
 sanctions_max_age_hours = 48
 tron_index_max_lag_minutes = 60
+evm_index_max_lag_minutes = 60
 
 # Methodology §2.4 and D-011.
 [network]
@@ -113,14 +114,6 @@ name = ""
 sdn_url = "https://sanctionslistservice.ofac.treas.gov/api/PublicationPreview/exports/SDN.XML"
 changes_url = "https://sanctionslistservice.ofac.treas.gov/changes/latest"
 min_kept_share = 0.8
-
-# Data sources §5, D-008, D-025 (Free plan).
-[eagle_virtual]
-base_url = "https://eaglevirtual.com"
-requests_per_second = 1.0
-daily_limit = 1000
-quota_warn_share = 0.8
-cache_ttl_seconds = 900
 
 # Data sources §3, §6. TronGrid limits are per key and unpublished: set them here.
 [tron]

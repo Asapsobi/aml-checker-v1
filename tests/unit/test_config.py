@@ -39,7 +39,7 @@ def test_defaults_match_methodology() -> None:
     assert s.trace.max_nodes == 40
     assert s.trace.coverage_share == Decimal("0.8")
     assert s.score.review_at == 0
-    assert s.eagle_virtual.cache_ttl_seconds == 900
+    assert s.freshness.evm_index_max_lag_minutes == 60
 
 
 def test_valid_overrides_load(tmp_path: Path) -> None:
@@ -69,7 +69,8 @@ flagged_inflow_share = 0.1
         ("[exposure]\nlookback_days = -1\n", "[exposure] lookback_days"),
         ('[exposure]\nlookback_days = "lots"\n', "[exposure] lookback_days"),
         ("[exposure]\nflagged_inflow_share = 1.5\n", "[exposure] flagged_inflow_share"),
-        ("[eagle_virtual]\ncache_ttl_seconds = 3600\n", "[eagle_virtual] cache_ttl_seconds"),
+        ("[freshness]\nevm_index_max_lag_minutes = 0\n", "[freshness] evm_index_max_lag_minutes"),
+        ('[eagle_virtual]\nbase_url = "x"\n', "eagle_virtual: unknown key"),  # D-033
         ('[rules.severity]\n"R-XYZ-01" = "BLOCK"\n', "unknown rule 'R-XYZ-01'"),
         ('[rules.severity]\n"R-SYS-01" = "REVIEW"\n', "R-SYS-01 is fixed"),
         ('[rules.severity]\n"R-HEU-07" = "BLOCK"\n', "R-HEU-07 is an inference"),
@@ -115,26 +116,21 @@ def test_secrets_order_env_then_cwd_then_home(tmp_path: Path) -> None:
     home.mkdir()
     cwd.mkdir()
     (home / ".env").write_text(
-        "AMLCHECK_TRONGRID_API_KEY=home\nAMLCHECK_HYPERSYNC_TOKEN=home\n"
-        "AMLCHECK_EAGLE_VIRTUAL_KEYS=home\n"
+        "AMLCHECK_TRONGRID_API_KEY=home\nAMLCHECK_HYPERSYNC_TOKEN=home\nAMLCHECK_API_TOKEN=home\n"
     )
     (cwd / ".env").write_text("AMLCHECK_TRONGRID_API_KEY=cwd\nAMLCHECK_HYPERSYNC_TOKEN=cwd\n")
     s = load_secrets(home, cwd=cwd, env={"AMLCHECK_TRONGRID_API_KEY": "env"})
     assert s.trongrid_api_key == "env"
     assert s.hypersync_token == "cwd"
-    assert s.eagle_virtual_keys == ("home",)
-    assert s.api_token is None
+    assert s.api_token == "home"
 
 
-def test_secrets_key_list_and_repr_hides_values(tmp_path: Path) -> None:
-    s = load_secrets(
-        tmp_path, cwd=tmp_path, env={"AMLCHECK_EAGLE_VIRTUAL_KEYS": "ev_live_a, ev_live_b ,"}
-    )
-    assert s.eagle_virtual_keys == ("ev_live_a", "ev_live_b")
-    assert "ev_live" not in repr(s)
+def test_secrets_repr_hides_values(tmp_path: Path) -> None:
+    s = load_secrets(tmp_path, cwd=tmp_path, env={"AMLCHECK_TRONGRID_API_KEY": " sekret-123 "})
+    assert s.trongrid_api_key == "sekret-123"
+    assert "sekret" not in repr(s)
     assert repr(Secrets()) == (
-        "Secrets({'trongrid_api_key': False, 'hypersync_token': False, "
-        "'eagle_virtual_keys': 0, 'api_token': False})"
+        "Secrets({'trongrid_api_key': False, 'hypersync_token': False, 'api_token': False})"
     )
 
 

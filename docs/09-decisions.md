@@ -32,7 +32,7 @@
 | D-005 | TRON data from TronGrid; BSC data from Envio HyperSync free plan | Complete and free (data sources §6–§7); Etherscan BSC is paid-only | Proposed |
 | D-006 | Sanctions from OFAC `SDN.XML`, matched on the address string whatever the currency label | Labels are unreliable (data sources §2) | Accepted |
 | D-007 | Sanctions staleness measured from our last successful download (48 h), not OFAC's publish date | OFAC does not publish daily | Proposed |
-| D-008 | Issuer freeze history from Eagle Virtual for the **target only**; never for counterparties on the Free plan; answers cached ≤ 15 min and never stored | Quota and licence | Proposed |
+| D-008 | Issuer freeze history from Eagle Virtual for the **target only**; never for counterparties on the Free plan; answers cached ≤ 15 min and never stored | Quota and licence | Superseded by D-033 |
 | D-009 | On BSC the token freeze check is `skipped` (not a gap); BSC checks can end `NO_HITS`; every BSC result says BEP20 USDT cannot freeze | Contract has no freeze function | Proposed |
 | D-010 | A `0x` address frozen or seized on any EVM chain → R-FRZ-01 BLOCK on BSC | Same key controls the address on every EVM chain | Proposed |
 | D-011 | Retry-After ≤ 10 s is waited out; longer → source error → INCOMPLETE. Indexer budget pacing may wait ≤ 65 s | Fast operator feedback, but traces must not fail on pacing | Proposed |
@@ -62,7 +62,7 @@
 - **Consequences:** CI must stay green on macOS. Defaults (`~/.amlcheck/`, macOS notifications) fit a laptop.
 
 ### D-025 · Eagle Virtual Free plan (Q-02)
-- **Status:** Accepted
+- **Status:** Superseded by D-033
 - **Date:** 2026-10-01 · **Phase:** P0
 - **Context:** Q-02 asked which freeze-vendor plan to use.
 - **Decision:** The Free plan (1,000 checks/day, credit line required) until volume needs more.
@@ -138,7 +138,7 @@
 - **Consequences:** Methodology §2.4 updated. `net/http.py` (T-1.01). Re-checked when VS-05 runs with a key.
 
 ### D-032 · Eagle Virtual CLEAR beside chains that are behind (Q-19)
-- **Status:** Accepted
+- **Status:** Superseded by D-033
 - **Date:** 2026-10-01 · **Phase:** P0
 - **Context:** Since API 1.3.0 (2026-09-28) Eagle Virtual answers `CLEAR` for the chains that are
   current and lists the ones behind in `coverage.not_vouched_for` (VS-08). Reading only `verdict` would
@@ -150,3 +150,33 @@
   ignore `not_vouched_for` (breaks non-negotiable 1).
 - **Consequences:** Methodology §2.1 and PRD F4.3 updated. Freeze-vendor adapter (T-2.07) reads
   `not_vouched_for` on every answer; VS-08 must confirm the `chain_id` values for TRON and BNB Chain.
+
+### D-033 · No third-party AML, screening or freeze API
+- **Status:** Accepted
+- **Date:** 2026-10-01 · **Phase:** P0
+- **Context:** The owner gives keys only for RPC providers and blockchain indexers, not for another
+  AML checker. Eagle Virtual was the freeze source for both chains (D-008, D-025, D-032).
+- **Decision:** amlcheck uses only public lists (OFAC, later OFSI) and RPC providers / indexers
+  (TronGrid, HyperSync, public BSC RPC). No third-party AML, screening or freeze API.
+- **Alternatives:** Keep Eagle Virtual on the Free plan (owner declined).
+- **Consequences:** Supersedes D-008, D-025 and D-032; the quota part of D-029 lapses. `[eagle_virtual]`
+  config and `AMLCHECK_EAGLE_VIRTUAL_KEYS` removed; VS-08 and VS-09 dropped. TRON keeps its own Tether
+  index (F4.1, F4.2). BSC freezes come from D-034. PRD F4.3/F4.5, methodology §2.1/§2.3, data sources
+  §1/§5, acceptance AT-11–AT-13 and AT-16, backlog T-2.07, CLAUDE.md #7 updated.
+
+### D-034 · Own EVM freeze index (Tether, Circle) through HyperSync
+- **Status:** Accepted
+- **Date:** 2026-10-01 · **Phase:** P0
+- **Context:** Without a third-party API (D-033), a `0x` address frozen by Tether or Circle on another
+  EVM chain would pass a BSC check, since BEP20 USDT can't freeze.
+- **Decision:** Index Tether USDT and Circle USDC blacklist events on the EVM chains where they can
+  freeze, through HyperSync with the same token as BSC data, like the TRON index. Any add without a
+  later removal → R-FRZ-01 on BSC (D-010); added then removed → R-FRZ-02. A chain lagging > 60 min that
+  can't be refreshed → `stale` → INCOMPLETE. Contracts, events and chains are confirmed by VS-15
+  before code.
+- **Alternatives:** TRON only, with BSC reporting cross-chain freezes as not checked (misses a `0x`
+  address Tether froze on Ethereum).
+- **Consequences:** New `screening/evm_freeze.py` (T-2.07) and VS-15 in P2. `issuer_events` holds both
+  indexes. Being local data, the index also flags BSC counterparties (methodology §3.3) and trace
+  terminals (§7.5 test 3), which the Free-plan API could not. Other issuers (AUSD, XUSD, USD0, …) are
+  not covered.
