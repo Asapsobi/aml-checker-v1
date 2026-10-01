@@ -48,3 +48,31 @@
 | D-021 | Web UI and API bound to 127.0.0.1, host allow-list, token on every write, strict CSP, no CDN | Any page in the browser can reach localhost | Proposed |
 | D-022 | Every release tagged `vX.Y.Z`; each check records `tool_version` | Records from different code must never share a version | Proposed |
 | D-023 | Results are for internal use only; no resale or client-facing reports | Constraint C4; vendor licences | Accepted |
+
+---
+
+## Decisions
+
+### D-024 · Runs on the owner's laptop first (Q-01)
+- **Status:** Accepted
+- **Date:** 2026-10-01 · **Phase:** P0
+- **Context:** Q-01 asked where amlcheck runs day to day.
+- **Decision:** The owner's laptop first. A server install guide follows in P10.
+- **Alternatives:** Corridor server now, or both from the start. Not needed before monitoring (P10).
+- **Consequences:** CI must stay green on macOS. Defaults (`~/.amlcheck/`, macOS notifications) fit a laptop.
+
+### D-025 · Eagle Virtual Free plan (Q-02)
+- **Status:** Accepted
+- **Date:** 2026-10-01 · **Phase:** P0
+- **Context:** Q-02 asked which freeze-vendor plan to use.
+- **Decision:** The Free plan (1,000 checks/day, credit line required) until volume needs more.
+- **Alternatives:** Business plan. Costs money before we know the volume.
+- **Consequences:** Confirms D-008: target-only checks, credit line shown, quota warning. VS-08 confirms the plan terms.
+
+### D-026 · Add UK OFSI if it carries crypto addresses (Q-03)
+- **Status:** Accepted
+- **Date:** 2026-10-01 · **Phase:** P0
+- **Context:** Q-03 asked whether to add the UK OFSI list.
+- **Decision:** Yes, if VS-11 shows it carries crypto addresses in a clean format under a usable licence.
+- **Alternatives:** OFAC only. Leaves UK-only designations unseen.
+- **Consequences:** VS-11 runs before P2 ends. If it passes, an OFSI source is added in P2; if not, a question is raised with the finding.

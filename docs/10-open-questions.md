@@ -6,9 +6,9 @@
 
 | ID | Question | Needed by | Proposed answer | Answer | Status |
 |---|---|---|---|---|---|
-| Q-01 | Where does amlcheck run day to day: your laptop, the corridor server, or both? | P0 | Laptop first; server install guide in P10 | | Open |
-| Q-02 | Which freeze-vendor plan: Eagle Virtual Free (1,000 checks/day, credit line) or Business? | P2 | Free until volume needs more | | Open |
-| Q-03 | Add the UK OFSI list if it carries crypto addresses (VS-11)? | P2 | Yes, if format and licence are clean | | Open |
+| Q-01 | Where does amlcheck run day to day: your laptop, the corridor server, or both? | P0 | Laptop first; server install guide in P10 | Accepted as proposed (D-024) | Answered |
+| Q-02 | Which freeze-vendor plan: Eagle Virtual Free (1,000 checks/day, credit line) or Business? | P2 | Free until volume needs more | Accepted as proposed (D-025) | Answered |
+| Q-03 | Add the UK OFSI list if it carries crypto addresses (VS-11)? | P2 | Yes, if format and licence are clean | Accepted as proposed (D-026) | Answered |
 | Q-04 | R-EXP-01 (a direct counterparty is sanctioned/frozen): REVIEW or BLOCK? | P3 | REVIEW (D-014) | | Open |
 | Q-05 | How long to keep cached histories of addresses that are not counterparties, labelled or own? | P4 | 30 days | | Open |
 | Q-06 | Do you have existing address lists (own wallets, known OTC partners, known bad actors) to import as labels at P4? | P4 | Import as `labels.csv` and operator labels | | Open |
