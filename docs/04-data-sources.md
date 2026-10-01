@@ -34,8 +34,8 @@
 | Size | ~29 MB (the "advanced" XML is ~127 MB and slow; not needed) |
 | Publish date | In the file: `<publshInformation><Publish_Date>MM/DD/YYYY</Publish_Date>` (OFAC's spelling) |
 | Addresses | `<sdnEntry>` → `<id><idType>Digital Currency Address - XXX</idType><idNumber>…</idNumber></id>`, with `<uid>` and `<programList>` |
-| Size of the crypto part (2026-09-23) | 1,059 addresses on 99 entries under 20 currency labels; 334 TRON, 133 `0x` |
-| **Labels are unreliable** | TRON addresses filed under XBT; USDT-labelled Bitcoin (Omni) addresses; the only "BNB" entry is a retired Beacon Chain `bnb1…` address. **Match on the address string only** |
+| Size of the crypto part (2026-09-30 list, VS-01) | 1,066 addresses on 106 entries under 20 currency labels; 341 TRON, 133 `0x` |
+| **Labels are unreliable** | TRON addresses filed under XBT; USDT-labelled Bitcoin (Omni) addresses; the only "BNB" entry is a retired Beacon Chain `bnb1…` address; one `0x` address sits under a newer "BSC" label. **Match on the address string only** |
 | Checksums | All TRON entries pass base58check; mixed-case `0x` entries pass EIP-55. Keep any entry that fails and log it |
 | Daily deltas | `https://sanctionslistservice.ofac.treas.gov/changes/latest` |
 | Freshness | OFAC does not publish daily. Measure staleness from **our** last successful download |
@@ -78,14 +78,14 @@
 |---|---|
 | Spec | Public OpenAPI at `https://eaglevirtual.com/v1/openapi.json` |
 | Auth | `Authorization: Bearer ev_live_…` |
-| Check | `GET /v1/check/{address}` → `verdict` ∈ `CLEAR`, `FROZEN`, `SEIZED`, `UNFROZEN`, or `null` with `verdict_reason: "coverage_unvouched"` and `coverage.not_vouched_for[]` |
+| Check | `GET /v1/check/{address}` → `verdict` ∈ `CLEAR`, `FROZEN`, `SEIZED`, `UNFROZEN`, or `null` with `verdict_reason: "coverage_unvouched"`. **Since API 1.3.0 (2026-09-28) a `CLEAR` can come with chains behind**, named in `coverage.not_vouched_for[]` (`chain_id`, `reason`); `null` only when none of the address's chains is current (VS-08, Q-19) |
 | Details | `GET /v1/address/{address}` → `restriction_records[]` with chain, token, company, event kind, block, tx hash. One more call: read only when the verdict is not `CLEAR` |
 | Usage | `GET /v1/usage` (free): plan, calls today, daily limit, credit line requirement |
 | Coverage | ~41 chains incl. BNB Chain (56) and TRON. A `0x` address is answered for **every** EVM chain at once |
 | Free plan | 1 key, 1,000 checks/day (per account), 1 request/s |
 | Business plan | 5 keys, 25,000 checks/day each, 10 requests/s, no credit line |
 | Errors | 400 (not an address, free), 401, 403, 429 (`Retry-After`), 503 ("we do not answer from stale data") |
-| **Licence** | Free plan must show the credit line from the `x-ev-credit-line` header. **Resale, bundling, building a dataset or training a model from it needs a written agreement.** Don't store answers beyond a short cache, don't screen counterparties with it on the Free plan |
+| **Licence** | Free plan must show the credit line from the `x-ev-credit-line` header ("Data from Eagle Virtual"). **Resale, bulk redistribution, reconstructing the dataset, bundling into a product for third parties or training a model needs a written agreement.** Data must not be presented as certifying an address safe (terms and data licence effective 2026-09-29, VS-09). Our own rules on top (D-008): don't store answers beyond a short cache, don't screen counterparties with it on the Free plan |
 | Freshness | At most ~1 day behind chain (observed) |
 
 ---
@@ -96,8 +96,8 @@
 |---|---|
 | Auth | Header `TRON-PRO-API-KEY`; works without a key but IP-limited |
 | Limits | **Not published.** Set per key in the console. Rate-limited answers are **429 or 403** — treat both the same; read limits from config |
-| Transfers | `GET /v1/accounts/{address}/transactions/trc20?contract_address=…&only_confirmed=true&min_timestamp=…&order_by=block_timestamp,desc&limit=200`, paged via `meta.links.next`. Rows: `transaction_id`, `block_timestamp` (ms), `from`, `to`, `value`, `type`, `token_info`. **No block number, no event index** (VS-04) |
-| Account | `POST /wallet/getaccount` → `create_time` (ms); `{}` when never activated. USDT can arrive at a never-activated address |
+| Transfers | `GET /v1/accounts/{address}/transactions/trc20?contract_address=…&only_confirmed=true&min_timestamp=…&order_by=block_timestamp,desc&limit=200`, paged via `meta.links.next`. Rows: `transaction_id`, `block_timestamp` (ms), `from`, `to`, `value`, `type`, `token_info`. **No block number, no event index** (VS-04). One transaction can hold several USDT transfers, and which of them a history shows depends on whose history it is (Q-17) |
+| Account | `POST /wallet/getaccount` → `create_time` (ms); `{}` when never activated. USDT can arrive at a never-activated address. A contract created by a contract has **no** `create_time` (VS-10) |
 | Contract calls | `POST /wallet/triggerconstantcontract`; `POST /wallet/getcontract` for contract detection |
 | Speed | Newest 5,000 transfers of a busy hot wallet: ~25 pages, ~20 s |
 
