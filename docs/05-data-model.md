@@ -26,7 +26,9 @@ each in one transaction.
 
 ```sql
 -- Every USDT transfer read for any address, stored once. `idx` tells transfers in one transaction
--- apart: log index on BSC; on TRON whatever VS-04 finds (else a stable ordinal within the tx).
+-- apart: on BSC the log index; on TRON (no index in TronGrid rows, VS-04) the number of earlier rows
+-- of the same tx with the identical (sender, recipient, amount), so either side's history yields the
+-- same key (D-030).
 CREATE TABLE transfers (
     chain       TEXT    NOT NULL,
     tx_hash     TEXT    NOT NULL,
@@ -36,7 +38,7 @@ CREATE TABLE transfers (
     sender      TEXT    NOT NULL,
     recipient   TEXT    NOT NULL,
     amount      TEXT    NOT NULL,
-    PRIMARY KEY (chain, tx_hash, idx)
+    PRIMARY KEY (chain, tx_hash, sender, recipient, amount, idx)
 );
 CREATE INDEX transfers_in  ON transfers (chain, recipient, time);
 CREATE INDEX transfers_out ON transfers (chain, sender, time);

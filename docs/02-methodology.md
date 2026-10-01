@@ -36,7 +36,7 @@
 | Sanctions list (OFAC SDN, local) | both | yes | last successful download > 48 h ago | Age is from **our download**, not OFAC's publish date (OFAC does not publish daily) |
 | TRON USDT freeze index (local) | TRON | yes | index cannot be refreshed and lags the chain > 60 min | Refreshed incrementally at the start of every TRON check |
 | TRON `isBlackListed` spot-check | TRON | yes | — | One contract call for the target |
-| Third-party freeze history (Eagle Virtual) | both | yes | it reports it cannot vouch for a chain (`null`) | Answer covers the same `0x` address on every EVM chain it indexes |
+| Third-party freeze history (Eagle Virtual) | both | yes | verdict `null`, or the target's own chain (TRON; BNB Chain for BSC) is in `coverage.not_vouched_for` (D-032) | Answer covers the same `0x` address on every EVM chain it indexes. Other chains behind are noted in the evidence, not a gap |
 | BEP20 USDT token freeze | BSC | — | — | Always `skipped`: the contract has no freeze function ([data sources](04-data-sources.md)) |
 | Exposure (USDT history) | both | yes | history could not be read in full (§3.1) | |
 
@@ -67,6 +67,7 @@ Evidence: issuer, chain, token, event transaction, block time, amount destroyed 
 | Event | Effect |
 |---|---|
 | HTTP 429 with `Retry-After` ≤ 10 s | Wait and retry once |
+| HTTP 429 (or TronGrid 403) **without** `Retry-After`, where no budget pacer applies | Wait 5 s and retry once; a second refusal is a source `error` (D-031) |
 | `Retry-After` > 10 s, timeout, 5xx after retries | Source `error` → R-SYS-01 |
 | Indexer budget pacer needs to wait ≤ 65 s | Wait (it is pacing, not failing) |
 | Error answers | Never cached |

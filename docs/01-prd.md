@@ -224,7 +224,7 @@ definitions and thresholds: [methodology §2–§4](02-methodology.md).
 |---|---|
 | F4.1 | TRON: local index of Tether USDT contract events (blacklist added/removed, funds destroyed), refreshed incrementally on every TRON check and by `sync` |
 | F4.2 | Live spot-check `isBlackListed` for the target on TRON |
-| F4.3 | Third-party freeze history (e.g. Eagle Virtual) for the target, on both chains. A chain it cannot vouch for → INCOMPLETE |
+| F4.3 | Third-party freeze history (e.g. Eagle Virtual) for the target, on both chains. If it cannot vouch for the target's own chain → INCOMPLETE (D-032) |
 | F4.4 | BEP20 USDT on BSC has no freeze function: the token freeze check reports `skipped`, and every BSC result says so |
 | F4.5 | Third-party answers are cached ≤ 15 min and never stored permanently (licence) |
 

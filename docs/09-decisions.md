@@ -89,3 +89,64 @@
   placeholder `0001` with the cache tables shifted to `0002` (renumbers the whole data model).
 - **Consequences:** `amlcheck status` on P0 reports schema 0. No doc changes needed beyond the backlog
   wording.
+
+### D-028 · Target history TTL 60 s (Q-15)
+- **Status:** Accepted
+- **Date:** 2026-10-01 · **Phase:** P0
+- **Context:** `[cache] target_ttl_seconds` had no default in the docs.
+- **Decision:** 60 s. A check re-reads the target's newest transfers when the cached window ends more
+  than a minute ago.
+- **Alternatives:** 0 (always re-read: more provider calls on repeated checks); minutes (a check could
+  miss a payment that just arrived).
+- **Consequences:** Default in `config.py` and `config.example.toml`. Used from P1 (`chain/cache.py`).
+
+### D-029 · Network and quota defaults (Q-16)
+- **Status:** Accepted
+- **Date:** 2026-10-01 · **Phase:** P0
+- **Context:** The docs give no value for `[network] timeout_seconds`, `[tron] requests_per_second` or
+  `[eagle_virtual] quota_warn_share`.
+- **Decision:** 20 s; 10 requests/s until VS-05 measures the owner's TronGrid key; warn at 80% of the
+  freeze vendor's daily quota.
+- **Alternatives:** Shorter timeouts (false `error`s on slow pages); no quota warning (the operator
+  finds out at the limit).
+- **Consequences:** Defaults in config. `[tron] requests_per_second` is revisited after VS-05.
+
+### D-030 · TRON transfer identity without an event index (Q-17)
+- **Status:** Accepted
+- **Date:** 2026-10-01 · **Phase:** P0
+- **Context:** TronGrid transfer rows have no event index, and one transaction can hold several USDT
+  transfers that appear differently in the sender's and the recipient's history (VS-04). A per-history
+  ordinal would store one transfer twice or merge two.
+- **Decision:** On TRON, `idx` = the number of earlier rows of the same transaction with the identical
+  (`sender`, `recipient`, `amount`). The `transfers` key becomes (`chain`, `tx_hash`, `sender`,
+  `recipient`, `amount`, `idx`). On BSC `idx` stays the log index.
+- **Alternatives:** Fetch `/v1/transactions/{tx}/events` for exact indexes (one more call per
+  transaction: too expensive for histories); ordinal within the tx (not stable, see context).
+- **Consequences:** Data model `0001_cache.sql` updated before it is written (P1). Exact event indexes
+  only if a later phase needs them.
+
+### D-031 · Rate-limit answer without Retry-After (Q-18)
+- **Status:** Accepted
+- **Date:** 2026-10-01 · **Phase:** P0
+- **Context:** Keyless TronGrid answers 429 with no `Retry-After`; the wait (5 s) is only in the message
+  (VS-05). D-011 assumed the header.
+- **Decision:** A 429 (or TronGrid 403) without `Retry-After`, where no budget pacer applies, waits 5 s
+  and retries once; a second refusal is a source `error`. The indexer budget pacer (HyperSync) is
+  unchanged.
+- **Alternatives:** Treat as an immediate error (more INCOMPLETE checks for a 5 s pause); parse the wait
+  from the message (fragile wording).
+- **Consequences:** Methodology §2.4 updated. `net/http.py` (T-1.01). Re-checked when VS-05 runs with a key.
+
+### D-032 · Eagle Virtual CLEAR beside chains that are behind (Q-19)
+- **Status:** Accepted
+- **Date:** 2026-10-01 · **Phase:** P0
+- **Context:** Since API 1.3.0 (2026-09-28) Eagle Virtual answers `CLEAR` for the chains that are
+  current and lists the ones behind in `coverage.not_vouched_for` (VS-08). Reading only `verdict` would
+  give a clean result over a gap.
+- **Decision:** The source is `stale` (→ INCOMPLETE) when the verdict is `null` or the target's own
+  chain (TRON; BNB Chain for BSC) is in `not_vouched_for`. Other chains behind are noted in the
+  evidence and are not a gap.
+- **Alternatives:** Any chain behind is a gap (frequent INCOMPLETE for chains we don't transact on);
+  ignore `not_vouched_for` (breaks non-negotiable 1).
+- **Consequences:** Methodology §2.1 and PRD F4.3 updated. Freeze-vendor adapter (T-2.07) reads
+  `not_vouched_for` on every answer; VS-08 must confirm the `chain_id` values for TRON and BNB Chain.
