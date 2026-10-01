@@ -76,3 +76,16 @@
 - **Decision:** Yes, if VS-11 shows it carries crypto addresses in a clean format under a usable licence.
 - **Alternatives:** OFAC only. Leaves UK-only designations unseen.
 - **Consequences:** VS-11 runs before P2 ends. If it passes, an OFSI source is added in P2; if not, a question is raised with the finding.
+
+### D-027 · No placeholder migration in P0
+- **Status:** Proposed
+- **Date:** 2026-10-01 · **Phase:** P0
+- **Context:** T-0.05 asks for "an empty `0001` placeholder", but the data model gives `0001` to
+  `0001_cache.sql` (P1). A DB that ran a placeholder 0001 would sit at `user_version = 1` and never run
+  the real 0001.
+- **Decision:** P0 ships no migration file (latest schema = 0). The runner is tested against temporary
+  migration sets instead. P1 adds `0001_cache.sql` as the data model says.
+- **Alternatives:** A placeholder later replaced in place (breaks append-only and any P0-era DB); a
+  placeholder `0001` with the cache tables shifted to `0002` (renumbers the whole data model).
+- **Consequences:** `amlcheck status` on P0 reports schema 0. No doc changes needed beyond the backlog
+  wording.
