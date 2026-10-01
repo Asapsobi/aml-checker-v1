@@ -126,7 +126,7 @@
   only if a later phase needs them.
 
 ### D-031 · Rate-limit answer without Retry-After (Q-18)
-- **Status:** Accepted
+- **Status:** Superseded by D-036
 - **Date:** 2026-10-01 · **Phase:** P0
 - **Context:** Keyless TronGrid answers 429 with no `Retry-After`; the wait (5 s) is only in the message
   (VS-05). D-011 assumed the header.
@@ -193,3 +193,16 @@
   `user_version` alone (the clash above).
 - **Consequences:** `amlcheck status` exits 1 with a clear message while the old DB sits in
   `~/.amlcheck/`. The owner moves it or sets `AMLCHECK_HOME`.
+
+### D-036 · TronGrid key suspension (Q-20)
+- **Status:** Accepted
+- **Date:** 2026-10-01 · **Phase:** P0
+- **Context:** The owner's TronGrid key allows 15 requests/s; going over answers 429 without
+  `Retry-After` and suspends the key for 30 s (VS-05). D-031's single 5 s wait would always fail.
+- **Decision:** Prevent it: one process-wide TronGrid limiter at `[tron] requests_per_second` = 10. If
+  a 429/403 without `Retry-After` still comes, a **check** treats the source as `error` at once (a 30 s
+  wait breaks the 10 s rule of D-011). **Traces and syncs** wait it out through the pacer, for the seconds
+  in "suspended for N s" or 30 s if absent, within the 65 s pacer limit.
+- **Alternatives:** D-031 (too short a wait); always wait 30 s (slow checks for the operator).
+- **Consequences:** Supersedes D-031. Methodology §2.4 updated. `net/http.py` and `net/limits.py` (T-1.01,
+  T-1.02).

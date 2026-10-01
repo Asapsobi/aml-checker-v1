@@ -67,7 +67,7 @@ Evidence: issuer, chain, token, event transaction, block time, amount destroyed 
 | Event | Effect |
 |---|---|
 | HTTP 429 with `Retry-After` ≤ 10 s | Wait and retry once |
-| HTTP 429 (or TronGrid 403) **without** `Retry-After`, where no budget pacer applies | Wait 5 s and retry once; a second refusal is a source `error` (D-031) |
+| TronGrid 429/403 **without** `Retry-After` (key suspended, 30 s with a key) | Check: source `error` at once. Traces and syncs: wait through the pacer for the "suspended for N s" seconds, else 30 s, within 65 s (D-036). The limiter at 10 req/s (key limit 15) should prevent it |
 | `Retry-After` > 10 s, timeout, 5xx after retries | Source `error` → R-SYS-01 |
 | Indexer budget pacer needs to wait ≤ 65 s | Wait (it is pacing, not failing) |
 | Error answers | Never cached |

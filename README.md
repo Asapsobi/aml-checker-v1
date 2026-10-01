@@ -4,7 +4,7 @@
 address classification, risk scoring and a recorded decision trail. Local-first, built on RPC
 providers and indexers, no own nodes.
 
-> **Status:** P0 (foundations) in progress. The product is built from these docs with Claude Code,
+> **Status:** P0 (foundations) ready for review. The product is built from these docs with Claude Code,
 > phase by phase.
 
 ## Setup
