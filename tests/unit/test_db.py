@@ -172,3 +172,27 @@ def test_p0_database_upgrades_to_p1(tmp_path: Path) -> None:
     assert schema_version(conn) == len(load_migrations())
     tables = {r[0] for r in conn.execute("SELECT name FROM sqlite_master WHERE type='table'")}
     assert "transfers" in tables
+
+
+def test_0002_screening_schema(tmp_path: Path) -> None:
+    conn = open_db(tmp_path / "a.db")
+    assert schema_version(conn) >= 2
+    tables = {r[0] for r in conn.execute("SELECT name FROM sqlite_master WHERE type='table'")}
+    assert {
+        "list_snapshots",
+        "sanctioned_addresses",
+        "issuer_events",
+        "index_state",
+        "checks",
+        "check_sources",
+        "check_findings",
+    } <= tables
+    cols = [r[1] for r in conn.execute("PRAGMA table_info(checks)")]
+    assert cols[:2] == ["seq", "check_id"]
+    assert {"prev_hash", "record_hash", "config_hash", "rules_version", "tool_version"} <= set(cols)
+    with pytest.raises(sqlite3.IntegrityError):
+        conn.execute(
+            "INSERT INTO checks (check_id, created_at, chain, address_norm, verdict, tool_version, "
+            "rules_version, config_hash, prev_hash, record_hash) "
+            "VALUES ('c1', 't', 'tron', 'T', 'MAYBE', 'v', 1, 'h', 'p', 'r')"
+        )
