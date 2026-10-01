@@ -101,6 +101,7 @@ class Http:
         headers: Mapping[str, str] | None = None,
         params: Mapping[str, str | int] | None = None,
         json: Any = None,
+        follow_redirects: bool = False,
     ) -> httpx.Response:
         transient = 0
         refusals = 0
@@ -118,6 +119,7 @@ class Http:
                     params=params,
                     json=json,
                     timeout=self._network.timeout_seconds,
+                    follow_redirects=follow_redirects,
                 )
             except httpx.ConnectError as e:
                 raise Unreachable(provider.name, f"cannot connect ({type(e).__name__})") from None
