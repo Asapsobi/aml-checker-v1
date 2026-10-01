@@ -7,7 +7,7 @@
 
 | Migration | Phase | Tables |
 |---|---|---|
-| `0001_cache.sql` | P1 | `transfers`, `history_windows`, `http_cache`, `contracts` |
+| `0001_cache.sql` | P1 | `transfers`, `history_windows`, `contracts` (no `http_cache`, D-037) |
 | `0002_screening.sql` | P2 | `list_snapshots`, `sanctioned_addresses`, `issuer_events`, `index_state`, `checks`, `check_sources`, `check_findings` |
 | `0003_labels.sql` | P3 | `labels` |
 | `0004_intel.sql` | P4 | `intel_labels`, `entities`, `entity_members`, `counterparties` |
@@ -56,15 +56,6 @@ CREATE TABLE history_windows (
     fetched_at      TEXT    NOT NULL,
     last_used_at    TEXT    NOT NULL,
     PRIMARY KEY (chain, address_norm, since)
-);
-
--- Short-lived cache of provider answers (e.g. freeze checks). Errors are never cached.
-CREATE TABLE http_cache (
-    key            TEXT    PRIMARY KEY,
-    source         TEXT    NOT NULL,
-    response_json  TEXT    NOT NULL,
-    fetched_at     TEXT    NOT NULL,
-    ttl_s          INTEGER NOT NULL
 );
 
 -- Whether an address is a contract never changes: cached forever.

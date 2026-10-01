@@ -9,6 +9,8 @@ from __future__ import annotations
 
 import re
 import sqlite3
+from collections.abc import Iterator
+from contextlib import contextmanager
 from dataclasses import dataclass
 from importlib import resources
 from importlib.resources.abc import Traversable
@@ -118,3 +120,15 @@ def open_db(path: Path) -> sqlite3.Connection:
         conn.close()
         raise
     return conn
+
+
+@contextmanager
+def transaction(conn: sqlite3.Connection) -> Iterator[sqlite3.Connection]:
+    """One short write transaction (architecture §5): commit on success, roll back on any error."""
+    conn.execute("BEGIN IMMEDIATE")
+    try:
+        yield conn
+    except BaseException:
+        conn.execute("ROLLBACK")
+        raise
+    conn.execute("COMMIT")

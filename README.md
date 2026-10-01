@@ -4,7 +4,7 @@
 address classification, risk scoring and a recorded decision trail. Local-first, built on RPC
 providers and indexers, no own nodes.
 
-> **Status:** P0 (foundations) ready for review. The product is built from these docs with Claude Code,
+> **Status:** P1 (chain data layer) ready for review, release v0.1.0. The product is built from these docs with Claude Code,
 > phase by phase.
 
 ## Setup
@@ -28,6 +28,18 @@ uv run amlcheck status       # creates ~/.amlcheck/ and the database
    only the keys you change. Unknown keys and invalid values are refused, so a typo can't silently
    fall back to a default.
 3. Try it without touching real data: `AMLCHECK_HOME=$(mktemp -d) uv run amlcheck status`.
+
+## Commands
+
+| Command | What it does |
+|---|---|
+| `amlcheck status` | Data folder, config, database and schema version |
+| `amlcheck history <addr> [--since 30\|2026-09-01] [--until …] [--limit N] [--first-activity] [--json]` | An address's USDT transfers, newest first, from the cache and the providers. 0-value spam is dropped and counted; a window with more than `--limit` transfers is marked incomplete |
+| `amlcheck cache stats [--json]` | Addresses, windows and transfers cached per chain |
+| `amlcheck cache prune [--days N]` | Forget histories of addresses not used for N days (default `[cache] history_keep_days`) |
+
+Errors exit with code 1 and a one-line `error:` message. TRON works without a key at 1 request/s;
+BSC needs `AMLCHECK_HYPERSYNC_TOKEN`.
 
 Development checks: `uv run pytest -q`, `uv run ruff check .`, `uv run ruff format --check .`,
 `uv run mypy`.

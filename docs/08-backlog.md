@@ -28,6 +28,7 @@
 
 | ID | Ticket | Size | Needs | Done when |
 |---|---|---|---|---|
+| T-1.00 | `core/address.py` pulled forward from T-2.01 (D-038): detect, base58check, EIP-55, normalise, TRON hex↔base58 | M | P0 | Unit tests; AT-07/AT-08 address parts |
 | T-1.01 | `net/http.py`: shared client, timeouts, Retry-After policy (≤ 10 s wait, else error), 403≙429 for TronGrid | M | P0 | Unit tests with respx |
 | T-1.02 | `net/limits.py`: token bucket + header-driven budget pacer (≤ 65 s wait) | M | T-1.01 | AT-06 |
 | T-1.03 | `chain/base.py`: `Transfer`, `History`, `HistorySource`, `ContractLookup` protocols | S | P0 | Typed, documented |
@@ -42,7 +43,7 @@
 
 | ID | Ticket | Size | Needs | Done when |
 |---|---|---|---|---|
-| T-2.01 | `core/address.py`: detect, base58check, EIP-55, normalise | M | P0 | AT-07, AT-08 |
+| T-2.01 | ~~`core/address.py`~~ done in P1 (T-1.00, D-038); P2 wires it into `check` | S | P1 | AT-07, AT-08 |
 | T-2.02 | Migration `0002_screening.sql` | S | P1 | Schema matches |
 | T-2.03 | `core/audit.py`: canonical JSON, append, verify, "hash only when set" | M | T-2.02 | AT-20 |
 | T-2.04 | `core/rules.py` + `core/verdict.py`: IDs, defaults, overrides, fixed rules, R-SYS-01 | M | T-0.03 | Verdict precedence tests; AT-16 |

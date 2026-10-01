@@ -10,7 +10,7 @@ from typing import Annotated
 
 import typer
 
-from amlcheck.cli import status
+from amlcheck.cli import cache, history, status
 
 app = typer.Typer(
     name="amlcheck",
@@ -20,6 +20,8 @@ app = typer.Typer(
     pretty_exceptions_enable=False,
 )
 app.command("status")(status.status)
+app.command("history")(history.history)
+app.add_typer(cache.app, name="cache")
 
 
 def _version(value: bool) -> None:

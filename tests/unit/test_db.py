@@ -124,3 +124,51 @@ def test_foreign_db_refused_untouched(tmp_path: Path, setup: str) -> None:
     assert raw.execute("PRAGMA user_version").fetchone()[0] == before
     assert raw.execute("PRAGMA application_id").fetchone()[0] != APPLICATION_ID
     assert raw.execute("PRAGMA journal_mode").fetchone()[0] == "delete"
+
+
+def test_0001_cache_schema(tmp_path: Path) -> None:
+    conn = open_db(tmp_path / "a.db")
+    assert schema_version(conn) >= 1
+    tables = {r[0] for r in conn.execute("SELECT name FROM sqlite_master WHERE type='table'")}
+    assert {"transfers", "history_windows", "contracts"} <= tables
+    assert "http_cache" not in tables  # D-037
+
+    def pk(table: str) -> list[str]:
+        rows = conn.execute(f"PRAGMA table_info({table})").fetchall()
+        return [r[1] for r in sorted((r for r in rows if r[5]), key=lambda r: r[5])]
+
+    # D-030: the TRON transfer key needs sender, recipient and amount.
+    assert pk("transfers") == ["chain", "tx_hash", "sender", "recipient", "amount", "idx"]
+    assert pk("history_windows") == ["chain", "address_norm", "since"]
+    assert pk("contracts") == ["chain", "address_norm"]
+    indexes = {r[1] for r in conn.execute("PRAGMA index_list(transfers)")}
+    assert {"transfers_in", "transfers_out"} <= indexes
+
+
+def test_transaction_commits_or_rolls_back(tmp_path: Path) -> None:
+    from amlcheck.storage.db import transaction
+
+    conn = open_db(tmp_path / "a.db")
+    with transaction(conn):
+        conn.execute("INSERT INTO contracts VALUES ('bsc', '0x1', 1, 't', 's')")
+
+    def failing_write() -> None:
+        with transaction(conn):
+            conn.execute("INSERT INTO contracts VALUES ('bsc', '0x2', 1, 't', 's')")
+            raise RuntimeError("boom")
+
+    with pytest.raises(RuntimeError):
+        failing_write()
+    assert [r[0] for r in conn.execute("SELECT address_norm FROM contracts")] == ["0x1"]
+
+
+def test_p0_database_upgrades_to_p1(tmp_path: Path) -> None:
+    # A DB created by P0: marked as ours, schema 0, no tables.
+    path = tmp_path / "a.db"
+    raw = sqlite3.connect(path)
+    raw.execute(f"PRAGMA application_id = {APPLICATION_ID}")
+    raw.close()
+    conn = open_db(path)
+    assert schema_version(conn) == len(load_migrations())
+    tables = {r[0] for r in conn.execute("SELECT name FROM sqlite_master WHERE type='table'")}
+    assert "transfers" in tables

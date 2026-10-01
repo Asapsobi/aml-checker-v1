@@ -51,3 +51,14 @@ def test_fixed_clock() -> None:
     clock = fixed(at)
     assert clock() == at
     assert clock() == at
+
+
+def test_to_db_is_fixed_width_and_sorts_as_time() -> None:
+    from amlcheck.core.clock import to_db
+
+    whole = datetime(2026, 10, 1, 10, 0, 0, tzinfo=UTC)
+    half = datetime(2026, 10, 1, 10, 0, 0, 500000, tzinfo=UTC)
+    assert to_db(whole) == "2026-10-01T10:00:00.000000Z"
+    assert to_db(whole) < to_db(half)
+    assert to_iso(whole) > to_iso(half)  # why to_iso must not be used for ordering
+    assert from_iso(to_db(half)) == half

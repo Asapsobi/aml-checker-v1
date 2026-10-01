@@ -206,3 +206,22 @@
 - **Alternatives:** D-031 (too short a wait); always wait 30 s (slow checks for the operator).
 - **Consequences:** Supersedes D-031. Methodology §2.4 updated. `net/http.py` and `net/limits.py` (T-1.01,
   T-1.02).
+
+### D-037 · No `http_cache` table
+- **Status:** Accepted
+- **Date:** 2026-10-01 · **Phase:** P1
+- **Context:** `http_cache` in `0001_cache.sql` held third-party freeze answers for ≤ 15 min. D-033
+  removed the only source that needed it.
+- **Decision:** `0001_cache.sql` creates `transfers`, `history_windows` and `contracts` only.
+- **Alternatives:** Keep the table unused (dead schema that migrations must carry forever).
+- **Consequences:** Data model updated. A later short-lived cache, if ever needed, comes as a new migration.
+
+### D-038 · Address validation moves to P1
+- **Status:** Accepted
+- **Date:** 2026-10-01 · **Phase:** P1
+- **Context:** `amlcheck history <addr>` (P1) must detect and validate the address, but `core/address.py`
+  was ticket T-2.01 in P2.
+- **Decision:** Build `core/address.py` in P1 as T-1.00 with its unit tests; P2 wires it into `check`
+  (T-2.01) and covers the audit-record parts of AT-07 and AT-08.
+- **Alternatives:** A throwaway check inside `history` (two validators to keep in sync).
+- **Consequences:** Backlog updated. P1 adds `base58` and `eth-hash` (architecture §1).

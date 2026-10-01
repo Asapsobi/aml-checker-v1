@@ -36,6 +36,15 @@ def to_iso(dt: datetime) -> str:
     return ensure_utc(dt).isoformat().replace("+00:00", "Z")
 
 
+def to_db(dt: datetime) -> str:
+    """Fixed-width UTC text (`2026-10-01T10:00:00.000000Z`) whose string order is time order.
+
+    `to_iso` drops a zero fraction, and as text `…:00Z` sorts after `…:00.5Z`; anything compared or
+    ordered in SQL is stored with this instead.
+    """
+    return ensure_utc(dt).strftime("%Y-%m-%dT%H:%M:%S.%fZ")
+
+
 def from_iso(text: str) -> datetime:
     """Parse ISO-8601 with `Z` or an explicit offset. Naive input is refused, not assumed UTC."""
     return ensure_utc(datetime.fromisoformat(text))
