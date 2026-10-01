@@ -1,5 +1,42 @@
-"""Command line: one Typer sub-app per file (architecture §2). Filled in T-0.06."""
+"""Command line: one Typer sub-app per file (architecture §2).
+
+Exit codes (D-019): 0 NO_HITS, 1 could not run, 3 REVIEW, 4 INCOMPLETE, 5 BLOCK, 6 needs attention.
+"""
+
+from __future__ import annotations
+
+from importlib.metadata import version
+from typing import Annotated
+
+import typer
+
+from amlcheck.cli import status
+
+app = typer.Typer(
+    name="amlcheck",
+    help="Counterparty intelligence for USDT on TRON and BNB Smart Chain. Internal use only.",
+    no_args_is_help=True,
+    add_completion=False,
+    pretty_exceptions_enable=False,
+)
+app.command("status")(status.status)
+
+
+def _version(value: bool) -> None:
+    if value:
+        typer.echo(f"amlcheck {version('amlcheck')}")
+        raise typer.Exit()
+
+
+@app.callback()
+def _root(
+    show_version: Annotated[
+        bool,
+        typer.Option("--version", callback=_version, is_eager=True, help="Show the version."),
+    ] = False,
+) -> None:
+    pass
 
 
 def main() -> None:
-    raise SystemExit(0)
+    app()
