@@ -254,15 +254,28 @@ async def test_property_every_read_is_exact(
     # Several transfers may share an instant (same second), as on a busy chain.
     src = FakeSource(clock, [tr(s, i + 1) for i, s in enumerate(times)])
     with tempfile.TemporaryDirectory() as d:
-        cache = make(Path(d), src)
-        for since_s, until_s, limit, advance in reads:
-            clock.now += timedelta(seconds=advance)
-            since = at(since_s)
-            until = at(until_s) if until_s is not None else None
-            if until is not None and until < since:
-                since, until = until, since
-            since = min(since, clock.now)  # a window can't start in the future
-            h = await cache.history(ME, since, until, limit)
-            want, complete = brute(src, since, h.until, limit)
-            assert h.transfers == want
-            assert h.complete == complete
+        conn = open_db(Path(d) / "c.db")
+        cache = TransferCache(conn, {Chain.BSC: src}, Cache(target_ttl_seconds=60), clock=src.clock)
+        try:
+            await _replay(cache, src, clock, reads)
+        finally:
+            conn.close()  # Windows can't delete an open database file
+
+
+async def _replay(
+    cache: TransferCache,
+    src: FakeSource,
+    clock: Clock,
+    reads: list[tuple[int, int | None, int, int]],
+) -> None:
+    for since_s, until_s, limit, advance in reads:
+        clock.now += timedelta(seconds=advance)
+        since = at(since_s)
+        until = at(until_s) if until_s is not None else None
+        if until is not None and until < since:
+            since, until = until, since
+        since = min(since, clock.now)  # a window can't start in the future
+        h = await cache.history(ME, since, until, limit)
+        want, complete = brute(src, since, h.until, limit)
+        assert h.transfers == want
+        assert h.complete == complete
