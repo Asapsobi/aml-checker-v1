@@ -1,0 +1,28 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+build/
+dist/
+
+# Tooling
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+.hypothesis/
+
+# Secrets and local data: never committed (CLAUDE.md non-negotiable 8)
+.env
+.env.local
+*.db
+*.db-wal
+*.db-shm
+
+# OS / editors
+.DS_Store
+.idea/
+.vscode/
+.claude/settings.local.json
