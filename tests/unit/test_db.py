@@ -160,3 +160,15 @@ def test_transaction_commits_or_rolls_back(tmp_path: Path) -> None:
     with pytest.raises(RuntimeError):
         failing_write()
     assert [r[0] for r in conn.execute("SELECT address_norm FROM contracts")] == ["0x1"]
+
+
+def test_p0_database_upgrades_to_p1(tmp_path: Path) -> None:
+    # A DB created by P0: marked as ours, schema 0, no tables.
+    path = tmp_path / "a.db"
+    raw = sqlite3.connect(path)
+    raw.execute(f"PRAGMA application_id = {APPLICATION_ID}")
+    raw.close()
+    conn = open_db(path)
+    assert schema_version(conn) == len(load_migrations())
+    tables = {r[0] for r in conn.execute("SELECT name FROM sqlite_master WHERE type='table'")}
+    assert "transfers" in tables

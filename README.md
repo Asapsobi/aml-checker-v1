@@ -4,7 +4,7 @@
 address classification, risk scoring and a recorded decision trail. Local-first, built on RPC
 providers and indexers, no own nodes.
 
-> **Status:** P1 (chain data layer) in progress. The product is built from these docs with Claude Code,
+> **Status:** P1 (chain data layer) ready for review, release v0.1.0. The product is built from these docs with Claude Code,
 > phase by phase.
 
 ## Setup
