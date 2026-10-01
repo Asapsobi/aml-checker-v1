@@ -86,6 +86,8 @@ class CheckResult:
     findings: tuple[Finding, ...]
     tool_version: str
     config_hash: str
+    check_id: str
+    record_hash: str  # this check's audit record (the hash chain), PRD F6
     amount: Decimal | None = None
     client: str | None = None
     note: str | None = None
