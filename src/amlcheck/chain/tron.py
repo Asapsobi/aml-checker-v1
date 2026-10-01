@@ -106,8 +106,8 @@ class TronGridSource:
             "only_confirmed": "true",
             "limit": PAGE_SIZE,
             "order_by": "block_timestamp,desc",
-            "min_timestamp": _ms(since),
-            "max_timestamp": _ms(until),
+            "min_timestamp": ms(since),
+            "max_timestamp": ms(until),
         }
         rows: list[_Row] = []
         zero = 0
@@ -154,7 +154,7 @@ class TronGridSource:
             headers=self._headers,
             json={"address": address, "visible": True},
         )
-        account = _json(resp)
+        account = json_object(resp)
         created = account.get("create_time")
         candidates = [from_ms(int(created))] if isinstance(created, int) else []
         data = await self._get(
@@ -175,7 +175,7 @@ class TronGridSource:
         resp = await self._http.request(
             self._provider, "GET", url, headers=self._headers, params=params
         )
-        data = _json(resp)
+        data = json_object(resp)
         if data.get("success") is False:
             raise SourceError("trongrid", f"answer not successful: {data.get('error', '?')}")
         return data
@@ -203,7 +203,7 @@ def _with_idx(rows: list[_Row]) -> list[Transfer]:
     return out
 
 
-def _json(resp: httpx.Response) -> dict[str, Any]:
+def json_object(resp: httpx.Response) -> dict[str, Any]:
     try:
         data = resp.json()
     except json.JSONDecodeError:
@@ -223,6 +223,6 @@ def _list(data: Mapping[str, Any], key: str) -> list[Any]:
 _EPOCH = datetime(1970, 1, 1, tzinfo=UTC)
 
 
-def _ms(dt: datetime) -> int:
+def ms(dt: datetime) -> int:
     """Exact milliseconds (floor), no float rounding at window edges."""
     return (dt - _EPOCH) // timedelta(milliseconds=1)
