@@ -31,6 +31,8 @@ packages = ["src/amlcheck"]
 line-length = 100
 target-version = "py312"
 src = ["src", "tests"]
+# The spec docs quote pseudocode written for reading, not for the formatter.
+extend-exclude = ["docs", ".claude"]
 
 [tool.ruff.lint]
 select = [
@@ -44,6 +46,8 @@ select = [
     "S",             # bandit
     "PT",            # pytest style
 ]
+# Docs and messages quote the specs, which use typographic dashes, arrows and section signs.
+ignore = ["RUF001", "RUF002", "RUF003"]
 
 [tool.ruff.lint.per-file-ignores]
 "tests/**" = ["S101"]
