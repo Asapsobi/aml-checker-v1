@@ -12,7 +12,7 @@ Delegate the live work to the `source-verifier` subagent, then review what it br
 2. Check the provider's current official docs / spec first. Note the URL and date.
 3. Make the **fewest** live calls that settle the question. Use keys from the environment only;
    never print, log or save a key, and never read `.env` directly. Respect free-plan quotas
-   (the freeze vendor's Free plan has 1,000 calls a day).
+   (keyless TronGrid allows about 1 request a second; HyperSync about 30 queries a minute).
 4. Save real responses (secrets and personal data removed) under `tests/fixtures/<provider>/` with
    descriptive names.
 5. Append an entry to `docs/verification-log.md`:

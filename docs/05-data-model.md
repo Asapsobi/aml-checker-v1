@@ -26,7 +26,9 @@ each in one transaction.
 
 ```sql
 -- Every USDT transfer read for any address, stored once. `idx` tells transfers in one transaction
--- apart: log index on BSC; on TRON whatever VS-04 finds (else a stable ordinal within the tx).
+-- apart: on BSC the log index; on TRON (no index in TronGrid rows, VS-04) the number of earlier rows
+-- of the same tx with the identical (sender, recipient, amount), so either side's history yields the
+-- same key (D-030).
 CREATE TABLE transfers (
     chain       TEXT    NOT NULL,
     tx_hash     TEXT    NOT NULL,
@@ -36,7 +38,7 @@ CREATE TABLE transfers (
     sender      TEXT    NOT NULL,
     recipient   TEXT    NOT NULL,
     amount      TEXT    NOT NULL,
-    PRIMARY KEY (chain, tx_hash, idx)
+    PRIMARY KEY (chain, tx_hash, sender, recipient, amount, idx)
 );
 CREATE INDEX transfers_in  ON transfers (chain, recipient, time);
 CREATE INDEX transfers_out ON transfers (chain, sender, time);
@@ -108,7 +110,8 @@ CREATE TABLE issuer_events (
     chain           TEXT    NOT NULL,
     token_contract  TEXT    NOT NULL,
     address_norm    TEXT    NOT NULL,
-    event_type      TEXT    NOT NULL,          -- AddedBlackList | RemovedBlackList | DestroyedBlackFunds
+    event_type      TEXT    NOT NULL,          -- Tether: AddedBlackList | RemovedBlackList | DestroyedBlackFunds;
+                                               -- Circle: Blacklisted | UnBlacklisted (D-034)
     amount          TEXT,                      -- DestroyedBlackFunds balance
     tx_hash         TEXT    NOT NULL,
     event_index     INTEGER NOT NULL,
@@ -412,4 +415,3 @@ CREATE TABLE api_requests (
 | `classifications` | Latest per address and type forever; older may be pruned |
 | `traces` | Forever when linked to a check; others for `[cache] history_keep_days` |
 | `transfers`, `history_windows` | Cache: pruned for addresses outside registry, entities, labels and own wallets after `history_keep_days` (30) |
-| Third-party freeze answers | `http_cache` only, ≤ 15 min. Never copied into any other table |

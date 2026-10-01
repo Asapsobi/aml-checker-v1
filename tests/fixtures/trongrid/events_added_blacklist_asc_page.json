@@ -1,0 +1,63 @@
+{
+ "data": [
+  {
+   "block_number": 20972943,
+   "block_timestamp": 1593184959000,
+   "caller_contract_address": "TR7NHqjeKQxGTCi8q8ZY4pL8otSzgjLj6t",
+   "contract_address": "TR7NHqjeKQxGTCi8q8ZY4pL8otSzgjLj6t",
+   "event_index": 0,
+   "event_name": "AddedBlackList",
+   "result": {
+    "0": "0xa614f803b6fd780986a42c78ec9c7f77e6ded13c",
+    "_user": "0xa614f803b6fd780986a42c78ec9c7f77e6ded13c"
+   },
+   "result_type": {
+    "_user": "address"
+   },
+   "event": "AddedBlackList(address indexed _user)",
+   "transaction_id": "af4bc4d793f82ca5ba500cf13cf93ca3e7a56fccc2aabf8b09e55fc756500ea8"
+  },
+  {
+   "block_number": 20973608,
+   "block_timestamp": 1593186954000,
+   "caller_contract_address": "TR7NHqjeKQxGTCi8q8ZY4pL8otSzgjLj6t",
+   "contract_address": "TR7NHqjeKQxGTCi8q8ZY4pL8otSzgjLj6t",
+   "event_index": 0,
+   "event_name": "AddedBlackList",
+   "result": {
+    "0": "0xd337e17c5bc42b9e81ca36dcbe1076c2c094707e",
+    "_user": "0xd337e17c5bc42b9e81ca36dcbe1076c2c094707e"
+   },
+   "result_type": {
+    "_user": "address"
+   },
+   "event": "AddedBlackList(address indexed _user)",
+   "transaction_id": "fd69e248edbb8009e4a3569b4a150589ce8370434edc3da2d1b8c40790b1dc77"
+  },
+  {
+   "block_number": 23189014,
+   "block_timestamp": 1599842382000,
+   "caller_contract_address": "TR7NHqjeKQxGTCi8q8ZY4pL8otSzgjLj6t",
+   "contract_address": "TR7NHqjeKQxGTCi8q8ZY4pL8otSzgjLj6t",
+   "event_index": 0,
+   "event_name": "AddedBlackList",
+   "result": {
+    "0": "0xf172584249ce9749c1aab5fd9f04c369b894867a",
+    "_user": "0xf172584249ce9749c1aab5fd9f04c369b894867a"
+   },
+   "result_type": {
+    "_user": "address"
+   },
+   "event": "AddedBlackList(address indexed _user)",
+   "transaction_id": "d41d6a4c7a5ad1830688429b5d4231fa435233f3f4906a78822f362af613f261"
+  }
+ ],
+ "meta": {
+  "at": 1790852477091,
+  "fingerprint": "2eTCYiRari8oBxQtZzJds9AjMVxcyPXSX5Hief1tgVBN8Q6h6TV1JewdnGez6daRE7G1dkR34cYSTjkh6vzAJRtuAXJeGs5LH9GYUZPLrdkEY1NyfcZHKEkQrWuwYym3FQia1gnFeGQPMRA6WivjjAvx2HMTmpxDrHFsZRMMfHkKNQqFUZFZW5rR93Knxcib9MDYAe1V15pNqW5R82hEPCb25xPi2r9RQnxYRmvYEdQr1jayXayn48f5C",
+  "links": {
+   "next": "https://api.trongrid.io/v1/contracts/TR7NHqjeKQxGTCi8q8ZY4pL8otSzgjLj6t/events?event_name=AddedBlackList&limit=200&min_block_timestamp=1593129600000&only_confirmed=true&order_by=block_timestamp,asc&fingerprint=2eTCYiRari8oBxQtZzJds9AjMVxcyPXSX5Hief1tgVBN8Q6h6TV1JewdnGez6daRE7G1dkR34cYSTjkh6vzAJRtuAXJeGs5LH9GYUZPLrdkEY1NyfcZHKEkQrWuwYym3FQia1gnFeGQPMRA6WivjjAvx2HMTmpxDrHFsZRMMfHkKNQqFUZFZW5rR93Knxcib9MDYAe1V15pNqW5R82hEPCb25xPi2r9RQnxYRmvYEdQr1jayXayn48f5C"
+  },
+  "page_size": 200
+ }
+}

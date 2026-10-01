@@ -76,7 +76,7 @@ P11                                                          ████
 | | |
 |---|---|
 | **Goal** | Answer "can I transact with this address?" with evidence and an audit trail |
-| **Deliverables** | Address validation; OFAC sync + adapter; TRON freeze index + spot-check; freeze vendor adapter; BSC skipped adapter; rules + verdict; engine; audit log; `check`, `sync`, `status`, `audit list/verify`; migration 0002 |
+| **Deliverables** | Address validation; OFAC sync + adapter; TRON freeze index + spot-check; EVM freeze index (Tether, Circle via HyperSync); BSC skipped adapter; rules + verdict; engine; audit log; `check`, `sync`, `status`, `audit list/verify`; migration 0002 |
 | **Exit criteria** | AT-07…AT-21; live: an OFAC-listed address → BLOCK, a Tether-frozen TRON address → BLOCK, a never-used address → NO_HITS on each chain |
 
 ## P3 · Exposure & behaviour

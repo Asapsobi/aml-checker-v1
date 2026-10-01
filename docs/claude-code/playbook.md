@@ -32,7 +32,7 @@ its own when the situation matches their description.
 
 1. Clone the repo and open Claude Code in it.
 2. Create `.env` from `.env.example` once P0 has written it. Keys needed: TronGrid API key, Envio
-   HyperSync token, Eagle Virtual key; later an API token for the local API. Claude Code never reads
+   HyperSync token; later an API token for the local API. No third-party AML API keys (D-033). Claude Code never reads
    this file (blocked in settings); code reads keys from the environment.
 3. Answer the open questions marked "Needed by P0–P2" in `docs/10-open-questions.md` (Q-01, Q-02,
    Q-03), or accept the proposed answers.

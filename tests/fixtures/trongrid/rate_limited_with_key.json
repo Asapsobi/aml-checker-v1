@@ -1,0 +1,14 @@
+{
+ "status": 429,
+ "headers": {
+  "Date": "Thu, 01 Oct 2026 11:24:20 GMT",
+  "Content-Type": "application/json",
+  "Transfer-Encoding": "chunked",
+  "Connection": "close",
+  "Server": "openresty",
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
+  "Access-Control-Allow-Headers": "*"
+ },
+ "body": "{\"Error\":\"The key exceeds the frequency limit(15), and the query server is suspended for 30 s\"}\n"
+}

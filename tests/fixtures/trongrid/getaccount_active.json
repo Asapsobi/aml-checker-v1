@@ -1,0 +1,11 @@
+{
+ "address": "TNHrhtVnRMRaTJFRsqLUqSytCKsavXJJaa",
+ "balance": 734604,
+ "create_time": 1789014000000,
+ "latest_opration_time": 1790824455000,
+ "free_net_usage": 288,
+ "latest_consume_free_time": 1790816571000,
+ "net_window_size": 28800000,
+ "net_window_optimized": true,
+ "asset_optimized": true
+}

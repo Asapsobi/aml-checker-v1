@@ -1,0 +1,14 @@
+{
+ "status": 429,
+ "headers": {
+  "Date": "Thu, 01 Oct 2026 11:05:23 GMT",
+  "Content-Type": "application/json",
+  "Transfer-Encoding": "chunked",
+  "Connection": "close",
+  "Server": "openresty",
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
+  "Access-Control-Allow-Headers": "*"
+ },
+ "body": "{\"Error\":\"request rate of (getTrc20TransactionsByAccount) exceeded the allowed_rps(1), and the query server is suspended for 5 s. To obtain higher request quotas and a more stable service, it is recommended to authenticate with an API Key. Please refer to the documentation: https:\\/\\/developers.tron.network\\/reference\\/select-network#how-to-get-an-api-key\"}\n"
+}
