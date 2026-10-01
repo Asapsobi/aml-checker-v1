@@ -20,3 +20,5 @@
 | Q-12 | Operator name on decisions: one name from config, or asked each time? | P9 | From config | | Open |
 | Q-13 | Which own wallets are monitored, and how often? | P10 | All registered, every 10 min | | Open |
 | Q-14 | Who supplies the golden-set addresses (known clean, known exchange deposits, decided cases)? | P11 | Owner picks 20 per chain, Claude Code proposes the rest from public data | | Open |
+| Q-15 | `[cache] target_ttl_seconds`: how old may the cached tail of a **target's** history be before a check re-reads it up to now? The docs name the key but give no default | P1 | 60 s (a check always sees transfers older than a minute) | | Open |
+| Q-16 | Defaults the docs don't give: `[network] timeout_seconds`, `[tron] requests_per_second`, `[eagle_virtual] quota_warn_share` | P1 | 20 s; 10 req/s until VS-05 measures the key's limit; warn at 80% of the daily quota | | Open |
