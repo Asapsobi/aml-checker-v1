@@ -12,6 +12,7 @@ from amlcheck.core import audit as chain
 from amlcheck.core.address import AddressError, detect
 from amlcheck.core.clock import to_db
 from amlcheck.core.models import Verdict
+from amlcheck.core.score import shown
 
 app = typer.Typer(help="List and verify the audit log.", no_args_is_help=True)
 
@@ -38,7 +39,7 @@ def list_(
     start = to_db(runtime.parse_when(since, rt.clock(), name="--since")) if since else None
     rows = conn.execute(
         "SELECT seq, check_id, created_at, chain, address_norm, verdict, amount, client, "
-        "record_hash FROM checks "
+        "record_hash, score_json FROM checks "
         "WHERE (?1 IS NULL OR (chain = ?1 AND address_norm = ?2)) "
         "AND (?3 IS NULL OR verdict = ?3) "
         "AND (?4 IS NULL OR client = ?4 COLLATE NOCASE) "
@@ -57,6 +58,7 @@ def list_(
             "amount_usdt": r[6],
             "client": r[7],
             "record_hash": r[8],
+            "score": json.loads(r[9])["score"] if r[9] else None,
         }
         for r in rows
     ]
@@ -68,8 +70,9 @@ def list_(
     for rec in records:
         extra = f"  {rec['amount_usdt']} USDT" if rec["amount_usdt"] else ""
         who = f"  {rec['client']}" if rec["client"] else ""
+        score = shown(rec["score"], rec["verdict"])
         typer.echo(
-            f"#{rec['seq']:<5} {rec['created_at']}  {rec['verdict']:<10} "
+            f"#{rec['seq']:<5} {rec['created_at']}  {rec['verdict']:<10} {score:<15} "
             f"{rec['chain']:<4} {rec['address']}{extra}{who}"
         )
 

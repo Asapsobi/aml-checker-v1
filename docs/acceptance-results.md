@@ -206,3 +206,33 @@ R-TRC-04: coverage 29.4%. The check's audit record carries the trace id; `audit 
 Notes for P11 calibration: coverage was 6.6–44% on four of six real targets, mostly
 `untraced:pruned` (5 senders kept per node) and `untraced:depth`; consider `branch` and `coverage_share`
 against the golden set.
+
+## P7 · Score & reports
+
+| AT | Tests | Status |
+|---|---|---|
+| AT-42 | `test_score.py::test_at42_worked_example` (H 0.24 → 66 `high`, E 59.5, D 0, B 5, U 1); through a check: `test_score_check.py::test_check_carries_its_score` | Green locally (2026-10-03) |
+| AT-43 | `test_score.py::test_at43_block_and_incomplete` (BLOCK → 100; INCOMPLETE with E 34 → `≥ 34 · medium+`); `test_score_check.py::test_block_and_incomplete_through_a_check` | Green locally |
+| AT-44 | `test_score_check.py::test_at44_old_and_new_records_verify` (a record without `score_json` and one with it verify; changing a stored score breaks the chain) | Green locally |
+
+Also: band edges, the 99 cap, caps of `D` and `B`, a rule counted once, rounding half up with the stored
+breakdown reproducing the score (D-052), inferred terminals at their own confidence, the registry's
+`last_score` (also after `cp rebuild`), R-SCR-01 off by default and REVIEW-only when on (D-051, refused
+as BLOCK at config load), the score in `check`/`investigate`/`audit list`/`cp list`/`cp show` and JSON
+(snapshot tests), and the case report: every section, same bytes for the same records, a choice of
+check, refusals, a pre-P7 record, a tampered record flagged, text outside WinAnsi (D-053).
+
+**Live (2026-10-03, owner's keys, the VS-07 scratch copies of the database):**
+
+| Chain | Target | Command | Result |
+|---|---|---|---|
+| TRON | `TVvWhZyL…LeSsWP` | `investigate --amount 20000` | REVIEW, **38 · medium** (E 30.8 · D 0 · B 0 · U 7.1; H 0.036): R-TRC-01, R-TRC-04 |
+| BSC | `0x0c1e52…ee1576` | `check --amount 15000` (trace on by amount) | REVIEW, **36 · medium** (E 12.9 · D 0 · B 15 · U 8.4): R-HEU-01, R-HEU-02, R-TRC-04 |
+
+`amlcheck cp report` on both: 3-page PDFs with every section, the TRON one with its 57-box trace graph on its
+own page, the record's hash matching its contents. `audit list` shows the score next to the verdict
+(`-` for records from before P7); `audit verify`: OK on both databases (16 and 15 records).
+
+Notes for P11 calibration: on the TRON target most of `E` comes from money through unattributed
+services and contracts (weight 0.1 each: H 0.028 of 0.036), not from the 0.8% sanctioned share. Labelling
+the exchanges behind them (weight 0) would lower it; check the weights against the golden set.

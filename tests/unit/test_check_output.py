@@ -109,3 +109,37 @@ def result() -> CheckResult:
 def test_human_output_snapshot(capsys) -> None:  # type: ignore[no-untyped-def]
     print_result(result())
     assert capsys.readouterr().out == EXPECTED
+
+
+def test_score_line_snapshot(capsys) -> None:  # type: ignore[no-untyped-def]
+    from dataclasses import replace
+
+    from amlcheck.cli.check import as_dict
+    from amlcheck.core.score import compute
+
+    base = result()
+    scored = replace(base, score=compute(Verdict.REVIEW, base.findings))
+    print_result(scored)
+    lines = capsys.readouterr().out.splitlines()
+    assert lines[:3] == [
+        "REVIEW  ·  TRON TNHrhtVnRMRaTJFRsqLUqSytCKsavXJJaa",
+        "Review by hand before transacting.",
+        "Score 30 · medium  (E 0 · D 25 · B 5 · U 0)",
+    ]
+    assert as_dict(scored)["score"] == {
+        "score_version": 1,
+        "score": 30,
+        "band": "medium",
+        "lower_bound": False,
+        "components": {"E": "0", "D": "25", "B": "5", "U": "0"},
+        "hazard": None,
+        "shown": "30 · medium",
+    }
+    gap = replace(
+        base, verdict=Verdict.INCOMPLETE, score=compute(Verdict.INCOMPLETE, base.findings)
+    )
+    print_result(gap)
+    assert capsys.readouterr().out.splitlines()[2] == (
+        "Score ≥ 30 · medium+  (E 0 · D 25 · B 5 · U 0)  lower bound: a required source is missing"
+    )
+    assert as_dict(base)["score"] is None  # a result without a score (not from screen())

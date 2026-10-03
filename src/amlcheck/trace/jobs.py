@@ -177,29 +177,7 @@ class TraceJobs:
         return done
 
     def get(self, trace_id: str) -> Job | None:
-        r = self._conn.execute(
-            "SELECT trace_id, chain, address_norm, direction, status, requested_by, created_at, "
-            "started_at, finished_at, progress_json, result_json, partial_json, failure_reason "
-            "FROM traces WHERE trace_id = ?",
-            (trace_id,),
-        ).fetchone()
-        if r is None:
-            return None
-        return Job(
-            trace_id=r[0],
-            chain=Chain(r[1]),
-            address=r[2],
-            direction=r[3],
-            status=r[4],
-            requested_by=r[5],
-            created_at=from_iso(r[6]),
-            started_at=from_iso(r[7]) if r[7] else None,
-            finished_at=from_iso(r[8]) if r[8] else None,
-            progress=json.loads(r[9]) if r[9] else None,
-            result=Trace.from_json(json.loads(r[10])) if r[10] else None,
-            partial=Trace.from_json(json.loads(r[11])) if r[11] else None,
-            failure_reason=r[12],
-        )
+        return read_job(self._conn, trace_id)
 
     def latest(self, chain: Chain, address: str) -> Job | None:
         r = self._conn.execute(
@@ -208,3 +186,30 @@ class TraceJobs:
             (chain.value, address),
         ).fetchone()
         return self.get(r[0]) if r else None
+
+
+def read_job(conn: sqlite3.Connection, trace_id: str) -> Job | None:
+    """A stored job, read only (the case report reads traces this way)."""
+    r = conn.execute(
+        "SELECT trace_id, chain, address_norm, direction, status, requested_by, created_at, "
+        "started_at, finished_at, progress_json, result_json, partial_json, failure_reason "
+        "FROM traces WHERE trace_id = ?",
+        (trace_id,),
+    ).fetchone()
+    if r is None:
+        return None
+    return Job(
+        trace_id=r[0],
+        chain=Chain(r[1]),
+        address=r[2],
+        direction=r[3],
+        status=r[4],
+        requested_by=r[5],
+        created_at=from_iso(r[6]),
+        started_at=from_iso(r[7]) if r[7] else None,
+        finished_at=from_iso(r[8]) if r[8] else None,
+        progress=json.loads(r[9]) if r[9] else None,
+        result=Trace.from_json(json.loads(r[10])) if r[10] else None,
+        partial=Trace.from_json(json.loads(r[11])) if r[11] else None,
+        failure_reason=r[12],
+    )

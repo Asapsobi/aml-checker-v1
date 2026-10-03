@@ -21,19 +21,10 @@ from amlcheck.core.address import AddressError, detect
 from amlcheck.core.clock import to_iso
 from amlcheck.core.engine import screen
 from amlcheck.core.models import Address, Chain, CheckResult, Verdict
+from amlcheck.core.verdict import ACTION, DISCLAIMER
 from amlcheck.net.http import Mode
 
 EXIT = {Verdict.NO_HITS: 0, Verdict.REVIEW: 3, Verdict.INCOMPLETE: 4, Verdict.BLOCK: 5}
-ACTION = {
-    Verdict.BLOCK: "Do not transact. Escalate.",
-    Verdict.INCOMPLETE: "A required source failed or is stale. Retry, or treat as REVIEW.",
-    Verdict.REVIEW: "Review by hand before transacting.",
-    Verdict.NO_HITS: "Proceed per policy. Not a clearance.",
-}
-DISCLAIMER = (
-    "Internal use only. NO_HITS means nothing was found in the sources checked, as of the times "
-    "shown; it is not a clearance."
-)
 
 
 def check(
@@ -125,6 +116,7 @@ def as_dict(r: CheckResult) -> dict[str, Any]:
         "amount_usdt": canonical_amount(r.amount) if r.amount is not None else None,
         "client": r.client,
         "note": r.note,
+        "score": {**r.score.to_json(), "shown": r.score.shown} if r.score else None,
         "findings": [
             {
                 "rule_id": f.rule_id,
@@ -159,6 +151,9 @@ def print_result(r: CheckResult) -> None:
     echo = typer.echo
     echo(f"{r.verdict.value}  ·  {r.address.chain.value.upper()} {r.address.norm}")
     echo(ACTION[r.verdict])
+    if r.score is not None:
+        bound = "  lower bound: a required source is missing" if r.score.lower_bound else ""
+        echo(f"Score {r.score.shown}  ({r.score.breakdown}){bound}")
     if r.findings:
         echo("")
         echo("Findings")

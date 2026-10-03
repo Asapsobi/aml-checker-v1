@@ -21,8 +21,22 @@ from amlcheck.chain.base import canonical_amount
 from amlcheck.config import Settings
 from amlcheck.core.audit import AuditFinding, AuditRecord, AuditSource, append
 from amlcheck.core.clock import Clock, to_db, to_iso, utcnow
-from amlcheck.core.models import Address, CheckResult, Finding, SourceResult, SourceStatus
-from amlcheck.core.rules import RULES_VERSION, apply_overrides, system_findings
+from amlcheck.core.models import (
+    Address,
+    CheckResult,
+    Finding,
+    SourceResult,
+    SourceStatus,
+    Verdict,
+)
+from amlcheck.core.rules import (
+    RULES_VERSION,
+    SYSTEM_SOURCE,
+    apply_overrides,
+    finding,
+    system_findings,
+)
+from amlcheck.core.score import compute
 from amlcheck.core.verdict import decide
 from amlcheck.intel import registry
 from amlcheck.net.http import SourceError
@@ -64,6 +78,24 @@ async def screen(
     findings = apply_overrides(found, settings.rules.severity) + system_findings(ordered, started)
     findings.sort(key=lambda f: (f.rule_id, f.source, f.summary))
     verdict = decide(findings)
+    trace_evidence = next((r.evidence for r in ordered if r.source == "trace"), None)
+    # After the verdict, never feeding it (F10.2).
+    score = compute(verdict, findings, trace_evidence)
+    threshold = settings.score.review_at
+    if threshold and verdict is not Verdict.BLOCK and score.score >= threshold:
+        # R-SCR-01, only when the owner turned it on (D-051): REVIEW at most, decided again.
+        findings.append(
+            finding(
+                "R-SCR-01",
+                SYSTEM_SOURCE,
+                f"Score {score.shown} reaches the review threshold {threshold}",
+                started,
+                {"score": score.score, "review_at": threshold, "band": score.band},
+                overrides=settings.rules.severity,
+            )
+        )
+        findings.sort(key=lambda f: (f.rule_id, f.source, f.summary))
+        verdict = decide(findings)
     check_id = str(uuid.uuid4())
     tool_version = version("amlcheck")
     config_hash = settings.hash()
@@ -101,6 +133,7 @@ async def screen(
         amount=canonical_amount(amount) if amount is not None else None,
         client=client,
         operator_note=note,
+        score_json=score.dumps(),
         trace_id=next(
             (
                 str(r.evidence["trace_id"])
@@ -115,7 +148,13 @@ async def screen(
     registry.upsert(
         conn,
         registry.CheckRow(
-            check_id, record.created_at, record.chain, record.address_norm, record.verdict, client
+            check_id,
+            record.created_at,
+            record.chain,
+            record.address_norm,
+            record.verdict,
+            client,
+            score.score,
         ),
     )
     return CheckResult(
@@ -131,6 +170,7 @@ async def screen(
         amount=amount,
         client=client,
         note=note,
+        score=score,
     )
 
 

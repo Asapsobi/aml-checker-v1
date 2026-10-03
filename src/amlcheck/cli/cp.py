@@ -1,9 +1,10 @@
-"""`amlcheck cp`: the counterparty registry (PRD F7.3)."""
+"""`amlcheck cp`: the counterparty registry (PRD F7.3) and its case report (F10.4)."""
 
 from __future__ import annotations
 
 import json
 from dataclasses import asdict
+from pathlib import Path
 from typing import Annotated, Any
 
 import typer
@@ -11,9 +12,11 @@ import typer
 from amlcheck.cli import runtime
 from amlcheck.core.address import AddressError, detect
 from amlcheck.core.models import Chain, Verdict
+from amlcheck.core.score import shown
 from amlcheck.intel import registry
 from amlcheck.intel.lookalike import lookalikes
 from amlcheck.intel.store import IntelStore
+from amlcheck.report import case_report
 
 app = typer.Typer(
     help="Counterparties: every address checked, with its last verdict.", no_args_is_help=True
@@ -51,6 +54,7 @@ def list_(
         who = f"  {', '.join(r.clients)}" if r.clients else ""
         typer.echo(
             f"{r.chain.value:<4} {r.address_norm:<42} {r.last_verdict:<10} "
+            f"{shown(r.last_score, r.last_verdict):<15} "
             f"{r.check_count:>3}×  last {r.last_screened_at[:19]}Z{who}"
         )
     typer.echo(f"{len(rows)} counterpart{'y' if len(rows) == 1 else 'ies'}")
@@ -101,7 +105,8 @@ def show(
     if cp:
         echo(
             f"  checked {cp.check_count}× · first {cp.first_screened_at[:19]}Z · last "
-            f"{cp.last_screened_at[:19]}Z → {cp.last_verdict} · "
+            f"{cp.last_screened_at[:19]}Z → {cp.last_verdict}, score "
+            f"{shown(cp.last_score, cp.last_verdict)} · "
             f"clients {', '.join(cp.clients) or '-'}"
         )
     else:
@@ -127,3 +132,38 @@ def rebuild() -> None:
     n = registry.rebuild(conn)
     rows = len(registry.snapshot(conn))
     typer.echo(f"rebuilt from {n} audit record(s): {rows} counterpart{'y' if rows == 1 else 'ies'}")
+
+
+@app.command()
+def report(
+    address: Annotated[str, typer.Argument(help="A counterparty that has been checked.")],
+    check: Annotated[
+        str | None, typer.Option("--check", help="This check instead of the latest.")
+    ] = None,
+    out: Annotated[Path | None, typer.Option(help="PDF file to write.")] = None,
+) -> None:
+    """Case report PDF: verdict, score, findings, sources, history, trace, classification."""
+    rt = runtime.load()
+    try:
+        addr = detect(address)
+    except AddressError as e:
+        runtime.fail(str(e))
+    conn = runtime.open_database(rt)
+    try:
+        data = case_report.gather(conn, addr, check)
+    except case_report.ReportError as e:
+        runtime.fail(str(e))
+    finally:
+        conn.close()
+    day = data.record.created_at[:10]
+    path = out or Path(f"case-{addr.chain.value}-{addr.norm[:10]}-{day}.pdf")
+    try:
+        path.write_bytes(case_report.render(data))
+    except OSError as e:
+        runtime.fail(f"could not write {path}: {e.strerror or e}")
+    info = case_report.summary(data)
+    score = f", score {info['score']}" if info["score"] else ""
+    typer.echo(f"Case report written to {path}")
+    typer.echo(f"  check {info['check_id']}: {info['verdict']}{score}")
+    if not data.hash_ok:
+        typer.echo("  WARNING: the record does not match its hash; run `amlcheck audit verify`")

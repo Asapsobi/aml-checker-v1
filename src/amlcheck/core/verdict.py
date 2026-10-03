@@ -10,6 +10,18 @@ from collections.abc import Iterable
 
 from amlcheck.core.models import Finding, Severity, Verdict
 
+#: What the operator should do, shown with every verdict (CLI, case report).
+ACTION = {
+    Verdict.BLOCK: "Do not transact. Escalate.",
+    Verdict.INCOMPLETE: "A required source failed or is stale. Retry, or treat as REVIEW.",
+    Verdict.REVIEW: "Review by hand before transacting.",
+    Verdict.NO_HITS: "Proceed per policy. Not a clearance.",
+}
+DISCLAIMER = (
+    "Internal use only. NO_HITS means nothing was found in the sources checked, as of the times "
+    "shown; it is not a clearance."
+)
+
 
 def decide(findings: Iterable[Finding]) -> Verdict:
     severities = {f.severity for f in findings}

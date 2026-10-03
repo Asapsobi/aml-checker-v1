@@ -368,3 +368,37 @@
 - **Alternatives:** A paid tier now (cost without a measured need).
 - **Consequences:** Revisit if P10 monitoring (auto-screening senders, traces at ≥ 10,000 USDT) needs
   more than the free budget.
+
+### D-051 · R-SCR-01 off by default (Q-10)
+- **Status:** Accepted
+- **Date:** 2026-10-03 · **Phase:** P7
+- **Context:** PRD F10.2: the score never changes the verdict unless R-SCR-01 is enabled.
+- **Decision:** `[score] review_at` = 0 keeps it off. When the owner sets it above 0, a score at or above
+  it adds R-SCR-01 (REVIEW, never BLOCK; refused at config load).
+- **Alternatives:** On with a default threshold (the score is uncalibrated until P11).
+- **Consequences:** Verdicts depend on rules only until the owner opts in.
+
+### D-052 · Score details: inferred confidence, rounding, uncertainty (Q-21, Q-22, Q-23)
+- **Status:** Accepted
+- **Date:** 2026-10-03 · **Phase:** P7
+- **Context:** Methodology §9 leaves three details open.
+- **Decision:** (1) An inferred terminal adds `w × share × confidence` (its classification's
+  confidence; 1 when the terminal has none): a share-weighted mean. (2) `E`, `D`, `B`, `U` are stored to
+  0.1, half up, and the score is `min(99, ⌊E + D + B + U + 0.5⌋)` of the stored values. (3) No inflow
+  in the trace window → `U` = 0; a partial trace → `U` = 0 and `E` from what was attributed (the check
+  is INCOMPLETE and the score a lower bound).
+- **Alternatives:** A plain mean of confidences; scoring from unrounded components (a stored breakdown
+  could then miss its score by 1).
+- **Consequences:** Every stored breakdown reproduces its score. AT-42 unchanged.
+
+### D-053 · The case report is built from stored records only (Q-24)
+- **Status:** Accepted
+- **Date:** 2026-10-03 · **Phase:** P7
+- **Context:** PRD F10.4 lists the contents of the case report PDF but not its source.
+- **Decision:** `amlcheck cp report <addr>` uses the counterparty's latest check (`--check ID` for
+  another), the trace linked to it and the stored classifications. No network. "No decision recorded"
+  until P9 adds decisions. Marked internal use only (D-023). Same records ⇒ same PDF bytes.
+- **Alternatives:** Re-screening while building the report (the report would no longer match the
+  recorded check).
+- **Consequences:** A report always shows what was recorded at the time of the check.
+
