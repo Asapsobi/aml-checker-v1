@@ -84,3 +84,32 @@ A mixed-case `0x` address typed with a broken checksum was refused (exit 1) and 
 (AT-07/AT-08 live). `amlcheck audit verify`: OK, 6 records. `amlcheck status`: list 0 h old, TRON index
 1 min behind.
 
+## P3 · Exposure & behaviour
+
+| AT | Tests | Status |
+|---|---|---|
+| AT-22 | `test_exposure.py::test_at22_frozen_counterparty` | Green locally (2026-10-03) |
+| AT-23 | `test_exposure.py::test_at23_flagged_inflow_share` (6% raised, 4% not) | Green locally |
+| AT-24 | `test_exposure.py::test_at24_pass_through_and_allowlist` | Green locally |
+| AT-25 | `test_exposure.py::test_at25_fan_in` (60 × 20 USDT in 3 h raised; ≥ 100 USDT not) | Green locally |
+| AT-26 | `test_exposure.py::test_at26_too_many_transfers_is_stale` | Green locally |
+| AT-27 | `test_labels.py::test_at27_bad_row_imports_nothing` | Green locally |
+
+Also: `test_heuristics.py` (FIFO edge cases, window boundaries, property test), allowlist never cancels
+R-EXP-01, caps of 10 largest first, R-HEU-01 new/unused, the readable output snapshot.
+**Performance (T-3.07):** 1,000-transfer check offline p95 15 ms, median 8 ms (budget 60 s).
+
+**Live (2026-10-03, owner's keys, scratch `AMLCHECK_HOME`, lists synced the same day):**
+
+| Chain | Address | Verdict (exit) | Rules | Exposure | Time |
+|---|---|---|---|---|---|
+| TRON | counterparty of the Tether-frozen address, `TF1gUASc…2BQK` | **REVIEW (3)** | R-EXP-01, R-HEU-02 | ok: 881 transfers, 216 counterparties | 16.6 s |
+| TRON | Tether-frozen `TNHrhtVn…vXJJaa` | **BLOCK (5)** | R-FRZ-01, R-HEU-02 | ok: 233 transfers, 60 counterparties | 25.4 s |
+| TRON | busy `TN12qS4g…aDGdRY` | **INCOMPLETE (4)** | R-SYS-01, R-HEU-03, R-HEU-04 | stale: > 5,000 transfers (D-013) | 41.3 s |
+| BSC | quiet `0x563964…a67ca6` | **REVIEW (3)** | R-HEU-02 | ok: 223 transfers, 17 counterparties | 16.9 s |
+| BSC | busy `0x8894e0…e2d4e3` | **INCOMPLETE (4)** | R-SYS-01, R-HEU-02/03/04 | stale: > 5,000 transfers | 34.1 s |
+
+`audit verify`: OK, 11 records. Note for P11 calibration: R-HEU-02 (pass-through) fired on 4 of 5
+live addresses; deposit and trading wallets move money on within a day, so this rule is noisy at the
+methodology's defaults.
+
