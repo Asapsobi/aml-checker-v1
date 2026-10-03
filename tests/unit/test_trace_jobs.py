@@ -174,7 +174,10 @@ async def test_trace_source_failure_is_incomplete(conn: sqlite3.Connection) -> N
     src = TraceSource(jobs(conn), eng, Settings(), clock=fixed(NOW))
     result = await screen(detect(T), [src], conn=conn, settings=Settings(), now=fixed(NOW))
     assert result.verdict is Verdict.INCOMPLETE
-    assert [f.rule_id for f in result.findings] == ["R-SYS-01"]
+    (sys01,) = result.findings
+    assert sys01.rule_id == "R-SYS-01"
+    assert E in sys01.summary  # names the node (AT-39)
+    assert "hop 2" in sys01.summary
     (r,) = result.sources
     assert r.evidence["complete"] is False
     assert r.evidence["partition"]["sanctioned"] == "0.2"
