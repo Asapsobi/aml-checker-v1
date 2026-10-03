@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="808" height="360" viewBox="0 0 808 360" font-family="ui-sans-serif, system-ui, sans-serif">
+<rect width="808" height="360" fill="#ffffff"/>
+<text x="24" y="30" font-size="17" font-weight="600" fill="#111827">Source of funds · BSC · 0x540000…000000</text>
+<text x="24" y="52" font-size="12" fill="#4b5563">as of 2026-10-01T10:00:00Z · 20000 USDT · coverage 90.0% · shares are proportional estimates</text>
+<text x="564" y="84" font-size="11" letter-spacing="0.5" fill="#6b7280">TARGET</text>
+<text x="294" y="84" font-size="11" letter-spacing="0.5" fill="#6b7280">HOP 1</text>
+<text x="24" y="84" font-size="11" letter-spacing="0.5" fill="#6b7280">HOP 2</text>
+<path d="M514,119 C539,119 539,119 564,119" fill="none" stroke="#15803d" stroke-opacity="0.45" stroke-width="12.0"><title>0x4100000000000000000000000000000000000000 → 0x5400000000000000000000000000000000000000: 12000 USDT</title></path>
+<path d="M514,179 C539,179 539,119 564,119" fill="none" stroke="#6b7280" stroke-opacity="0.45" stroke-width="6.5"><title>0x4200000000000000000000000000000000000000 → 0x5400000000000000000000000000000000000000: 6000 USDT</title></path>
+<path d="M244,119 C269,119 269,179 294,179" fill="none" stroke="#b42318" stroke-opacity="0.45" stroke-width="4.7"><title>0x4400000000000000000000000000000000000000 → 0x4200000000000000000000000000000000000000: 4000 USDT</title></path>
+<path d="M244,179 C269,179 269,179 294,179" fill="none" stroke="#b45309" stroke-opacity="0.45" stroke-width="2.8"><title>0x4500000000000000000000000000000000000000 → 0x4200000000000000000000000000000000000000: 2000 USDT</title></path>
+<g><title>0x5400000000000000000000000000000000000000
+hop 0 · target · share 100.0%</title><rect x="564" y="96" width="220" height="46" rx="6" fill="#eef2ff" stroke="#3730a3" stroke-width="1.5"/><rect x="564" y="96" width="6" height="46" rx="2" fill="#3730a3"/><text x="578" y="115" font-size="12.5" font-family="ui-monospace, Menlo, Consolas, monospace" fill="#111827">0x540000…000000</text><text x="776" y="115" font-size="11.5" font-weight="600" text-anchor="end" fill="#111827">100.0%</text><text x="578" y="132" font-size="11" fill="#374151">target</text></g>
+<g><title>0x4100000000000000000000000000000000000000
+hop 1 · exchange_regulated · share 60.0%</title><rect x="294" y="96" width="220" height="46" rx="6" fill="#dcfce7" stroke="#15803d" stroke-width="1.5"/><rect x="294" y="96" width="6" height="46" rx="2" fill="#15803d"/><text x="308" y="115" font-size="12.5" font-family="ui-monospace, Menlo, Consolas, monospace" fill="#111827">0x410000…000000</text><text x="506" y="115" font-size="11.5" font-weight="600" text-anchor="end" fill="#111827">60.0%</text><text x="308" y="132" font-size="11" fill="#374151">exchange_regulated</text></g>
+<g><title>0x4200000000000000000000000000000000000000
+hop 1 · followed · share 30.0%</title><rect x="294" y="156" width="220" height="46" rx="6" fill="#ffffff" stroke="#6b7280" stroke-width="1.5"/><rect x="294" y="156" width="6" height="46" rx="2" fill="#6b7280"/><text x="308" y="175" font-size="12.5" font-family="ui-monospace, Menlo, Consolas, monospace" fill="#111827">0x420000…000000</text><text x="506" y="175" font-size="11.5" font-weight="600" text-anchor="end" fill="#111827">30.0%</text><text x="308" y="192" font-size="11" fill="#374151">followed</text></g>
+<g><title>0x4400000000000000000000000000000000000000
+hop 2 · sanctioned · share 20.0%</title><rect x="24" y="96" width="220" height="46" rx="6" fill="#fde2e2" stroke="#b42318" stroke-width="1.5"/><rect x="24" y="96" width="6" height="46" rx="2" fill="#b42318"/><text x="38" y="115" font-size="12.5" font-family="ui-monospace, Menlo, Consolas, monospace" fill="#111827">0x440000…000000</text><text x="236" y="115" font-size="11.5" font-weight="600" text-anchor="end" fill="#111827">20.0%</text><text x="38" y="132" font-size="11" fill="#374151">sanctioned</text></g>
+<g><title>0x4500000000000000000000000000000000000000
+hop 2 · suspicious_collector · inferred COLLECTOR · share 10.0%</title><rect x="24" y="156" width="220" height="46" rx="6" fill="#fef3c7" stroke="#b45309" stroke-width="1.5"/><rect x="24" y="156" width="6" height="46" rx="2" fill="#b45309"/><text x="38" y="175" font-size="12.5" font-family="ui-monospace, Menlo, Consolas, monospace" fill="#111827">0x450000…000000</text><text x="236" y="175" font-size="11.5" font-weight="600" text-anchor="end" fill="#111827">10.0%</text><text x="38" y="192" font-size="11" fill="#374151">suspicious_collector</text></g>
+<text x="24" y="240" font-size="13" font-weight="600" fill="#111827">Share of traced value</text>
+<rect x="24" y="249" width="14" height="14" rx="3" fill="#dcfce7" stroke="#15803d"/><text x="46" y="260" font-size="12" fill="#111827">exchange_regulated · 60.0%</text>
+<rect x="24" y="269" width="14" height="14" rx="3" fill="#fde2e2" stroke="#b42318"/><text x="46" y="280" font-size="12" fill="#111827">sanctioned · 20.0%</text>
+<rect x="24" y="289" width="14" height="14" rx="3" fill="#fef3c7" stroke="#b45309"/><text x="46" y="300" font-size="12" fill="#111827">suspicious_collector · 10.0%</text>
+<rect x="24" y="309" width="14" height="14" rx="3" fill="#f3f4f6" stroke="#9ca3af"/><text x="46" y="320" font-size="12" fill="#111827">untraced:pruned · 10.0%</text>
+</svg>
