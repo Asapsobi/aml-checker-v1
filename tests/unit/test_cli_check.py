@@ -30,7 +30,9 @@ def home(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Path:
 
 
 def use(monkeypatch: pytest.MonkeyPatch, *fakes: Fake) -> None:
-    def sources(rt: Any, conn: Any, client: Any, mode: Mode, chain: Chain) -> list[Fake]:
+    def sources(
+        rt: Any, conn: Any, client: Any, mode: Mode, chain: Chain, *, trace: bool = False
+    ) -> list[Fake]:
         assert mode is Mode.CHECK
         return list(fakes)
 
@@ -182,3 +184,31 @@ def test_sync_end_to_end_with_fixtures(home: Path) -> None:
     info = json.loads(runner.invoke(app, ["status", "--json"]).output)
     statuses = {s["source"]: s["status"] for s in info["sources"]}
     assert statuses["ofac_sdn"] == "ok"
+
+
+# PRD F9.4: the trace runs on --trace, or when the amount reaches [trace] auto_amount_usdt.
+@pytest.mark.parametrize(
+    ("args", "traced"),
+    [
+        ([], False),
+        (["--amount", "9999.99"], False),
+        (["--amount", "10000"], True),
+        (["--amount", "50000", "--no-trace"], False),
+        (["--trace"], True),
+    ],
+)
+def test_trace_switch(
+    home: Path, monkeypatch: pytest.MonkeyPatch, args: list[str], traced: bool
+) -> None:
+    seen: list[bool] = []
+
+    def sources(
+        rt: Any, conn: Any, client: Any, mode: Mode, chain: Chain, *, trace: bool = False
+    ) -> list[Fake]:
+        seen.append(trace)
+        return [Fake("ofac_sdn")]
+
+    monkeypatch.setattr(runtime, "make_screening_sources", sources)
+    r = runner.invoke(app, ["check", TRON, *args])
+    assert r.exit_code == 0, r.output
+    assert seen == [traced]

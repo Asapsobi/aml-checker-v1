@@ -101,6 +101,14 @@ async def screen(
         amount=canonical_amount(amount) if amount is not None else None,
         client=client,
         operator_note=note,
+        trace_id=next(
+            (
+                str(r.evidence["trace_id"])
+                for r in ordered
+                if r.source == "trace" and r.evidence.get("trace_id")
+            ),
+            None,
+        ),
     )
     appended = append(conn, record)  # before anything is shown
     # Registry after the audit record (architecture §4.1 step 7); `cp rebuild` can always redo it.

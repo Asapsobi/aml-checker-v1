@@ -44,6 +44,13 @@ def check(
     amount: Annotated[str | None, typer.Option(help="USDT amount of the payment.")] = None,
     client: Annotated[str | None, typer.Option(help="Who the check is for.")] = None,
     note: Annotated[str | None, typer.Option(help="Free text kept with the record.")] = None,
+    trace: Annotated[
+        bool | None,
+        typer.Option(
+            "--trace/--no-trace",
+            help="Trace the source of funds. Default: on when --amount ≥ [trace] auto_amount_usdt.",
+        ),
+    ] = None,
     as_json: Annotated[bool, typer.Option("--json", help="Machine-readable output.")] = False,
 ) -> None:
     """Screen an address: sanctions and issuer freezes, with a recorded verdict."""
@@ -55,7 +62,12 @@ def check(
     value = _amount(amount)
     conn = runtime.open_database(rt)
     try:
-        result = asyncio.run(_screen(rt, conn, addr, value, client, note))
+        run_trace = (
+            trace
+            if trace is not None
+            else (value is not None and value >= rt.settings.trace.auto_amount_usdt)
+        )
+        result = asyncio.run(_screen(rt, conn, addr, value, client, note, run_trace))
     finally:
         conn.close()
     if as_json:
@@ -84,9 +96,12 @@ async def _screen(
     amount: Decimal | None,
     client: str | None,
     note: str | None,
+    run_trace: bool,
 ) -> CheckResult:
     async with httpx.AsyncClient() as http_client:
-        sources = runtime.make_screening_sources(rt, conn, http_client, Mode.CHECK, addr.chain)
+        sources = runtime.make_screening_sources(
+            rt, conn, http_client, Mode.CHECK, addr.chain, trace=run_trace
+        )
         return await screen(
             addr,
             sources,
