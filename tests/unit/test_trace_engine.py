@@ -1,14 +1,22 @@
+import asyncio
 import json
 import sqlite3
+import time
+from dataclasses import dataclass
+from datetime import datetime
 from decimal import Decimal
 from pathlib import Path
 
 import pytest
 
-from amlcheck.config import Settings, Trace
+from amlcheck.chain.base import History
+from amlcheck.chain.cache import ContractCache, TransferCache
+from amlcheck.config import Cache, Settings, Trace
 from amlcheck.core.address import detect
+from amlcheck.core.clock import fixed
+from amlcheck.intel.store import IntelStore
 from amlcheck.storage.db import open_db
-from amlcheck.trace.engine import TraceFailed, _Flow, prune
+from amlcheck.trace.engine import TraceEngine, TraceFailed, _Flow, prune
 from tests.unit.trace_world import (
     NOW,
     A,
@@ -17,6 +25,7 @@ from tests.unit.trace_world import (
     D,
     E,
     Fake,
+    NoContracts,
     T,
     addr,
     engine,
@@ -91,6 +100,62 @@ async def test_at40_node_budget(conn: sqlite3.Connection) -> None:
     assert t.partition["untraced:budget"] == D0("0.1")
     assert t.budget.nodes_read == 2
     assert E not in fake.asked
+
+
+@dataclass
+class Slow(Fake):
+    """A provider that hangs on one address (a lossy line: bytes trickle, no timeout fires)."""
+
+    slow: str = ""
+
+    async def fetch(
+        self,
+        address: str,
+        since: datetime,
+        until: datetime | None,
+        limit: int,
+        *,
+        first_activity: bool,
+    ) -> History:
+        if address == self.slow:
+            await asyncio.sleep(30)
+        return await super().fetch(address, since, until, limit, first_activity=first_activity)
+
+
+def real_time_engine(conn: sqlite3.Connection, fake: Fake, budget_s: int) -> TraceEngine:
+    return TraceEngine(
+        conn,
+        TransferCache(conn, {fake.chain: fake}, Cache(), clock=fixed(NOW)),
+        ContractCache(conn, {fake.chain: NoContracts()}, clock=fixed(NOW)),
+        IntelStore(conn, clock=fixed(NOW)),
+        Settings(trace=Trace(time_budget_seconds=budget_s)),
+        clock=fixed(NOW),
+        monotonic=time.monotonic,
+    )
+
+
+# F9.3: the time budget also bounds a read in progress; the trace ends as a partial, on time.
+async def test_time_budget_bounds_a_slow_read(conn: sqlite3.Connection) -> None:
+    fake = Slow(example(), slow=B)
+    setup_example(conn, IntelStore(conn, clock=fixed(NOW)))
+    started = time.monotonic()
+    with pytest.raises(TraceFailed) as exc:
+        await real_time_engine(conn, fake, 1).run(detect(T))
+    assert time.monotonic() - started < 5
+    partial = exc.value.partial
+    assert not partial.complete
+    assert "time budget of 1 s" in exc.value.reason
+    assert partial.partition["exchange_regulated"] == D0("0.6")  # A resolved before B hung
+    assert partial.partition["untraced:unfinished"] == D0("0.3")  # B, cut off mid-read
+    assert partial.partition["untraced:pruned"] == D0("0.1")  # C, as in §7.11
+    assert sum(partial.partition.values()) == 1
+
+
+async def test_time_budget_bounds_the_target_read(conn: sqlite3.Connection) -> None:
+    with pytest.raises(TraceFailed) as exc:
+        await real_time_engine(conn, Slow(example(), slow=T), 1).run(detect(T))
+    assert "time budget" in exc.value.reason
+    assert exc.value.partial.partition == {}
 
 
 # AT-41: a cycle A → B → A sends its weight to untraced:cycle and terminates.

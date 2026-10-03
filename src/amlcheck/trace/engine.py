@@ -14,6 +14,7 @@ facts only (D-045). A read failure or the time budget makes the trace fail with 
 
 from __future__ import annotations
 
+import asyncio
 import sqlite3
 import time
 from collections import defaultdict
@@ -224,13 +225,23 @@ class TraceEngine:
                 },
             )
 
+        out_of_time = f"time budget of {self._t.time_budget_seconds} s reached"
+
+        def left() -> float:
+            # The budget bounds every read too, not only the gaps between them: one slow read on a
+            # bad line must not hold a check past its budget (PRD performance, F9.3).
+            return self._t.time_budget_seconds - (self._monotonic() - started)
+
         since = as_of - timedelta(days=self._s.exposure.lookback_days)
         try:
-            history = await self._read(
-                target.norm, since, as_of, self._s.exposure.max_transfers, st
-            )
+            async with asyncio.timeout(max(left(), 0)):
+                history = await self._read(
+                    target.norm, since, as_of, self._s.exposure.max_transfers, st
+                )
         except SourceError as e:
             raise TraceFailed(trace(False, f"target {target.norm}: {e.reason}"), e.reason) from None
+        except TimeoutError:
+            raise TraceFailed(trace(False, out_of_time), out_of_time) from None
         if not history[1]:
             reason = (
                 f"target {target.norm} has more than {self._s.exposure.max_transfers} transfers "
@@ -252,13 +263,21 @@ class TraceEngine:
             current = sorted(queue, key=lambda i: (-i.weight, i.address, i.path))
             queue = []
             for n, item in enumerate(current):
-                if self._monotonic() - started > self._t.time_budget_seconds:
+                if left() <= 0:
                     rest = sum((i.weight for i in current[n:]), Decimal(0))
                     st.buckets[UNFINISHED] += rest
-                    reason = f"time budget of {self._t.time_budget_seconds} s reached"
-                    raise TraceFailed(trace(False, reason, in_t), reason)
+                    raise TraceFailed(trace(False, out_of_time, in_t), out_of_time)
                 try:
-                    queue += await self._step(item, chain, in_t, direction, st)
+                    # Cancelling is safe: a step only changes the partition after its last await.
+                    async with asyncio.timeout(left()):
+                        children = await self._step(item, chain, in_t, direction, st)
+                    queue += children
+                except TimeoutError:
+                    rest = sum((i.weight for i in current[n:]), Decimal(0)) + sum(
+                        (i.weight for i in queue), Decimal(0)
+                    )
+                    st.buckets[UNFINISHED] += rest
+                    raise TraceFailed(trace(False, out_of_time, in_t), out_of_time) from None
                 except SourceError as e:
                     rest = sum((i.weight for i in current[n:]), Decimal(0)) + sum(
                         (i.weight for i in queue), Decimal(0)
