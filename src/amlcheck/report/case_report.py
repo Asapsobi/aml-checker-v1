@@ -5,7 +5,7 @@
   recorded at the time of the check, and the same records give the same PDF bytes (`invariant`).
 - The record's own hash is recomputed and shown; `amlcheck audit verify` checks the whole chain.
 - Sections: verdict and score, findings, sources, USDT history, classification, decision ("No
-  decision recorded" until P9), source of funds with the graph drawn from the SVG's layout.
+  decision recorded" until P9), the record, then source of funds with the graph (the SVG's layout).
 - Built-in PDF fonts (no embedding): text the WinAnsi encoding can't hold is shown as `?`; `≥` and
   arrows are spelled out. Marked internal use only on every page (D-023).
 """
@@ -255,7 +255,8 @@ def _header(d: CaseData) -> list[Flowable]:
     if r.score_json:
         s = scoring.from_json(r.score_json)
         bound = " (lower bound: a required source is missing)" if s.lower_bound else ""
-        hazard = f" · hazard H {text(canonical(s.hazard))}" if s.hazard is not None else ""
+        h = s.hazard
+        hazard = f" · hazard H {dec(h.quantize(Decimal('0.0001')))}" if h is not None else ""
         out.append(
             _p(
                 f"<b>Score {text(s.shown)}</b>{text(bound)} · {text(s.breakdown)}{hazard} "
@@ -266,10 +267,6 @@ def _header(d: CaseData) -> list[Flowable]:
     else:
         out.append(_p("No score: this check was recorded before scores existed (P7).", SMALL))
     return out
-
-
-def canonical(x: Decimal | None) -> str:
-    return dec(x) if x is not None else "-"
 
 
 def _findings(d: CaseData) -> list[Flowable]:
@@ -381,7 +378,7 @@ def _trace(d: CaseData) -> list[Flowable]:
         out += [
             Spacer(1, 4),
             _p("Bottleneck: the smallest hop on the path; every hop moved at least that.", SMALL),
-            _table(prows, [30 * mm, 22 * mm, 22 * mm, TEXT_W - 74 * mm]),
+            _table(prows, [38 * mm, 20 * mm, 20 * mm, TEXT_W - 78 * mm]),
         ]
     out += [CondPageBreak(GRAPH_H / 2), _p("Trace graph", H2), _graph(t)]
     return out
@@ -551,8 +548,8 @@ def render(d: CaseData) -> bytes:
         + _exposure(d)
         + _classification(d)
         + _decision()
-        + _trace(d)
         + _integrity(d)
+        + _trace(d)  # last: the graph may take a page of its own
     )
     doc.build(story, onFirstPage=on_page, onLaterPages=on_page)
     return buf.getvalue()
