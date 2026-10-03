@@ -50,7 +50,7 @@
 | Contract | `TR7NHqjeKQxGTCi8q8ZY4pL8otSzgjLj6t` (`TetherToken`, symbol USDT, **6 decimals**) |
 | Events | `AddedBlackList(address indexed _user)`, `RemovedBlackList(address indexed _user)`, `DestroyedBlackFunds(address indexed _blackListedUser, uint256 _balance)` |
 | Read functions | `isBlackListed(address) → bool`, `getBlackListStatus(address) → bool` |
-| History | Events from 2020-06-26 onward; ~10,800 events in all (2026-09-28), full fetch ~24 s |
+| History | Events from 2020-06-26 onward: 10,923 in all on 2026-10-03 (8,722 added, 971 removed, 1,230 destroyed; 7,727 addresses frozen now). First full sync 24–64 s depending on the connection (VS-15) |
 | Paging | `GET /v1/contracts/{contract}/events?event_name=…`, 200 per page via `meta.links.next`; `only_confirmed=true`, `min_block_timestamp` |
 | Confirmed head | `POST /walletsolidity/getnowblock` (~1 min behind latest) |
 | Address format | Event addresses come as `0x` hex without the `41` prefix → convert to base58 `T…` |
@@ -147,4 +147,4 @@ as a fixture) in `docs/verification-log.md`, and raises a question for any chang
 | VS-12 | A free BSC JSON-RPC endpoint for `eth_getCode` without a key, and its limits | P5 |
 | VS-13 | TRON contract detection via `getcontract` (answer for a wallet vs a contract) | P5 |
 | VS-14 | Licence of any label pack before import | P4 |
-| VS-15 | ~~EVM freeze index contracts and events per chain~~ Dropped with the scope (D-039); partial findings logged | — |
+| VS-15 | Issuer freezes on TRC20 and BEP20: TRON event history and sync time; BEP20 USDT emits no freeze events (narrowed by D-039) | P2 |

@@ -6,8 +6,7 @@
 **P0 status (2026-10-01): complete.** VS-01 to VS-06 and VS-10 confirmed, VS-05, VS-06 and the BSC
 half of VS-10 with the owner's TronGrid key and HyperSync token (loaded through `amlcheck.config`, never
 printed). **VS-08 and VS-09 dropped** with Eagle Virtual (D-033); their entries stay below as a record.
-VS-07 (P6) and VS-11 to VS-14 (later phases) are not P0 items. VS-15 (EVM freeze index) was started in P2 and stopped
-with the scope (D-039); its partial findings are at the end.
+VS-07 (P6) and VS-11 to VS-14 (later phases) are not P0 items. VS-15 was redone in P2 for TRC20 and BEP20 only (D-039); see the end.
 
 | VS | Result | Differs from docs | Question |
 |---|---|---|---|
@@ -214,7 +213,25 @@ chain scanned, 2 queries, 11.7 s, no hit.
 
 ---
 
-## VS-15 · Tether and Circle freeze contracts on other EVM chains (stopped: out of v1 scope)
+## VS-15 · Issuer freezes on TRC20 and BEP20 (narrowed to v1's two networks, D-039)
+**Checked:** 2026-10-03. TRC20: amlcheck's own `TronFreezeIndex.refresh()` (TronGrid events, owner's
+key, scratch DB). BEP20: HyperSync logs of `0x55d398326f99059ff775485246999027b3197955`, full history,
+topic0 = every freeze/blacklist/pause event name in use by Tether (both families) and Circle.
+**Found:**
+
+| Network | Contract | Result |
+|---|---|---|
+| TRC20 | `TR7NHqjeKQxGTCi8q8ZY4pL8otSzgjLj6t` (Tether USDT) | **10,923 events**: `AddedBlackList` 8,722, `RemovedBlackList` 971, `DestroyedBlackFunds` 1,230, from 2020-06-26 to 2026-10-02. **7,727 addresses frozen now** (latest event is an add). First full sync **64 s** (≈55 pages at ≤ 10 req/s), incremental re-sync 2.6 s. Tether's newer event names (`BlockPlaced`, `BlockReleased`, `DestroyedBlockedFunds`): **0** |
+| BEP20 | `0x55d398…3197955` (Binance-Peg USDT) | **No freeze, blacklist or pause event ever**, blocks 0 to 125,443,300 (7 queries, 68 s) |
+
+**Differs from docs/04-data-sources.md:** TRON event count (~10,800 → 10,923) and first-sync time on this
+connection (~24 s → 64 s). BEP20 matches VS-03 (no freeze function), now confirmed from events too.
+**What this changes:** nothing in code: the TRON index reads exactly these three events; BSC freeze
+stays `skipped` (D-009). Data sources §3 updated.
+**Fixtures:** none new (the index tests use the P0 event fixtures).
+
+### Earlier, before the scope was narrowed: other EVM chains (not v1)
+
 **Checked:** 2026-10-01, contract identity by `eth_call` on public RPCs (publicnode, drpc for Polygon);
 events via HyperSync (`<chain>.hypersync.xyz`, owner's token) with topic0 for
 `AddedBlackList`/`RemovedBlackList`/`DestroyedBlackFunds`, `BlockPlaced`/`BlockReleased`/`DestroyedBlockedFunds`,
