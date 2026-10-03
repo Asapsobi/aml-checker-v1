@@ -143,7 +143,7 @@ as a fixture) in `docs/verification-log.md`, and raises a question for any chang
 | VS-08 | ~~Eagle Virtual spec version, plans, credit line, `/v1/usage`, chain list~~ Dropped (D-033) | — |
 | VS-09 | ~~Eagle Virtual licence terms~~ Dropped (D-033) | — |
 | VS-10 | First-activity definitions: TRON `getaccount.create_time` vs first transfer; BSC first tx/log scan | P3 |
-| VS-11 | UK OFSI list: crypto addresses present? format? licence? | P2 (optional) |
+| VS-11 | UK OFSI list: crypto addresses present? format? licence? | Deferred to after v1 (D-041) |
 | VS-12 | A free BSC JSON-RPC endpoint for `eth_getCode` without a key, and its limits | P5 |
 | VS-13 | TRON contract detection via `getcontract` (answer for a wallet vs a contract) | P5 |
 | VS-14 | Licence of any label pack before import | P4 |

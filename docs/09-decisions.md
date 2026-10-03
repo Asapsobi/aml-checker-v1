@@ -70,7 +70,7 @@
 - **Consequences:** Confirms D-008: target-only checks, credit line shown, quota warning. VS-08 confirms the plan terms.
 
 ### D-026 · Add UK OFSI if it carries crypto addresses (Q-03)
-- **Status:** Accepted
+- **Status:** Deferred by D-041
 - **Date:** 2026-10-01 · **Phase:** P0
 - **Context:** Q-03 asked whether to add the UK OFSI list.
 - **Decision:** Yes, if VS-11 shows it carries crypto addresses in a clean format under a usable licence.
@@ -254,3 +254,12 @@
   format to verify and maintain).
 - **Consequences:** `net/http.download`; `screening/sanctions.unpack`; config default changed (config
   hash changes). Data sources §2 updated.
+
+### D-041 · UK OFSI list left for after v1
+- **Status:** Accepted
+- **Date:** 2026-10-03 · **Phase:** P2
+- **Context:** D-026 would add OFSI if VS-11 found crypto addresses under a clean licence. The owner wants a
+  tight v1 (see D-039).
+- **Decision:** No OFSI in v1; VS-11 is not run now. v1 screens against OFAC SDN only.
+- **Alternatives:** Run VS-11 and add OFSI in P2 (more coverage, more scope).
+- **Consequences:** Defers D-026. PRD F3.5 stays optional. Revisit after v1.0.
