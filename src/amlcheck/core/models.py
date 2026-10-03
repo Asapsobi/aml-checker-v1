@@ -9,7 +9,10 @@ from dataclasses import dataclass, field
 from datetime import datetime
 from decimal import Decimal
 from enum import StrEnum
-from typing import Any
+from typing import TYPE_CHECKING, Any
+
+if TYPE_CHECKING:
+    from amlcheck.core.score import Score
 
 
 class Chain(StrEnum):
@@ -91,3 +94,4 @@ class CheckResult:
     amount: Decimal | None = None
     client: str | None = None
     note: str | None = None
+    score: Score | None = None

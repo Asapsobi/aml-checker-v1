@@ -23,6 +23,7 @@ from amlcheck.core.audit import AuditFinding, AuditRecord, AuditSource, append
 from amlcheck.core.clock import Clock, to_db, to_iso, utcnow
 from amlcheck.core.models import Address, CheckResult, Finding, SourceResult, SourceStatus
 from amlcheck.core.rules import RULES_VERSION, apply_overrides, system_findings
+from amlcheck.core.score import compute
 from amlcheck.core.verdict import decide
 from amlcheck.intel import registry
 from amlcheck.net.http import SourceError
@@ -64,6 +65,10 @@ async def screen(
     findings = apply_overrides(found, settings.rules.severity) + system_findings(ordered, started)
     findings.sort(key=lambda f: (f.rule_id, f.source, f.summary))
     verdict = decide(findings)
+    trace_evidence = next((r.evidence for r in ordered if r.source == "trace"), None)
+    score = compute(
+        verdict, findings, trace_evidence
+    )  # after the verdict, never feeding it (F10.2)
     check_id = str(uuid.uuid4())
     tool_version = version("amlcheck")
     config_hash = settings.hash()
@@ -101,6 +106,7 @@ async def screen(
         amount=canonical_amount(amount) if amount is not None else None,
         client=client,
         operator_note=note,
+        score_json=score.dumps(),
         trace_id=next(
             (
                 str(r.evidence["trace_id"])
@@ -115,7 +121,13 @@ async def screen(
     registry.upsert(
         conn,
         registry.CheckRow(
-            check_id, record.created_at, record.chain, record.address_norm, record.verdict, client
+            check_id,
+            record.created_at,
+            record.chain,
+            record.address_norm,
+            record.verdict,
+            client,
+            score.score,
         ),
     )
     return CheckResult(
@@ -131,6 +143,7 @@ async def screen(
         amount=amount,
         client=client,
         note=note,
+        score=score,
     )
 
 
