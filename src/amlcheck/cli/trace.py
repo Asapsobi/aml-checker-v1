@@ -93,7 +93,7 @@ async def _trace(
     jobs = TraceJobs(conn, rt.settings, clock=rt.clock)
     trace_id = jobs.create(addr.chain, addr.norm, direction, requested_by="cli")
     async with httpx.AsyncClient() as client:
-        engine = runtime.build_trace_engine(rt, conn, client, Mode.CHECK)
+        engine = runtime.build_trace_engine(rt, conn, client, Mode.BACKGROUND)  # D-036
         try:
             result = await jobs.run(trace_id, engine, _progress if sys.stderr.isatty() else None)
         except TraceFailed as e:

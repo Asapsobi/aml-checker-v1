@@ -3,6 +3,7 @@ import sqlite3
 from pathlib import Path
 from typing import Any
 
+import httpx
 import pytest
 from typer.testing import CliRunner
 
@@ -37,7 +38,7 @@ def world(conn: sqlite3.Connection, fail: bool) -> TraceEngine:
 
 def use_world(monkeypatch: pytest.MonkeyPatch, *, fail: bool = False) -> None:
     def build(rt: Any, conn: sqlite3.Connection, client: Any, mode: Mode) -> TraceEngine:
-        assert mode is Mode.CHECK
+        assert mode is Mode.BACKGROUND
         return world(conn, fail)
 
     def sources(
@@ -158,3 +159,28 @@ def test_investigate_incomplete(home: Path, monkeypatch: pytest.MonkeyPatch) -> 
     assert r.output.startswith("INCOMPLETE")
     assert "R-SYS-01" in r.output
     assert "Source of funds" in r.output  # the partial trace is still shown
+
+
+# The trace in a check gets its own client in background mode (D-036) and its own query count.
+@pytest.mark.parametrize("chain", [Chain.TRON, Chain.BSC])
+async def test_check_wiring(home: Path, monkeypatch: pytest.MonkeyPatch, chain: Chain) -> None:
+    modes: list[Mode] = []
+    real = runtime.build_trace_engine
+
+    def build(rt: Any, conn: sqlite3.Connection, client: Any, mode: Mode) -> TraceEngine:
+        modes.append(mode)
+        return real(rt, conn, client, mode)
+
+    monkeypatch.setattr(runtime, "build_trace_engine", build)
+    rt = runtime.load()
+    conn = runtime.open_database(rt)
+    try:
+        async with httpx.AsyncClient() as client:
+            plain = runtime.make_screening_sources(rt, conn, client, Mode.CHECK, chain)
+            traced = runtime.make_screening_sources(rt, conn, client, Mode.CHECK, chain, trace=True)
+    finally:
+        conn.close()
+    assert not any(isinstance(s, TraceSource) for s in plain)
+    assert isinstance(traced[-1], TraceSource)
+    assert [s.source for s in traced[:-1]] == [s.source for s in plain]
+    assert modes == [Mode.BACKGROUND]

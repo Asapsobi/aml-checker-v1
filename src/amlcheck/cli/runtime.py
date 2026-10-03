@@ -148,7 +148,7 @@ def make_screening_sources(
     trace: bool = False,
 ) -> list[SourceAdapter]:
     """The sources for a check on `chain` (methodology §2.1); the trace when asked (PRD F9.4)."""
-    http = Http(client, rt.settings.network, mode=mode)  # one client: every request is counted
+    http = Http(client, rt.settings.network, mode=mode)
     sanctions = SanctionsSource(conn, rt.settings.freshness, clock=rt.clock)
     cache = TransferCache(
         conn, make_sources(rt, client, mode, http=http), rt.settings.cache, clock=rt.clock
@@ -172,7 +172,9 @@ def make_screening_sources(
     classifier = ClassifierSource(profiler, store, rt.settings.classifier, clock=rt.clock)
     extra: list[SourceAdapter] = []
     if trace:
-        engine = make_trace_engine(rt, conn, cache, contracts, store, http)
+        # The trace gets its own client: it may wait out a suspension (D-036) and its query count
+        # is its own, not the other sources running beside it. The cache is shared through `conn`.
+        engine = build_trace_engine(rt, conn, client, Mode.BACKGROUND)
         extra.append(
             TraceSource(
                 TraceJobs(conn, rt.settings, clock=rt.clock), engine, rt.settings, clock=rt.clock
@@ -215,7 +217,7 @@ def make_trace_engine(
 def build_trace_engine(
     rt: Runtime, conn: sqlite3.Connection, client: httpx.AsyncClient, mode: Mode
 ) -> TraceEngine:
-    """A trace engine on its own (`amlcheck trace`), with its own counted HTTP client."""
+    """A trace engine with its own counted HTTP client (`trace`, and the trace in a check)."""
     http = Http(client, rt.settings.network, mode=mode)
     cache = TransferCache(
         conn, make_sources(rt, client, mode, http=http), rt.settings.cache, clock=rt.clock
