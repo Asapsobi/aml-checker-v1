@@ -196,3 +196,20 @@ def test_0002_screening_schema(tmp_path: Path) -> None:
             "rules_version, config_hash, prev_hash, record_hash) "
             "VALUES ('c1', 't', 'tron', 'T', 'MAYBE', 'v', 1, 'h', 'p', 'r')"
         )
+
+
+def test_v010_database_upgrades_to_p2_keeping_its_cache(tmp_path: Path) -> None:
+    from amlcheck.storage.db import Migration
+
+    path = tmp_path / "a.db"
+    conn = connect(path)
+    migrate(conn, load_migrations()[:1])  # what v0.1.0 created
+    conn.execute(
+        "INSERT INTO transfers VALUES ('tron', 'tx', 0, NULL, '2026-01-01T00:00:00.000000Z', "
+        "'Ta', 'Tb', '1.5')"
+    )
+    conn.close()
+    conn = open_db(path)
+    assert schema_version(conn) == len(load_migrations()) >= 2
+    assert conn.execute("SELECT amount FROM transfers").fetchone() == ("1.5",)
+    assert isinstance(load_migrations()[0], Migration)
