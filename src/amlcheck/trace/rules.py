@@ -66,7 +66,7 @@ def trace_findings(trace: Trace, s: TraceSettings, now: datetime) -> list[Findin
                     rule,
                     SOURCE,
                     f"Funds trace back to a {word} wallet {best.hops} hops away "
-                    f"(at least {dec(best.bottleneck)} USDT along the path)",
+                    f"(every hop on the path moved at least {dec(best.bottleneck)} USDT)",
                     now,
                     {
                         "paths": [_path(p) for p in paths[:5]],

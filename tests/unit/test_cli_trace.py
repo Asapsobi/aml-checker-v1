@@ -69,6 +69,7 @@ def test_trace_human(home: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     assert "12000" in out  # ≈ USDT for 60% of 20,000
     assert "Top paths" in out
     assert "R-TRC-01" in out
+    assert "every hop on the path moved at least 4000 USDT" in out  # the bottleneck, §7.3
     assert "Budget  3 address(es) read" in out
     assert "INCOMPLETE" not in out
     conn = db(home)

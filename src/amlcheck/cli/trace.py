@@ -150,20 +150,19 @@ def print_trace(t: Trace, trace_id: str) -> None:
         echo("")
         echo(f"  {'category':<24} {'share':>7}  {'≈ USDT':>14}")
         for category, share in sorted(t.partition.items(), key=lambda kv: (-kv[1], kv[0])):
-            usdt = (share * t.target_inflow).quantize(Decimal("0.01"))
-            echo(f"  {category:<24} {pct(share):>7}  {dec(usdt):>14}")
+            echo(f"  {category:<24} {pct(share):>7}  {dec(_cents(share * t.target_inflow)):>14}")
         layering = t.annotations.get("layering")
         if layering:
             echo(f"  {'layering (annotation)':<24} {pct(layering):>7}")
     if t.paths:
         echo("")
-        echo("Top paths  (bottleneck = most that can have come this way; estimate = by share)")
+        echo("Top paths  (bottleneck = smallest hop on the path / estimate by share, USDT)")
         arrow = " ← " if t.direction == "in" else " → "
         for p in t.paths[:5]:
             chain_text = arrow.join(short(a) for a in p.addresses)
             echo(
-                f"  {p.to_category:<22} {dec(p.bottleneck):>12} / {dec(p.estimated):<12} "
-                f"{chain_text}"
+                f"  {p.to_category:<22} {dec(_cents(p.bottleneck)):>12} / "
+                f"{dec(_cents(p.estimated)):<12} {chain_text}"
             )
     b = t.budget
     echo("")
@@ -172,6 +171,10 @@ def print_trace(t: Trace, trace_id: str) -> None:
         f"{b.cache_hits} cache hit(s) · {b.seconds:.1f} s · trace {trace_id}"
     )
     echo("Shares are proportional estimates (D-016): USDT is fungible, so no amount is exact.")
+
+
+def _cents(x: Decimal) -> Decimal:
+    return x.quantize(Decimal("0.01"))
 
 
 def investigate(
