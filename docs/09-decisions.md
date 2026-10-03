@@ -331,7 +331,7 @@
 - **Consequences:** AT-37 and the §7.11 table updated; no formula changes, no version bump.
 
 ### D-048 · Peel-chain freshness from what the trace read
-- **Status:** Proposed
+- **Status:** Accepted
 - **Date:** 2026-10-03 · **Phase:** P6
 - **Context:** Methodology §6.1: a peel-chain node must be first seen within 30 days before its edge.
   A node's true first activity costs extra reads (TRON 2 requests, BSC up to 2 indexer queries plus
@@ -345,7 +345,7 @@
   partition or a blocking rule.
 
 ### D-049 · `investigate` is a check with the trace on; `trace` records no verdict
-- **Status:** Proposed
+- **Status:** Accepted
 - **Date:** 2026-10-03 · **Phase:** P6
 - **Context:** PRD F9.4 names `amlcheck trace` and `investigate` but defines neither. U7 asks "where
   did this client's 30k come from?" with a graph and breakdown.
@@ -358,3 +358,13 @@
   trace has no verdict to record); `investigate` as an alias of `trace` (no recorded verdict for U7).
 - **Consequences:** A verdict that considered the trace always comes from `check --trace` or
   `investigate`, so it is in the audit log; `trace` is safe to run as often as needed.
+
+### D-050 · No paid HyperSync tier (Q-09)
+- **Status:** Accepted
+- **Date:** 2026-10-03 · **Phase:** P6
+- **Context:** Q-09 asked whether to pay for HyperSync if the free plan could not meet the trace budget.
+  VS-07 measured 9–35 HyperSync queries per cold BSC trace (G8 allows 120) and 2 per repeat.
+- **Decision:** Stay on the free plan.
+- **Alternatives:** A paid tier now (cost without a measured need).
+- **Consequences:** Revisit if P10 monitoring (auto-screening senders, traces at ≥ 10,000 USDT) needs
+  more than the free budget.
