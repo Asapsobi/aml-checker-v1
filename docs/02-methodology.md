@@ -36,8 +36,7 @@
 | Sanctions list (OFAC SDN, local) | both | yes | last successful download > 48 h ago | Age is from **our download**, not OFAC's publish date (OFAC does not publish daily) |
 | TRON USDT freeze index (local) | TRON | yes | index cannot be refreshed and lags the chain > 60 min | Refreshed incrementally at the start of every TRON check |
 | TRON `isBlackListed` spot-check | TRON | yes | — | One contract call for the target |
-| EVM issuer freeze index (local) | BSC | yes | index cannot be refreshed and lags a chain > 60 min (`[freshness] evm_index_max_lag_minutes`) | Tether USDT and Circle USDC blacklist events on the EVM chains in [data sources §5](04-data-sources.md), read through HyperSync (D-034). One key controls a `0x` address on every EVM chain (D-010) |
-| BEP20 USDT token freeze | BSC | — | — | Always `skipped`: the contract has no freeze function ([data sources](04-data-sources.md)) |
+| BEP20 USDT token freeze | BSC | — | — | Always `skipped`: the contract has no freeze function ([data sources](04-data-sources.md)). Every BSC result also says freezes of the same `0x` address on other chains are not checked in v1 (D-039) |
 | Exposure (USDT history) | both | yes | history could not be read in full (§3.1) | |
 
 A `skipped` source is not a gap. An `error` or `stale` required source adds **R-SYS-01**.
@@ -56,9 +55,7 @@ A listed address that fails its own checksum is kept (a typo must not hide an en
 |---|---|
 | TRON index: latest blacklist event is `AddedBlackList`, or a `DestroyedBlackFunds` exists | R-FRZ-01 |
 | `isBlackListed` returns true | R-FRZ-01 |
-| EVM index: on **any** indexed chain, the latest blacklist event for the address is an add (`AddedBlackList`, `Blacklisted`), or a `DestroyedBlackFunds` exists | R-FRZ-01 (one private key controls a `0x` address on every EVM chain) |
 | TRON index: `AddedBlackList` followed by `RemovedBlackList`, and no later add | R-FRZ-02 |
-| EVM index: an add followed by a removal (`RemovedBlackList`, `UnBlacklisted`) on the same contract, no later add on any indexed contract | R-FRZ-02 |
 
 Evidence: issuer, chain, token, event transaction, block time, amount destroyed if any.
 
@@ -109,7 +106,7 @@ ignored.
 | Flag | Source |
 |---|---|
 | `sanctioned` | latest sanctions snapshot |
-| `frozen` | TRON index or EVM index: latest blacklist event is an add |
+| `frozen` | TRON index: latest blacklist event is `AddedBlackList` |
 | `label:<tag>` | `labels.csv` and the intelligence store |
 
 ### 3.4 Exposure rules
@@ -295,7 +292,7 @@ smallest edge amount on it.
 |---|---|---|---|
 | 1 | Address on the current path | — | `untraced:cycle` |
 | 2 | On the OFAC snapshot | local | `sanctioned` |
-| 3 | Latest issuer event is an add (TRON index, or EVM index for `0x`), or `DestroyedBlackFunds` | local | `frozen` |
+| 3 | Latest Tether event is `AddedBlackList` (TRON), or `DestroyedBlackFunds` | local | `frozen` |
 | 4 | Has an active label or entity kind with a terminal category (§8), lists/operator/import first, then highest confidence, ties by category order in §8 | local | that category |
 | 5 | Cached unexpired classification `CONTRACT`, `HUB`, `DEPOSIT` or `COLLECTOR` | local | §6 mapping |
 | 6 | `hop == max_hops` | — | `untraced:depth` |
@@ -418,7 +415,7 @@ Order matters: it breaks ties in terminal test 4.
 | # | Category | Weight `w` | Allowed provenance | High-risk set (R-TRC-03) | Notes |
 |---|---|---|---|---|---|
 | 1 | `sanctioned` | 1.0 | list | yes | OFAC, plus any verified extra list |
-| 2 | `frozen` | 0.9 | list | yes | Tether TRON index; EVM index (Tether, Circle) |
+| 2 | `frozen` | 0.9 | list | yes | Tether TRON index |
 | 3 | `stolen_funds` | 0.9 | operator, import | yes | |
 | 4 | `darknet` | 0.9 | operator, import | yes | |
 | 5 | `mixer` | 0.8 | operator, import | yes | `labels.csv` tag `mixer` |

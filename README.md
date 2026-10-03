@@ -4,7 +4,7 @@
 address classification, risk scoring and a recorded decision trail. Local-first, built on RPC
 providers and indexers, no own nodes.
 
-> **Status:** P1 (chain data layer) ready for review, release v0.1.0. The product is built from these docs with Claude Code,
+> **Status:** P2 (screening) ready for review, release v0.2.0. Released: v0.1.0 (chain data layer). The product is built from these docs with Claude Code,
 > phase by phase.
 
 ## Setup
@@ -33,13 +33,19 @@ uv run amlcheck status       # creates ~/.amlcheck/ and the database
 
 | Command | What it does |
 |---|---|
-| `amlcheck status` | Data folder, config, database and schema version |
+| `amlcheck check <addr> [--amount N] [--client NAME] [--note TEXT] [--json]` | Screen an address: OFAC sanctions, Tether freezes on TRON (index + live `isBlackListed`). Verdict `BLOCK` / `REVIEW` / `INCOMPLETE` / `NO_HITS`, recorded in the audit log before it is shown. Exit codes: 0 NO_HITS, 3 REVIEW, 4 INCOMPLETE, 5 BLOCK, 1 could not run |
+| `amlcheck sync` | Download the OFAC list (about 29 MB) and refresh the Tether TRON freeze index. **Run at least daily**: a list older than 48 h makes checks INCOMPLETE |
+| `amlcheck status [--json]` | Data folder, config, database, source freshness and the audit log head |
+| `amlcheck audit list [--address] [--verdict] [--client] [--since] [--json]` | Recorded checks, newest first |
+| `amlcheck audit verify` | Recompute the audit hash chain; prints the head hash to keep elsewhere, or the first broken record (exit 1) |
 | `amlcheck history <addr> [--since 30\|2026-09-01] [--until …] [--limit N] [--first-activity] [--json]` | An address's USDT transfers, newest first, from the cache and the providers. 0-value spam is dropped and counted; a window with more than `--limit` transfers is marked incomplete |
 | `amlcheck cache stats [--json]` | Addresses, windows and transfers cached per chain |
 | `amlcheck cache prune [--days N]` | Forget histories of addresses not used for N days (default `[cache] history_keep_days`) |
 
 Errors exit with code 1 and a one-line `error:` message. TRON works without a key at 1 request/s;
-BSC needs `AMLCHECK_HYPERSYNC_TOKEN`.
+BSC history needs `AMLCHECK_HYPERSYNC_TOKEN`. v1 covers USDT on TRC20 and BEP20 only: BEP20 USDT
+can't be frozen, and BSC results say that freezes on other chains are not checked (D-039).
+`NO_HITS` means nothing was found in the sources checked; it is not a clearance.
 
 Development checks: `uv run pytest -q`, `uv run ruff check .`, `uv run ruff format --check .`,
 `uv run mypy`.

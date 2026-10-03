@@ -166,3 +166,90 @@ async def test_error_message_never_contains_request_headers(client: httpx.AsyncC
             PLAIN, "GET", URL, headers={"Authorization": "Bearer secret-123"}
         )
     assert "secret-123" not in str(exc.value)
+
+
+class _Stalls(httpx.AsyncByteStream):
+    """Yields `data`, then stalls (ReadTimeout) unless `complete`."""
+
+    def __init__(self, data: bytes, complete: bool) -> None:
+        self.data, self.complete = data, complete
+
+    async def __aiter__(self):  # type: ignore[no-untyped-def]
+        yield self.data
+        if not self.complete:
+            raise httpx.ReadTimeout("stalled")
+
+
+FILE = bytes(range(256)) * 40  # 10,240 bytes
+LM = "Fri, 02 Oct 2026 15:55:45 GMT"
+
+
+def full(n: int, complete: bool) -> httpx.Response:
+    return httpx.Response(
+        200,
+        headers={"content-length": str(len(FILE)), "last-modified": LM},
+        stream=_Stalls(FILE[:n], complete),
+    )
+
+
+def part(
+    start: int, n: int, complete: bool, lm: str = LM, total: int = len(FILE)
+) -> httpx.Response:
+    end = start + n - 1
+    return httpx.Response(
+        206,
+        headers={"content-range": f"bytes {start}-{end}/{total}", "last-modified": lm},
+        stream=_Stalls(FILE[start : start + n], complete),
+    )
+
+
+@respx.mock
+async def test_download_resumes_after_stalls(client: httpx.AsyncClient) -> None:
+    from amlcheck.net.http import download
+
+    route = respx.get(URL).mock(
+        side_effect=[full(3000, False), part(3000, 4000, False), part(7000, 3240, True)]
+    )
+    data = await download(make(client, FakeTime(), Mode.BACKGROUND), PLAIN, URL)
+    assert data == FILE
+    assert [c.request.headers.get("Range") for c in route.calls] == [
+        None,
+        "bytes=3000-",
+        "bytes=7000-",
+    ]
+
+
+@pytest.mark.parametrize(
+    "second",
+    [
+        full(len(FILE), True),  # server ignores Range: start over with the whole file
+        part(3000, 7240, True, lm="Sat, 03 Oct 2026 00:00:00 GMT"),  # the file changed
+    ],
+)
+@respx.mock
+async def test_download_restarts_when_resume_is_not_safe(
+    client: httpx.AsyncClient, second: httpx.Response
+) -> None:
+    from amlcheck.net.http import download
+
+    respx.get(URL).mock(side_effect=[full(3000, False), second, full(len(FILE), True)])
+    assert await download(make(client, FakeTime(), Mode.BACKGROUND), PLAIN, URL) == FILE
+
+
+@respx.mock
+async def test_download_gives_up_after_stalls_without_progress(client: httpx.AsyncClient) -> None:
+    from amlcheck.net.http import download
+
+    respx.get(URL).mock(side_effect=[full(3000, False)] + [part(3000, 0, False)] * 5)
+    with pytest.raises(SourceError, match=r"stalled 5 times in a row.*3000 of 10240 bytes"):
+        await download(make(client, FakeTime(), Mode.BACKGROUND), PLAIN, URL)
+
+
+@respx.mock
+async def test_download_client_error_is_immediate(client: httpx.AsyncClient) -> None:
+    from amlcheck.net.http import download
+
+    route = respx.get(URL).respond(404, text="gone")
+    with pytest.raises(SourceError, match="HTTP 404: gone"):
+        await download(make(client, FakeTime(), Mode.BACKGROUND), PLAIN, URL)
+    assert route.call_count == 1

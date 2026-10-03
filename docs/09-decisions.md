@@ -34,7 +34,7 @@
 | D-007 | Sanctions staleness measured from our last successful download (48 h), not OFAC's publish date | OFAC does not publish daily | Proposed |
 | D-008 | Issuer freeze history from Eagle Virtual for the **target only**; never for counterparties on the Free plan; answers cached ≤ 15 min and never stored | Quota and licence | Superseded by D-033 |
 | D-009 | On BSC the token freeze check is `skipped` (not a gap); BSC checks can end `NO_HITS`; every BSC result says BEP20 USDT cannot freeze | Contract has no freeze function | Proposed |
-| D-010 | A `0x` address frozen or seized on any EVM chain → R-FRZ-01 BLOCK on BSC | Same key controls the address on every EVM chain | Proposed |
+| D-010 | A `0x` address frozen or seized on any EVM chain → R-FRZ-01 BLOCK on BSC | Same key controls the address on every EVM chain | Deferred by D-039 (no other-chain data in v1) |
 | D-011 | Retry-After ≤ 10 s is waited out; longer → source error → INCOMPLETE. Indexer budget pacing may wait ≤ 65 s | Fast operator feedback, but traces must not fail on pacing | Proposed |
 | D-012 | 0-USDT transfers are dropped from histories | Address-poisoning spam, not dealings | Proposed |
 | D-013 | More transfers than `max_transfers` (5,000) in the lookback → exposure `stale` → INCOMPLETE | Never a clean result over part of a history | Proposed |
@@ -70,7 +70,7 @@
 - **Consequences:** Confirms D-008: target-only checks, credit line shown, quota warning. VS-08 confirms the plan terms.
 
 ### D-026 · Add UK OFSI if it carries crypto addresses (Q-03)
-- **Status:** Accepted
+- **Status:** Deferred by D-041
 - **Date:** 2026-10-01 · **Phase:** P0
 - **Context:** Q-03 asked whether to add the UK OFSI list.
 - **Decision:** Yes, if VS-11 shows it carries crypto addresses in a clean format under a usable licence.
@@ -165,7 +165,7 @@
   §1/§5, acceptance AT-11–AT-13 and AT-16, backlog T-2.07, CLAUDE.md #7 updated.
 
 ### D-034 · Own EVM freeze index (Tether, Circle) through HyperSync
-- **Status:** Accepted
+- **Status:** Superseded by D-039
 - **Date:** 2026-10-01 · **Phase:** P0
 - **Context:** Without a third-party API (D-033), a `0x` address frozen by Tether or Circle on another
   EVM chain would pass a BSC check, since BEP20 USDT can't freeze.
@@ -225,3 +225,41 @@
   (T-2.01) and covers the audit-record parts of AT-07 and AT-08.
 - **Alternatives:** A throwaway check inside `history` (two validators to keep in sync).
 - **Consequences:** Backlog updated. P1 adds `base58` and `eth-hash` (architecture §1).
+
+### D-039 · v1 covers TRC20 and BEP20 only
+- **Status:** Accepted
+- **Date:** 2026-10-01 · **Phase:** P2
+- **Context:** VS-15 started verifying Tether and Circle freeze contracts on six other EVM chains for the
+  EVM freeze index (D-034). The owner: too wide for this version; stay on TRC20 and BEP20.
+- **Decision:** v1 indexes issuer freezes on TRON only (Tether's contract). BEP20 USDT can't freeze, so
+  the BSC freeze source is always `skipped`, and its reason says freezes of the same `0x` address on
+  other chains are not checked in v1. No EVM freeze index; D-010 waits for a later version.
+- **Alternatives:** D-034's index on six chains (more coverage, more scope, more verification).
+- **Consequences:** Supersedes D-034; defers D-010. T-2.07 and VS-15 dropped (findings logged for later);
+  AT-11/AT-12 dropped, AT-13 and AT-16 now about the TRON index, AT-19 names the gap. PRD F4.3,
+  methodology §2.1/§2.3/§3.3/§7.5/§8, data sources §1/§4/§5/§9, `[freshness] evm_index_max_lag_minutes`
+  removed. A BSC check can end `NO_HITS` without any freeze source; the result says what wasn't checked.
+
+### D-040 · Download the zipped OFAC list and resume after stalls
+- **Status:** Proposed
+- **Date:** 2026-10-03 · **Phase:** P2
+- **Context:** Live, `amlcheck sync` failed: the 29 MB `SDN.XML` took 35 min on a 12 KB/s line,
+  stalled past the 20 s read timeout, and every retry started from zero. A stale list makes every check
+  INCOMPLETE after 48 h.
+- **Decision:** `[ofac] sdn_url` defaults to `SDN_XML.ZIP` (the same file, 2.6 MB; VS-01 addendum);
+  `sync` unpacks it (a plain XML URL still works) and keeps the hash of the XML. Large downloads resume
+  with `Range` after a stall and restart only if the server's copy changed; they give up after five
+  attempts in a row without new bytes.
+- **Alternatives:** a longer timeout alone (still restarts 29 MB); OFAC's daily delta feed (another
+  format to verify and maintain).
+- **Consequences:** `net/http.download`; `screening/sanctions.unpack`; config default changed (config
+  hash changes). Data sources §2 updated.
+
+### D-041 · UK OFSI list left for after v1
+- **Status:** Accepted
+- **Date:** 2026-10-03 · **Phase:** P2
+- **Context:** D-026 would add OFSI if VS-11 found crypto addresses under a clean licence. The owner wants a
+  tight v1 (see D-039).
+- **Decision:** No OFSI in v1; VS-11 is not run now. v1 screens against OFAC SDN only.
+- **Alternatives:** Run VS-11 and add OFSI in P2 (more coverage, more scope).
+- **Consequences:** Defers D-026. PRD F3.5 stays optional. Revisit after v1.0.

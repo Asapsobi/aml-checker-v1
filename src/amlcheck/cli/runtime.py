@@ -27,8 +27,17 @@ from amlcheck.config import (
 )
 from amlcheck.core.clock import Clock, from_iso, utcnow
 from amlcheck.core.models import Chain
-from amlcheck.net.http import Http, Mode, SourceError
+from amlcheck.net.http import Http, Limiter, Mode, SourceError
 from amlcheck.net.limits import BudgetPacer, TokenBucket
+from amlcheck.screening.base import SourceAdapter
+from amlcheck.screening.bsc_freeze import BscFreezeSource
+from amlcheck.screening.sanctions import SanctionsSource
+from amlcheck.screening.tron_freeze import (
+    TronBlacklistSource,
+    TronFreezeIndex,
+    TronFreezeSource,
+    TronTether,
+)
 from amlcheck.storage.db import MigrationError, open_db
 
 KEYLESS_TRONGRID_RPS = 1.0  # VS-05: without a key TronGrid allows 1 request/s
@@ -82,14 +91,39 @@ class _Unavailable:
         raise SourceError(self._source, self._reason)
 
 
+def trongrid_limiter(rt: Runtime) -> Limiter:
+    key = rt.secrets.trongrid_api_key
+    return TokenBucket(rt.settings.tron.requests_per_second if key else KEYLESS_TRONGRID_RPS)
+
+
+def make_tether(rt: Runtime, http: Http, limiter: Limiter) -> TronTether:
+    return TronTether(http, rt.settings.tron, api_key=rt.secrets.trongrid_api_key, limiter=limiter)
+
+
+def make_screening_sources(
+    rt: Runtime, conn: sqlite3.Connection, client: httpx.AsyncClient, mode: Mode, chain: Chain
+) -> list[SourceAdapter]:
+    """The P2 sources for a check on `chain` (methodology §2.1)."""
+    http = Http(client, rt.settings.network, mode=mode)
+    sanctions = SanctionsSource(conn, rt.settings.freshness, clock=rt.clock)
+    if chain is Chain.BSC:
+        return [sanctions, BscFreezeSource(clock=rt.clock)]
+    tether = make_tether(rt, http, trongrid_limiter(rt))
+    index = TronFreezeIndex(tether, conn, clock=rt.clock)
+    return [
+        sanctions,
+        TronFreezeSource(index, rt.settings.freshness, clock=rt.clock),
+        TronBlacklistSource(tether, clock=rt.clock),
+    ]
+
+
 def make_sources(rt: Runtime, client: httpx.AsyncClient, mode: Mode) -> dict[Chain, HistorySource]:
     http = Http(client, rt.settings.network, mode=mode)
-    key = rt.secrets.trongrid_api_key
     tron = TronGridSource(
         http,
         rt.settings.tron,
-        api_key=key,
-        limiter=TokenBucket(rt.settings.tron.requests_per_second if key else KEYLESS_TRONGRID_RPS),
+        api_key=rt.secrets.trongrid_api_key,
+        limiter=trongrid_limiter(rt),
         clock=rt.clock,
     )
     bsc: HistorySource

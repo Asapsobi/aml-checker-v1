@@ -51,7 +51,6 @@ class Freshness(_Section):
 
     sanctions_max_age_hours: PosInt = 48
     tron_index_max_lag_minutes: PosInt = 60
-    evm_index_max_lag_minutes: PosInt = 60  # D-034
 
 
 class Network(_Section):
@@ -190,8 +189,9 @@ class Operator(_Section):
 class Ofac(_Section):
     """Data sources §2."""
 
+    # The same SDN.XML zipped: 2.6 MB, not 29 MB (VS-01, D-040). A plain SDN.XML URL works too.
     sdn_url: str = (
-        "https://sanctionslistservice.ofac.treas.gov/api/PublicationPreview/exports/SDN.XML"
+        "https://sanctionslistservice.ofac.treas.gov/api/PublicationPreview/exports/SDN_XML.ZIP"
     )
     changes_url: str = "https://sanctionslistservice.ofac.treas.gov/changes/latest"
     min_kept_share: Share = Decimal("0.8")  # PRD F3.4: > 20% fewer addresses → rejected

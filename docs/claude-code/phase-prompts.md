@@ -32,7 +32,7 @@ first for every ticket.
 Phase P2: the first real check. Follow docs/02-methodology.md §2 exactly: sources table, R-SAN-01,
 R-FRZ-01/02, network failures, verdict precedence. The audit record is written before anything is
 shown (CLAUDE.md #2). Traps: OFAC currency labels are unreliable (match the string); the Tether
-contract's deprecated() must be checked on every sync; an EVM freeze index lagging a chain means
+contract's deprecated() must be checked on every sync; a TRON freeze index lagging > 60 min means
 INCOMPLETE; BSC token freeze is skipped, not failed. Finish with the live checks in T-2.11.
 ```
 

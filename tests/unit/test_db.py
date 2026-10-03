@@ -172,3 +172,44 @@ def test_p0_database_upgrades_to_p1(tmp_path: Path) -> None:
     assert schema_version(conn) == len(load_migrations())
     tables = {r[0] for r in conn.execute("SELECT name FROM sqlite_master WHERE type='table'")}
     assert "transfers" in tables
+
+
+def test_0002_screening_schema(tmp_path: Path) -> None:
+    conn = open_db(tmp_path / "a.db")
+    assert schema_version(conn) >= 2
+    tables = {r[0] for r in conn.execute("SELECT name FROM sqlite_master WHERE type='table'")}
+    assert {
+        "list_snapshots",
+        "sanctioned_addresses",
+        "issuer_events",
+        "index_state",
+        "checks",
+        "check_sources",
+        "check_findings",
+    } <= tables
+    cols = [r[1] for r in conn.execute("PRAGMA table_info(checks)")]
+    assert cols[:2] == ["seq", "check_id"]
+    assert {"prev_hash", "record_hash", "config_hash", "rules_version", "tool_version"} <= set(cols)
+    with pytest.raises(sqlite3.IntegrityError):
+        conn.execute(
+            "INSERT INTO checks (check_id, created_at, chain, address_norm, verdict, tool_version, "
+            "rules_version, config_hash, prev_hash, record_hash) "
+            "VALUES ('c1', 't', 'tron', 'T', 'MAYBE', 'v', 1, 'h', 'p', 'r')"
+        )
+
+
+def test_v010_database_upgrades_to_p2_keeping_its_cache(tmp_path: Path) -> None:
+    from amlcheck.storage.db import Migration
+
+    path = tmp_path / "a.db"
+    conn = connect(path)
+    migrate(conn, load_migrations()[:1])  # what v0.1.0 created
+    conn.execute(
+        "INSERT INTO transfers VALUES ('tron', 'tx', 0, NULL, '2026-01-01T00:00:00.000000Z', "
+        "'Ta', 'Tb', '1.5')"
+    )
+    conn.close()
+    conn = open_db(path)
+    assert schema_version(conn) == len(load_migrations()) >= 2
+    assert conn.execute("SELECT amount FROM transfers").fetchone() == ("1.5",)
+    assert isinstance(load_migrations()[0], Migration)
