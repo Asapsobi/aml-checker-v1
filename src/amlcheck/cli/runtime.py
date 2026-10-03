@@ -13,10 +13,10 @@ from typing import NoReturn
 import httpx
 import typer
 
-from amlcheck.chain.base import History, HistorySource
-from amlcheck.chain.bsc import HyperSyncSource
-from amlcheck.chain.cache import TransferCache
-from amlcheck.chain.tron import TronGridSource
+from amlcheck.chain.base import ContractLookup, History, HistorySource
+from amlcheck.chain.bsc import BscContractLookup, HyperSyncSource
+from amlcheck.chain.cache import ContractCache, TransferCache
+from amlcheck.chain.tron import TronContractLookup, TronGridSource
 from amlcheck.config import (
     ConfigError,
     Paths,
@@ -29,8 +29,10 @@ from amlcheck.config import (
 from amlcheck.core.clock import Clock, from_iso, utcnow
 from amlcheck.core.models import Chain
 from amlcheck.intel.lookalike import LookalikeSource
+from amlcheck.intel.store import IntelStore
 from amlcheck.net.http import Http, Limiter, Mode, SourceError
 from amlcheck.net.limits import BudgetPacer, TokenBucket
+from amlcheck.profile.adapter import ClassifierSource, Profiler
 from amlcheck.screening.base import SourceAdapter
 from amlcheck.screening.bsc_freeze import BscFreezeSource
 from amlcheck.screening.exposure import ExposureSource
@@ -105,6 +107,24 @@ def trongrid_limiter(rt: Runtime) -> Limiter:
     return rt.limiters["trongrid"]
 
 
+def bsc_rpc_limiter(rt: Runtime) -> Limiter:
+    if "bsc_rpc" not in rt.limiters:
+        rt.limiters["bsc_rpc"] = TokenBucket(rt.settings.bsc.rpc_requests_per_second)
+    return rt.limiters["bsc_rpc"]
+
+
+def make_contract_lookups(rt: Runtime, http: Http) -> dict[Chain, ContractLookup]:
+    return {
+        Chain.TRON: TronContractLookup(
+            http,
+            rt.settings.tron,
+            api_key=rt.secrets.trongrid_api_key,
+            limiter=trongrid_limiter(rt),
+        ),
+        Chain.BSC: BscContractLookup(http, rt.settings.bsc, limiter=bsc_rpc_limiter(rt)),
+    }
+
+
 def hypersync_pacer(rt: Runtime) -> Limiter:
     if "hypersync" not in rt.limiters:
         rt.limiters["hypersync"] = BudgetPacer(rt.settings.network.max_pacer_wait_seconds)
@@ -126,8 +146,20 @@ def make_screening_sources(
         cache, conn, rt.settings.exposure, rt.settings.heuristics, clock=rt.clock
     )
     lookalike = LookalikeSource(conn, clock=rt.clock)
+    store = IntelStore(conn, clock=rt.clock)
+    profiler = Profiler(
+        conn,
+        cache,
+        ContractCache(conn, make_contract_lookups(rt, http), clock=rt.clock),
+        store,
+        rt.settings.classifier,
+        rt.settings.heuristics,
+        rt.settings.trace,
+        clock=rt.clock,
+    )
+    classifier = ClassifierSource(profiler, store, rt.settings.classifier, clock=rt.clock)
     if chain is Chain.BSC:
-        return [sanctions, BscFreezeSource(clock=rt.clock), exposure, lookalike]
+        return [sanctions, BscFreezeSource(clock=rt.clock), exposure, lookalike, classifier]
     tether = make_tether(rt, http, trongrid_limiter(rt))
     index = TronFreezeIndex(tether, conn, clock=rt.clock)
     return [
@@ -136,6 +168,7 @@ def make_screening_sources(
         TronBlacklistSource(tether, clock=rt.clock),
         exposure,
         lookalike,
+        classifier,
     ]
 
 
