@@ -12,6 +12,7 @@ import typer
 
 from amlcheck.cli import (
     audit,
+    batch,
     cache,
     check,
     classify,
@@ -33,6 +34,7 @@ app = typer.Typer(
 )
 app.command("status")(status.status)
 app.command("check")(check.check)
+app.command("batch")(batch.batch)
 app.command("history")(history.history)
 app.command("classify")(classify.classify)
 app.command("trace")(trace.trace)
