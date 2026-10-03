@@ -402,3 +402,48 @@
   recorded check).
 - **Consequences:** A report always shows what was recorded at the time of the check.
 
+### D-054 · Watch notifications: macOS, plus an optional local webhook (Q-11)
+- **Status:** Accepted
+- **Date:** 2026-10-03 · **Phase:** P8
+- **Context:** `watch run` must tell the operator when a verdict changes (PRD F11.3).
+- **Decision:** A macOS notification (`osascript`) when anything changed. When `[monitor] webhook_url`
+  is set, the same changes also go there as one JSON POST. No notification elsewhere (Linux, Windows):
+  the run's output and exit code 6 carry it.
+- **Alternatives:** Webhook only; e-mail (needs credentials).
+- **Consequences:** A scheduled run reaches the operator without an extra service.
+
+### D-055 · The web UI uses no JavaScript (Q-25)
+- **Status:** Accepted
+- **Date:** 2026-10-03 · **Phase:** P8
+- **Context:** Architecture §2 names HTMX, vendored. The pages need only form posts and a progress view
+  for running traces.
+- **Decision:** Server-rendered pages without scripts. A running trace's page refreshes itself every 2 s
+  until the trace ends. The CSP is `default-src 'none'` with only same-origin styles, images and form
+  actions, so no script can run at all.
+- **Alternatives:** Vendored HTMX (a third-party file to download, review and keep updated).
+- **Consequences:** Supersedes the HTMX line of architecture §2 for P8. A later page that truly needs
+  scripts adds them with its own decision.
+
+### D-056 · Batch file format and exit code (Q-26)
+- **Status:** Accepted
+- **Date:** 2026-10-03 · **Phase:** P8
+- **Context:** PRD F11.2 names `batch` from CSV but no columns.
+- **Decision:** Input header `address,chain,amount,client,note`, only `address` required, extra columns
+  refused. Every row is validated before any is screened; one invalid row ⇒ nothing screened, exit 1,
+  each problem listed by row. Output CSV, streamed row by row: `row,address,chain,verdict,score,band,
+  rules,check_id,record_hash`. Exit code: the most serious verdict (5 BLOCK, 4 INCOMPLETE, 3 REVIEW, 0).
+- **Alternatives:** Screen the valid rows and skip the rest (a silently partial batch).
+- **Consequences:** A batch is all or nothing at the validation step, like `labels import`.
+
+### D-057 · `watch run` re-screens without a trace (Q-27)
+- **Status:** Accepted
+- **Date:** 2026-10-03 · **Phase:** P8
+- **Context:** PRD F11.3: changed verdicts are reported and recorded.
+- **Decision:** Every watched address is checked like `check` without an amount (no trace), one at a
+  time. A change is a verdict different from the watchlist's last verdict for it; the first run of a new
+  address is not a change. Each check is in the audit log; the watchlist row keeps the last verdict and
+  check id. Exit 6 when anything changed.
+- **Alternatives:** Trace every watched address (budget); compare scores (the score is uncalibrated
+  until P11).
+- **Consequences:** A scheduled daily run costs one check per watched address.
+
