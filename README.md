@@ -4,7 +4,7 @@
 address classification, risk scoring and a recorded decision trail. Local-first, built on RPC
 providers and indexers, no own nodes.
 
-> **Status:** P5 (profiler & classifier) ready for review, release v0.5.0. Released: v0.1.0 – v0.4.0. The product is built from these docs with Claude Code,
+> **Status:** P6 (source-of-funds trace) ready for review, release v0.6.0. Released: v0.1.0 – v0.5.0. The product is built from these docs with Claude Code,
 > phase by phase.
 
 ## Setup

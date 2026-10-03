@@ -168,3 +168,41 @@ R-HEU-01 (new) and R-HEU-02 (pass-through) fire. `audit verify`: OK, 14 records.
 Notes for P11 calibration: a very busy deposit address is capped and so primary HUB (table order);
 R-HEU-02 fires on deposit addresses by nature (they sweep within hours).
 
+## P6 · Source-of-funds trace
+
+| AT | Tests | Status |
+|---|---|---|
+| AT-37 | `test_trace_engine.py::test_at37_worked_example` (partition, coverage 0.9, 3 reads, D-047); `test_trace_rules.py::test_at37_findings`; through a check: `test_trace_jobs.py::test_trace_source_in_a_check` (REVIEW, trace id in the audit record) | Green locally (2026-10-03) |
+| AT-38 | `test_trace_property.py::test_at38_random_graphs` (500 random graphs: partition = 1 ± 0.001, reads ≤ `max_nodes`, identical JSON on re-run) | Green locally |
+| AT-39 | `test_trace_engine.py::test_at39_read_failure_keeps_partial`; `test_trace_jobs.py::test_trace_source_failure_is_incomplete` (INCOMPLETE, R-SYS-01 naming the node and hop, partial saved with the job); `test_cli_trace.py::test_trace_incomplete`, `test_investigate_incomplete` | Green locally |
+| AT-40 | `test_trace_engine.py::test_at40_node_budget` (`untraced:budget` 0.1, complete) | Green locally |
+| AT-41 | `test_trace_engine.py::test_at41_cycle` (`untraced:cycle`, terminates) | Green locally |
+
+Also: the job queue (atomic claim, idempotency key, an abandoned `running` job resumed after the time
+budget + 120 s, progress, failures stored with the partial); the time budget bounding a read in
+progress; `check --trace/--no-trace` and the automatic trace at ≥ 10,000 USDT; the trace's own
+background client (D-036); the SVG graph (snapshot of the §7.11 example, 8 + 6 labels, edge widths);
+`trace` and `investigate` (D-049); the BSC read that no longer rescans empty blocks.
+
+**Live budget run, VS-07 (2026-10-03, owner's keys, scratch copies of the database emptied of all
+cached chain data per target):** see [verification-log.md](verification-log.md#vs-07--trace-budget-cold-and-warm-prd-g7-g8).
+
+| | TRON (3 traces) | BSC (3 traces) | Target |
+|---|---|---|---|
+| Cold: requests | 43, 105, 86 TronGrid | 9, 31, 35 HyperSync | ≤ 200 / ≤ 120 (G8) |
+| Cold: time | 28–71 s | 63–147 s | ≤ 5 min on BSC |
+| Warm: requests | 1 each | 2 each | ≥ 50% fewer (G7): 78–99% |
+| Warm: time | ≤ 0.8 s | ≤ 3.1 s | ≤ 90 s |
+
+The run found two bugs, both fixed before these numbers: the BSC backward read rescanned empty blocks
+for new busy wallets (181 queries and 632 s → 31 queries and 63 s on the same trace), and the time
+budget did not bound a read in progress.
+
+`amlcheck investigate TVvWhZyL…LeSsWP --amount 20000` (scratch copy, warm): **REVIEW**. R-TRC-01: a
+sanctioned wallet 2 hops away, every hop on the path moved ≥ 34,733 USDT (estimated share 0.7%);
+R-TRC-04: coverage 29.4%. The check's audit record carries the trace id; `audit verify`: OK, 15 records.
+`amlcheck trace … --svg` drew the 57-item graph.
+
+Notes for P11 calibration: coverage was 6.6–44% on four of six real targets, mostly
+`untraced:pruned` (5 senders kept per node) and `untraced:depth`; consider `branch` and `coverage_share`
+against the golden set.

@@ -82,7 +82,7 @@ class TraceSource:
         coverage = pct(trace.coverage) if trace.coverage is not None else "no inflow"
         b = trace.budget
         detail = (
-            f"coverage {coverage}; {b.nodes_read} addresses read, {b.queries} provider calls, "
+            f"coverage {coverage}; {b.nodes_read} address(es) read, {b.queries} provider call(s), "
             f"{b.seconds:.0f} s"
         )
         return SourceResult(

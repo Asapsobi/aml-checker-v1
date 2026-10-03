@@ -14,7 +14,7 @@
 | Q-06 | Do you have existing address lists (own wallets, known OTC partners, known bad actors) to import as labels at P4? | P4 | Import as `labels.csv` and operator labels | | Open |
 | Q-07 | Accept proportional trace shares as an *estimated* metric next to absolute amounts (D-016)? | P6 | Yes | Yes, as proposed (D-016 accepted) | Answered |
 | Q-08 | R-TRC-01 (sanctioned wallet 2–3 hops upstream, ≥ 1,000 USDT): REVIEW or BLOCK? | P6 | REVIEW | REVIEW, as proposed (D-044) | Answered |
-| Q-09 | If the free HyperSync plan can't meet the trace budget, is a paid tier OK, and at what monthly budget? | P6 | Decide after VS-07 | Decide after VS-07 (T-6.11), as proposed | Open |
+| Q-09 | If the free HyperSync plan can't meet the trace budget, is a paid tier OK, and at what monthly budget? | P6 | **No paid tier.** VS-07 (2026-10-03): a cold trace used 9–35 HyperSync queries (G8 allows 120) and 43–105 TronGrid requests (allows 200); a repeat 1–2. Revisit only if P10 monitoring needs more | | Open |
 | Q-10 | Should the score ever change the verdict (R-SCR-01)? | P7 | Off | | Open |
 | Q-11 | Notifications: macOS notification only, or also a local webhook (e.g. into a Telegram bot you run)? | P8 | Notification only; webhook optional | | Open |
 | Q-12 | Operator name on decisions: one name from config, or asked each time? | P9 | From config | | Open |

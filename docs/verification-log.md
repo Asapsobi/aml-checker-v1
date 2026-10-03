@@ -16,6 +16,7 @@ VS-07 (P6) and VS-11 to VS-14 (later phases) are not P0 items. VS-15 was redone 
 | VS-04 | Confirmed, plus a uniqueness problem | Yes: transfer identity depends on whose history is read | Q-17 |
 | VS-05 | Confirmed with key | Key limit 15/s; over it a 30 s suspension, no `Retry-After` | Q-18, Q-20 |
 | VS-06 | Confirmed with token | Small: header format, `rollback_guard`, budget shared across hosts | — |
+| VS-07 | Measured (3 + 3 traces, cold and warm): within G7 and G8 | No; two of our bugs found and fixed | Q-09 |
 | VS-08 | Dropped (D-033) | Was: `CLEAR` can come with chains behind (spec 1.3.0) | Q-19 (superseded) |
 | VS-09 | Dropped (D-033) | — | — |
 | VS-10 | Confirmed (both chains) | `create_time` absent on contract-created contracts | — |
@@ -222,6 +223,48 @@ wallet: first activity block 50,980,453 (a transaction), 1 query, 10.7 s. Never-
 chain scanned, 2 queries, 11.7 s, no hit.
 **Fixtures:** `tests/fixtures/trongrid/getaccount_active.json`, `getaccount_contract_no_create_time.json`,
 `getaccount_never_activated.json` (permissions and resources removed)
+
+---
+
+## VS-07 · Trace budget, cold and warm (PRD G7, G8)
+**Checked:** 2026-10-03, owner's TronGrid key and HyperSync token, trace engine v1 with default
+`[trace]` settings. Targets: 3 per chain that had just received a 1k–50k USDT transfer, not contracts,
+20–1,500 transfers in 180 days, ≥ 10k USDT received from ≥ 3 senders. Each cold trace ran on its own
+copy of the database with every cached transfer, window, contract answer, classification and inferred
+entity removed; the warm trace repeated it right after. Requests counted per provider.
+
+| Target | Cold: requests | Cold: time | Read | Coverage | Warm: requests | Warm: time | Saving |
+|---|---|---|---|---|---|---|---|
+| TRON `TRwJi21T…i6vSwo` (711 transfers) | 43 TronGrid | 28 s | 12 | 34.8% | 1 | 0.6 s | 98% |
+| TRON `TS5t3Vh8…iGB3hE` (110) | 105 TronGrid | 71 s | 24 | 6.6% | 1 | 0.8 s | 99% |
+| TRON `TVvWhZyL…LeSsWP` (194) | 86 TronGrid | 46 s | 22 | 29.4% | 1 | 0.8 s | 99% |
+| BSC `0xc613cf…a1eeda` (1,112) | 9 HyperSync | 74 s | 2 | 99.4% | 2 | 3.1 s | 78% |
+| BSC `0x0c1e52…ee1576` (30) | 31 HyperSync, 14 RPC | 63 s | 15 | 15.5% | 2 | 1.3 s | 96% |
+| BSC `0x090354…26600c` (1,099) | 35 HyperSync | 147 s | 6 | 43.8% | 2 | 2.0 s | 94% |
+
+**Found:**
+- **G8 met with a wide margin:** at most 35 of 120 HyperSync queries and 105 of 200 TronGrid requests.
+  **G7 met:** a repeat used 78–99% fewer. **Performance met:** cold BSC ≤ 147 s (≤ 5 min), warm ≤ 3.1 s
+  (≤ 90 s). All six complete; partitions identical cold and warm.
+- At ~0.45 s per BSC block a 30-day hop window is ~5.76 million blocks. A quiet address costs one
+  page (0.5–2 s). HyperSync sometimes takes 20–57 s for one page (2 of 54 pages), so BSC time is
+  dominated by a few slow answers, not by the count.
+- **Bug 1 (fixed, `4ee0a2c`):** the newest-first BSC read ignored that HyperSync's first page holds every
+  log up to its `next_block`, and scanned backward to the window start. A new, busy wallet (all logs
+  near the end, many 0-value spam that don't count) sent it through millions of empty blocks: ~160
+  queries and 632 s for one trace (181 queries, failed on time). After the fix the same trace: 31
+  queries, 63 s, complete.
+- **Bug 2 (fixed, `1a6bad4`):** the 300 s time budget was checked only between addresses, so one slow
+  read ran past it. Every read now runs under the time left; the trace then ends as a partial (seen
+  live: stopped at 300.0 s).
+- Real finding: TRON target 3 traces to an OFAC-listed wallet 2 hops away (every hop on the path moved
+  ≥ 34,733 USDT; estimated share 0.7%) → R-TRC-01 REVIEW.
+- Coverage is often low (6.6–44%) because pruning keeps 5 senders per node and `untraced:depth` takes the
+  rest: wallets with many mid-sized senders lose most value to `untraced:pruned`. R-TRC-04 flags these
+  for review, as designed. A calibration input for P11 (`branch`, `coverage_share`).
+**Differs from docs/04-data-sources.md:** no (BSC pace ~0.45 s per block, as the doc says).
+**What this changes:** Q-09: no paid HyperSync tier needed (proposed). No config change.
+**Scripts:** run from a scratch folder, keys through `amlcheck.config` only, never printed.
 
 ---
 
