@@ -67,7 +67,17 @@ def prune(
     rt = runtime.load()
     cache = _cache(rt)
     keep_days = days or rt.settings.cache.history_keep_days
-    # P1 keeps nothing special; registry, labels, entities and own wallets join in later phases.
-    n = cache.prune(keep_days, keep=lambda chain, address: False)
+    # D-043: counterparties, labelled addresses and entity members are kept (own wallets: P10).
+    conn = runtime.open_database(rt)
+    keep = {
+        (r[0], r[1])
+        for r in conn.execute(
+            "SELECT chain, address_norm FROM counterparties "
+            "UNION SELECT chain, address_norm FROM labels "
+            "UNION SELECT chain, address_norm FROM intel_labels WHERE retracted_at IS NULL "
+            "UNION SELECT chain, address_norm FROM entity_members"
+        )
+    }
+    n = cache.prune(keep_days, keep=lambda chain, address: (chain.value, address) in keep)
     left = sum(c.transfers for c in cache.stats().chains.values())
     typer.echo(f"forgot {n} address(es) unused for {keep_days} days; {left} transfers left")

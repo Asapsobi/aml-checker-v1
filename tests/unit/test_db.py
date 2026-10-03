@@ -213,3 +213,17 @@ def test_v010_database_upgrades_to_p2_keeping_its_cache(tmp_path: Path) -> None:
     assert schema_version(conn) == len(load_migrations()) >= 2
     assert conn.execute("SELECT amount FROM transfers").fetchone() == ("1.5",)
     assert isinstance(load_migrations()[0], Migration)
+
+
+def test_0004_intel_schema(tmp_path: Path) -> None:
+    conn = open_db(tmp_path / "a.db")
+    tables = {r[0] for r in conn.execute("SELECT name FROM sqlite_master WHERE type='table'")}
+    assert {"intel_labels", "entities", "entity_members", "counterparties"} <= tables
+    with pytest.raises(sqlite3.IntegrityError):
+        conn.execute(
+            "INSERT INTO intel_labels (chain, address_norm, category, provenance, source_ref, "
+            "confidence, category_version, created_at) VALUES ('tron', 'T', 'mixer', 'rumour', "
+            "'x', '1', 1, 't')"
+        )
+    indexes = {r[1] for r in conn.execute("PRAGMA index_list(counterparties)")}
+    assert "counterparties_lookalike" in indexes

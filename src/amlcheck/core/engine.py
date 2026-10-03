@@ -5,7 +5,7 @@
 2. Collect findings, apply config severity overrides, add R-SYS-01 for required gaps, decide.
 3. Append the audit record **before** anything is returned for display (non-negotiable #2). If the
    append fails, the check fails: a result that isn't recorded is never shown.
-Score (P7) and registry (P4) join later.
+4. Upsert the counterparty registry (P4). Score (P7) joins later.
 """
 
 from __future__ import annotations
@@ -24,6 +24,7 @@ from amlcheck.core.clock import Clock, to_db, to_iso, utcnow
 from amlcheck.core.models import Address, CheckResult, Finding, SourceResult, SourceStatus
 from amlcheck.core.rules import RULES_VERSION, apply_overrides, system_findings
 from amlcheck.core.verdict import decide
+from amlcheck.intel import registry
 from amlcheck.net.http import SourceError
 from amlcheck.screening.base import SourceAdapter, failed
 
@@ -102,6 +103,13 @@ async def screen(
         operator_note=note,
     )
     appended = append(conn, record)  # before anything is shown
+    # Registry after the audit record (architecture §4.1 step 7); `cp rebuild` can always redo it.
+    registry.upsert(
+        conn,
+        registry.CheckRow(
+            check_id, record.created_at, record.chain, record.address_norm, record.verdict, client
+        ),
+    )
     return CheckResult(
         address=address,
         verdict=verdict,

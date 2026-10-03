@@ -28,6 +28,7 @@ from amlcheck.config import (
 )
 from amlcheck.core.clock import Clock, from_iso, utcnow
 from amlcheck.core.models import Chain
+from amlcheck.intel.lookalike import LookalikeSource
 from amlcheck.net.http import Http, Limiter, Mode, SourceError
 from amlcheck.net.limits import BudgetPacer, TokenBucket
 from amlcheck.screening.base import SourceAdapter
@@ -124,8 +125,9 @@ def make_screening_sources(
     exposure = ExposureSource(
         cache, conn, rt.settings.exposure, rt.settings.heuristics, clock=rt.clock
     )
+    lookalike = LookalikeSource(conn, clock=rt.clock)
     if chain is Chain.BSC:
-        return [sanctions, BscFreezeSource(clock=rt.clock), exposure]
+        return [sanctions, BscFreezeSource(clock=rt.clock), exposure, lookalike]
     tether = make_tether(rt, http, trongrid_limiter(rt))
     index = TronFreezeIndex(tether, conn, clock=rt.clock)
     return [
@@ -133,6 +135,7 @@ def make_screening_sources(
         TronFreezeSource(index, rt.settings.freshness, clock=rt.clock),
         TronBlacklistSource(tether, clock=rt.clock),
         exposure,
+        lookalike,
     ]
 
 

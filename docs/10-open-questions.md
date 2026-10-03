@@ -10,7 +10,7 @@
 | Q-02 | Which freeze-vendor plan: Eagle Virtual Free (1,000 checks/day, credit line) or Business? | P2 | Free until volume needs more | Accepted as proposed (D-025), then superseded: no third-party freeze API (D-033) | Superseded |
 | Q-03 | Add the UK OFSI list if it carries crypto addresses (VS-11)? | P2 | Yes, if format and licence are clean | Accepted as proposed (D-026), then deferred to after v1 (D-041) | Answered |
 | Q-04 | R-EXP-01 (a direct counterparty is sanctioned/frozen): REVIEW or BLOCK? | P3 | REVIEW (D-014) | REVIEW, as proposed (D-014 accepted) | Answered |
-| Q-05 | How long to keep cached histories of addresses that are not counterparties, labelled or own? | P4 | 30 days | | Open |
+| Q-05 | How long to keep cached histories of addresses that are not counterparties, labelled or own? | P4 | 30 days | 30 days, as proposed (= `[cache] history_keep_days`; D-043) | Answered |
 | Q-06 | Do you have existing address lists (own wallets, known OTC partners, known bad actors) to import as labels at P4? | P4 | Import as `labels.csv` and operator labels | | Open |
 | Q-07 | Accept proportional trace shares as an *estimated* metric next to absolute amounts (D-016)? | P6 | Yes | | Open |
 | Q-08 | R-TRC-01 (sanctioned wallet 2–3 hops upstream, ≥ 1,000 USDT): REVIEW or BLOCK? | P6 | REVIEW | | Open |

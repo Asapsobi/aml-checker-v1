@@ -273,3 +273,14 @@ events via HyperSync (`<chain>.hypersync.xyz`, owner's token) with topic0 for
 **Differs from docs/04-data-sources.md:** the doc listed only `AddedBlackList`-style events for Tether.
 **What this changes:** nothing in v1 (D-039). Input for a later version.
 **Fixtures:** none saved (not used by code).
+
+---
+
+## VS-14 · Label pack licence (template; fill in before every `intel import-pack`)
+**Checked:** YYYY-MM-DD, against <the provider's licence / terms URL or contract reference>
+**Pack:** name (as passed to `--name`), provider, version/date, row count
+**Found:** may it be used internally for screening? stored locally, for how long? may it be combined
+with our own labels? attribution required? any ban on resale or redistribution (we never resell)?
+**Licence string recorded:** the exact `--licence` text (it is stored on every imported label)
+**What this changes:** categories the pack adds, and whether `[heuristics] risky_tags` should include any
+**Decision:** D-NNN if the pack changes scope or cost
