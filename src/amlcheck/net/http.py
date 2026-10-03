@@ -15,6 +15,7 @@ Errors are `SourceError` with a plain reason. Request headers (keys) never appea
 from __future__ import annotations
 
 import asyncio
+import re
 from collections.abc import Awaitable, Callable, Mapping
 from dataclasses import dataclass, field
 from enum import StrEnum
@@ -184,3 +185,66 @@ def _seconds(value: str) -> float | None:
 def _snippet(resp: httpx.Response) -> str:
     text = " ".join(resp.text.split())
     return text[:200] if text else "(empty body)"
+
+
+_CONTENT_RANGE = re.compile(r"^bytes (\d+)-(\d+)/(\d+)$")
+DOWNLOAD_STALLS = 5
+
+
+async def download(http: Http, provider: Provider, url: str) -> bytes:
+    """GET a large file, resuming after stalls instead of starting over (D-040).
+
+    Each attempt streams; a stall longer than `[network] timeout_seconds` ends it, and the next one
+    asks for the rest with `Range`. If the server's copy changed (size or `Last-Modified`), or it
+    ignores `Range`, the download restarts from zero. Gives up after `DOWNLOAD_STALLS` attempts in a
+    row that brought no new bytes. Redirects are followed and never logged (signed URLs).
+    """
+    buf = bytearray()
+    total: int | None = None
+    version: str | None = None
+    stalls = 0
+    while True:
+        before = len(buf)
+        headers = {"Range": f"bytes={len(buf)}-"} if buf else {}
+        try:
+            async with http._client.stream(
+                "GET",
+                url,
+                headers=headers,
+                follow_redirects=True,
+                timeout=http._network.timeout_seconds,
+            ) as resp:
+                if resp.status_code == 206 and buf:
+                    m = _CONTENT_RANGE.match(resp.headers.get("content-range", ""))
+                    same = (
+                        m is not None
+                        and int(m.group(1)) == len(buf)
+                        and int(m.group(3)) == total
+                        and resp.headers.get("last-modified") == version
+                    )
+                    if not same:
+                        buf.clear()
+                        continue
+                elif resp.status_code == 200:
+                    buf.clear()
+                    length = resp.headers.get("content-length")
+                    total = int(length) if length and length.isdigit() else None
+                    version = resp.headers.get("last-modified")
+                elif resp.status_code >= 500 or resp.status_code in provider.refusal_statuses:
+                    raise httpx.TransportError(f"HTTP {resp.status_code}")
+                else:
+                    await resp.aread()
+                    raise SourceError(provider.name, f"HTTP {resp.status_code}: {_snippet(resp)}")
+                async for chunk in resp.aiter_bytes():
+                    buf.extend(chunk)
+            if total is None or len(buf) >= total:
+                return bytes(buf)
+        except (httpx.TimeoutException, httpx.TransportError) as e:
+            stalls = 0 if len(buf) > before else stalls + 1
+            if stalls >= DOWNLOAD_STALLS:
+                got = f"{len(buf)} of {total} bytes" if total else f"{len(buf)} bytes"
+                raise SourceError(
+                    provider.name,
+                    f"download stalled {stalls} times in a row ({type(e).__name__}); got {got}",
+                ) from None
+            await http._sleep(_BACKOFF_S[min(stalls, len(_BACKOFF_S)) - 1] if stalls else 0)

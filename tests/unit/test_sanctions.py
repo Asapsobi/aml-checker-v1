@@ -179,12 +179,52 @@ def test_old_snapshots_keep_rows_but_not_addresses(conn: sqlite3.Connection, dat
 
 
 @respx.mock
-async def test_sync_follows_redirect(conn: sqlite3.Connection, data: bytes) -> None:
-    respx.get(Ofac().sdn_url).respond(302, headers={"Location": "https://s3.test/SDN.XML?sig=1"})
+async def test_sync_follows_redirect_plain_xml(conn: sqlite3.Connection, data: bytes) -> None:
+    plain = Ofac(sdn_url="https://ofac.test/SDN.XML")
+    respx.get(plain.sdn_url).respond(302, headers={"Location": "https://s3.test/SDN.XML?sig=1"})
     respx.get("https://s3.test/SDN.XML").respond(200, content=data)
+    async with httpx.AsyncClient() as c:
+        http = Http(c, Network(), mode=Mode.BACKGROUND, sleep=FakeTime().sleep)
+        r = await sync(http, conn, plain, fixed(NOW))
+    assert r.accepted
+    assert r.address_count == len(parse_sdn(data).addresses)
+    assert r.previous_count is None
+
+
+def zipped(xml: bytes, name: str = "SDN.XML", extra: bool = False) -> bytes:
+    import io
+    import zipfile
+
+    buf = io.BytesIO()
+    with zipfile.ZipFile(buf, "w", zipfile.ZIP_DEFLATED) as z:
+        z.writestr(name, xml)
+        if extra:
+            z.writestr("OTHER/SDN.XML", xml)
+    return buf.getvalue()
+
+
+def test_unpack(data: bytes) -> None:
+    from amlcheck.screening.sanctions import unpack
+
+    assert unpack(zipped(data)) == data
+    assert unpack(data) == data  # a plain SDN.XML URL still works
+    with pytest.raises(SourceError, match=r"exactly one SDN\.XML"):
+        unpack(zipped(data, extra=True))
+    with pytest.raises(SourceError, match=r"exactly one SDN\.XML"):
+        unpack(zipped(data, name="README.TXT"))
+    with pytest.raises(SourceError, match="not a valid zip"):
+        unpack(b"PK\x03\x04 broken")
+
+
+@respx.mock
+async def test_sync_from_the_zip(conn: sqlite3.Connection, data: bytes) -> None:
+    import hashlib
+
+    assert Ofac().sdn_url.endswith("/SDN_XML.ZIP")
+    respx.get(Ofac().sdn_url).respond(302, headers={"Location": "https://s3.test/SDN_XML.ZIP?s=1"})
+    respx.get("https://s3.test/SDN_XML.ZIP").respond(200, content=zipped(data))
     async with httpx.AsyncClient() as c:
         http = Http(c, Network(), mode=Mode.BACKGROUND, sleep=FakeTime().sleep)
         r = await sync(http, conn, Ofac(), fixed(NOW))
     assert r.accepted
-    assert r.address_count == len(parse_sdn(data).addresses)
-    assert r.previous_count is None
+    assert r.sha256 == hashlib.sha256(data).hexdigest()  # the list's hash, not the zip's

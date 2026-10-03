@@ -41,6 +41,18 @@ VS-07 (P6) and VS-11 to VS-14 (later phases) are not P0 items. VS-15 was redone 
 **Fixtures:** `tests/fixtures/ofac/sdn_sample.xml` (6 real entries: TRON under USDT, TRON under XBT,
 mixed-case ETH, the BSC label, the BNB label, one non-crypto entry; `Record_Count` set to 6)
 
+### VS-01 addendum · the zipped list (2026-10-03)
+**Checked:** `…/exports/SDN_XML.ZIP` and `…/exports/SDN.XML`, publication of 2026-10-02.
+**Found:** both redirect into the same S3 publication folder. The ZIP is 2,581,725 bytes and holds one
+member, `SDN.XML`, of 29,240,384 bytes: exactly the size of `SDN.XML`, and byte-identical to it at the
+start, middle and end (three 64 KB `Range` slices). S3 answers `Range` with `206` and `Content-Range`.
+The ETags are not MD5s of the content (the ZIP's own MD5 differs from its ETag), so they can't be used
+to compare files. Live trigger: `amlcheck sync` of the 29 MB XML failed after 35 min on a 12 KB/s line
+("timed out after 3 tries"), each retry starting from zero.
+**Differs from docs/04-data-sources.md:** adds the ZIP and the Range support.
+**What this changes:** D-040: download the ZIP by default and resume after stalls.
+**Fixtures:** none (the tests zip `sdn_sample.xml`).
+
 ## VS-02 · Tether TRON contract: events, isBlackListed, deprecated()
 **Checked:** 2026-10-01, against `https://api.trongrid.io` (no key)
 **Found:**

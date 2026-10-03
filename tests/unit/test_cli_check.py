@@ -152,7 +152,9 @@ def test_status_shows_sources_and_audit(home: Path) -> None:
 
 @respx.mock
 def test_sync_end_to_end_with_fixtures(home: Path) -> None:
-    respx.get(Ofac().sdn_url).respond(200, content=(FIX / "ofac" / "sdn_sample.xml").read_bytes())
+    respx.get(Ofac().sdn_url).respond(
+        200, content=(FIX / "ofac" / "sdn_sample.xml").read_bytes()
+    )  # plain XML also accepted
     tg = FIX / "trongrid"
     respx.post("https://api.trongrid.io/wallet/triggerconstantcontract").respond(
         json=json.loads((tg / "constant_deprecated_false.json").read_text())

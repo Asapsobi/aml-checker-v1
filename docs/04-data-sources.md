@@ -31,8 +31,8 @@
 
 | Fact | Detail |
 |---|---|
-| URL | `https://sanctionslistservice.ofac.treas.gov/api/PublicationPreview/exports/SDN.XML` → 302 to a short-lived signed S3 URL, no key |
-| Size | ~29 MB (the "advanced" XML is ~127 MB and slow; not needed) |
+| URL | `https://sanctionslistservice.ofac.treas.gov/api/PublicationPreview/exports/SDN.XML` → 302 to a short-lived signed S3 URL, no key. **`…/exports/SDN_XML.ZIP` holds the same file zipped** (2.6 MB; verified 2026-10-03, D-040). The S3 copies answer `Range` requests (`Accept-Ranges: bytes`); their ETags are not plain MD5s |
+| Size | ~29 MB as XML, 2.6 MB as ZIP (the "advanced" XML is ~127 MB and slow; not needed). On a slow line (12–130 KB/s seen) the XML can take 35 min and stall; amlcheck downloads the ZIP and resumes after stalls |
 | Publish date | In the file: `<publshInformation><Publish_Date>MM/DD/YYYY</Publish_Date>` (OFAC's spelling) |
 | Addresses | `<sdnEntry>` → `<id><idType>Digital Currency Address - XXX</idType><idNumber>…</idNumber></id>`, with `<uid>` and `<programList>` |
 | Size of the crypto part (2026-09-30 list, VS-01) | 1,066 addresses on 106 entries under 20 currency labels; 341 TRON, 133 `0x` |

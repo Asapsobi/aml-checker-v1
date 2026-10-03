@@ -20,6 +20,7 @@ import logging
 import re
 import sqlite3
 import xml.etree.ElementTree as ET
+import zipfile
 from collections.abc import Iterator
 from dataclasses import dataclass
 from datetime import UTC, datetime, timedelta
@@ -31,6 +32,7 @@ from amlcheck.core.clock import Clock, from_iso, to_db, to_iso, utcnow
 from amlcheck.core.models import Address, Finding, SourceResult, SourceStatus
 from amlcheck.core.rules import finding
 from amlcheck.net.http import Http, Provider, SourceError
+from amlcheck.net.http import download as download_file
 from amlcheck.screening.base import SourceHealth
 from amlcheck.storage.db import transaction
 
@@ -144,10 +146,30 @@ def _publish_date(text: str) -> str | None:
         return None
 
 
+MAX_XML_BYTES = 300 * 1024 * 1024  # SDN.XML is ~29 MB; refuse anything absurd (zip bomb)
+
+
 async def download(http: Http, settings: Ofac) -> bytes:
-    """GET SDN.XML; OFAC redirects to a short-lived signed URL, which is never logged."""
-    resp = await http.request(Provider(SOURCE), "GET", settings.sdn_url, follow_redirects=True)
-    return resp.content
+    """The SDN.XML bytes. OFAC redirects to a short-lived signed URL, never logged. The default URL
+    is the zipped list (D-040); the download resumes after stalls."""
+    data = await download_file(http, Provider(SOURCE), settings.sdn_url)
+    return unpack(data)
+
+
+def unpack(data: bytes) -> bytes:
+    """SDN.XML from `SDN_XML.ZIP`, or the bytes as they are when they aren't a zip."""
+    if not data.startswith(b"PK"):
+        return data
+    try:
+        with zipfile.ZipFile(io.BytesIO(data)) as z:
+            members = [i for i in z.infolist() if i.filename.upper().endswith("SDN.XML")]
+            if len(members) != 1:
+                raise SourceError(SOURCE, "zip does not hold exactly one SDN.XML")
+            if members[0].file_size > MAX_XML_BYTES:
+                raise SourceError(SOURCE, "SDN.XML in the zip is implausibly large")
+            return z.read(members[0])
+    except zipfile.BadZipFile:
+        raise SourceError(SOURCE, "download is not a valid zip") from None
 
 
 def store(

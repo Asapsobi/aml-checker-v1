@@ -110,7 +110,7 @@ name = ""
 
 # Data sources §2.
 [ofac]
-sdn_url = "https://sanctionslistservice.ofac.treas.gov/api/PublicationPreview/exports/SDN.XML"
+sdn_url = "https://sanctionslistservice.ofac.treas.gov/api/PublicationPreview/exports/SDN_XML.ZIP"
 changes_url = "https://sanctionslistservice.ofac.treas.gov/changes/latest"
 min_kept_share = 0.8
 

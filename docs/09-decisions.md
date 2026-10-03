@@ -239,3 +239,18 @@
   AT-11/AT-12 dropped, AT-13 and AT-16 now about the TRON index, AT-19 names the gap. PRD F4.3,
   methodology §2.1/§2.3/§3.3/§7.5/§8, data sources §1/§4/§5/§9, `[freshness] evm_index_max_lag_minutes`
   removed. A BSC check can end `NO_HITS` without any freeze source; the result says what wasn't checked.
+
+### D-040 · Download the zipped OFAC list and resume after stalls
+- **Status:** Proposed
+- **Date:** 2026-10-03 · **Phase:** P2
+- **Context:** Live, `amlcheck sync` failed: the 29 MB `SDN.XML` took 35 min on a 12 KB/s line,
+  stalled past the 20 s read timeout, and every retry started from zero. A stale list makes every check
+  INCOMPLETE after 48 h.
+- **Decision:** `[ofac] sdn_url` defaults to `SDN_XML.ZIP` (the same file, 2.6 MB; VS-01 addendum);
+  `sync` unpacks it (a plain XML URL still works) and keeps the hash of the XML. Large downloads resume
+  with `Range` after a stall and restart only if the server's copy changed; they give up after five
+  attempts in a row without new bytes.
+- **Alternatives:** a longer timeout alone (still restarts 29 MB); OFAC's daily delta feed (another
+  format to verify and maintain).
+- **Consequences:** `net/http.download`; `screening/sanctions.unpack`; config default changed (config
+  hash changes). Data sources §2 updated.
