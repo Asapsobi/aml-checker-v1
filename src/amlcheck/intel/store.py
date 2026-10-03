@@ -272,6 +272,34 @@ class IntelStore:
         ).fetchone()
         return Entity(r[0], Chain(r[1]), r[2], r[3], r[4]) if r else None
 
+    def entities(self, chain: Chain | None = None) -> list[tuple[Entity, int]]:
+        """Every entity with its member count, newest first."""
+        rows = self._conn.execute(
+            "SELECT e.id, e.chain, e.name, e.kind, e.named_by, count(m.address_norm) "
+            "FROM entities e LEFT JOIN entity_members m ON m.entity_id = e.id "
+            "WHERE (?1 IS NULL OR e.chain = ?1) "
+            "GROUP BY e.id ORDER BY e.id DESC",
+            (chain.value if chain else None,),
+        ).fetchall()
+        return [(Entity(r[0], Chain(r[1]), r[2], r[3], r[4]), r[5]) for r in rows]
+
+    def members(self, entity_id: int) -> list[dict[str, Any]]:
+        rows = self._conn.execute(
+            "SELECT address_norm, role, provenance, evidence_json, linked_at FROM entity_members "
+            "WHERE entity_id = ? ORDER BY role != 'hub', address_norm",
+            (entity_id,),
+        ).fetchall()
+        return [
+            {
+                "address": r[0],
+                "role": r[1],
+                "provenance": r[2],
+                "evidence": json.loads(r[3]),
+                "linked_at": r[4],
+            }
+            for r in rows
+        ]
+
     def entity_for(self, chain: Chain, address: str) -> Entity | None:
         r = self._conn.execute(
             "SELECT e.id, e.chain, e.name, e.kind, e.named_by, m.role FROM entity_members m "
