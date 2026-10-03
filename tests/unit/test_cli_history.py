@@ -141,3 +141,10 @@ def test_cache_stats_and_prune(home: Path, fake: FakeSource) -> None:
     assert "forgot 0 address(es)" in r.output  # just used
     r = runner.invoke(app, ["cache", "stats"])
     assert "bsc: 1 addresses" in r.output
+
+
+def test_one_limiter_per_provider_per_process(home: Path) -> None:
+    rt = runtime.load()
+    assert runtime.trongrid_limiter(rt) is runtime.trongrid_limiter(rt)
+    assert runtime.hypersync_pacer(rt) is runtime.hypersync_pacer(rt)
+    assert runtime.trongrid_limiter(rt) is not runtime.hypersync_pacer(rt)

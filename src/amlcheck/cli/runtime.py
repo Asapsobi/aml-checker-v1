@@ -6,7 +6,7 @@ Limiters are created here once per process and shared by every source (architect
 from __future__ import annotations
 
 import sqlite3
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from datetime import UTC, datetime, timedelta
 from typing import NoReturn
 
@@ -54,6 +54,9 @@ class Runtime:
     settings: Settings
     secrets: Secrets
     clock: Clock = utcnow
+    # One limiter per provider for the whole process (architecture §5): every source that talks to
+    # TronGrid shares one bucket, so together they stay under the key's limit (VS-05, D-036).
+    limiters: dict[str, Limiter] = field(default_factory=dict, compare=False)
 
 
 def load() -> Runtime:
@@ -92,8 +95,17 @@ class _Unavailable:
 
 
 def trongrid_limiter(rt: Runtime) -> Limiter:
-    key = rt.secrets.trongrid_api_key
-    return TokenBucket(rt.settings.tron.requests_per_second if key else KEYLESS_TRONGRID_RPS)
+    if "trongrid" not in rt.limiters:
+        key = rt.secrets.trongrid_api_key
+        rate = rt.settings.tron.requests_per_second if key else KEYLESS_TRONGRID_RPS
+        rt.limiters["trongrid"] = TokenBucket(rate)
+    return rt.limiters["trongrid"]
+
+
+def hypersync_pacer(rt: Runtime) -> Limiter:
+    if "hypersync" not in rt.limiters:
+        rt.limiters["hypersync"] = BudgetPacer(rt.settings.network.max_pacer_wait_seconds)
+    return rt.limiters["hypersync"]
 
 
 def make_tether(rt: Runtime, http: Http, limiter: Limiter) -> TronTether:
@@ -132,7 +144,7 @@ def make_sources(rt: Runtime, client: httpx.AsyncClient, mode: Mode) -> dict[Cha
             http,
             rt.settings.bsc,
             token=rt.secrets.hypersync_token,
-            pacer=BudgetPacer(rt.settings.network.max_pacer_wait_seconds),
+            pacer=hypersync_pacer(rt),
             clock=rt.clock,
         )
     else:
