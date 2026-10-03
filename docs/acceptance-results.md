@@ -236,3 +236,30 @@ own page, the record's hash matching its contents. `audit list` shows the score 
 Notes for P11 calibration: on the TRON target most of `E` comes from money through unattributed
 services and contracts (weight 0.1 each: H 0.028 of 0.036), not from the 0.8% sanctioned share. Labelling
 the exchanges behind them (weight 0) would lower it; check the weights against the golden set.
+
+## P8 · Operator UX
+
+| AT | Tests | Status |
+|---|---|---|
+| AT-45 | `test_cli_batch.py::test_at45_one_bad_row_screens_nothing` (100 rows, one invalid: nothing screened, exit 1, the line named); `test_at45_fixed_file_all_screened` (all 100 screened in order, results streamed, exit = most serious verdict) | Green locally (2026-10-03) |
+| AT-46 | `test_cli_watch.py::test_at46_changed_verdict` (first run is not a change; a changed verdict is listed, notified, recorded, exit 6) | Green locally |
+| AT-47 | `test_export.py::test_at47_csv_export_is_spreadsheet_safe` (`=…` and `+…` cells prefixed with `'`); `test_csv_cell` | Green locally |
+| AT-48 | `test_web.py::test_at48_host_allow_list` (`Host: evil.com` → 400); `test_at48_token` (no cookie / wrong token / POST without the form token → 403) | Green locally |
+
+Also: batch header and value refusals, blank lines and file line numbers, the trace by amount, the run
+lock shared by batch and watch; watch add/remove/list, the webhook payload and a failing webhook that
+only warns, the notification message passed as an argument (no AppleScript injection), webhook URLs
+limited to http(s); export filters, the JSON export re-verifying the hash chain, the PDF export; web
+security headers and no scripts, the check flow, bad input recording nothing, history and
+counterparties with escaping of hostile text, traces from the web with progress (D-054 to D-057).
+
+**Live (2026-10-03, owner's keys, the VS-07 scratch copies of the database):**
+
+| What | Result |
+|---|---|
+| `batch` with an invalid 4th row | Refused: "line 5: not a TRON … or EVM … address"; nothing screened (15 records before and after), exit 1 |
+| `batch` of 3 real addresses | NO_HITS `TVvWhZyL…LeSsWP`; REVIEW 15 · low `0x0c1e52…ee1576`; **BLOCK 100 · severe** `TA3941uF…X86mz` (OFAC-listed and Tether-frozen); exit 5; results CSV streamed |
+| `watch add` ×2, `watch run` ×2 | First run "new", second "same"; exit 0 both times |
+| `audit export` csv, json, pdf | 22 records each; an independent script recomputed every hash from the JSON file alone and the links hold; `audit verify` OK |
+| `amlcheck web` (scratch copy, port 8799) | Sign-in, check form with recent checks, check detail (score, findings, sources, PDF link), the 57-box trace page, counterparties, the look-alike warning on a poisoned address; no console errors (CSP) |
+
