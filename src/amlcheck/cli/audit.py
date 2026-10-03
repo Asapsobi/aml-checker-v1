@@ -1,9 +1,10 @@
-"""`amlcheck audit`: list and verify the audit log (PRD F6.3, F6.5). Export comes in P8."""
+"""`amlcheck audit`: list, verify and export the audit log (PRD F6.3, F6.5, F11)."""
 
 from __future__ import annotations
 
 import json
-from typing import Annotated, Any
+from pathlib import Path
+from typing import Annotated, Any, Literal
 
 import typer
 
@@ -13,8 +14,9 @@ from amlcheck.core.address import AddressError, detect
 from amlcheck.core.clock import to_db
 from amlcheck.core.models import Verdict
 from amlcheck.core.score import shown
+from amlcheck.report import export as exporter
 
-app = typer.Typer(help="List and verify the audit log.", no_args_is_help=True)
+app = typer.Typer(help="List, verify and export the audit log.", no_args_is_help=True)
 
 
 @app.command("list")
@@ -92,3 +94,60 @@ def verify() -> None:
         err=True,
     )
     raise typer.Exit(1)
+
+
+@app.command()
+def export(
+    fmt: Annotated[
+        Literal["csv", "json", "pdf"], typer.Option("--format", help="csv, json or pdf.")
+    ] = "csv",
+    out: Annotated[Path | None, typer.Option(help="File to write (needed for pdf).")] = None,
+    address: Annotated[str | None, typer.Option(help="Only this address.")] = None,
+    verdict: Annotated[Verdict | None, typer.Option(help="Only this verdict.")] = None,
+    client: Annotated[str | None, typer.Option(help="Only this client (any case).")] = None,
+    since: Annotated[str | None, typer.Option(help="From: days back, or an ISO date/time.")] = None,
+    until: Annotated[str | None, typer.Option(help="Before: days back or ISO date/time.")] = None,
+) -> None:
+    """Export recorded checks: CSV (spreadsheet-safe), JSON (with every hash) or a PDF table."""
+    rt = runtime.load()
+    chain_value = norm = None
+    if address:
+        try:
+            a = detect(address)
+        except AddressError as e:
+            runtime.fail(str(e))
+        chain_value, norm = a.chain.value, a.norm
+    now = rt.clock()
+    f = exporter.Filter(
+        chain=chain_value,
+        address=norm,
+        verdict=verdict.value if verdict else None,
+        client=client,
+        since=to_db(runtime.parse_when(since, now, name="--since")) if since else None,
+        until=to_db(runtime.parse_when(until, now, name="--until")) if until else None,
+    )
+    if fmt == "pdf" and out is None:
+        runtime.fail("--format pdf needs --out FILE")
+    conn = runtime.open_database(rt)
+    try:
+        found = exporter.rows(conn, f)
+        data: str | bytes
+        if fmt == "csv":
+            data = exporter.to_csv(found)
+        elif fmt == "json":
+            data = exporter.to_json(conn, found)
+        else:
+            data = exporter.to_pdf(found, f)
+    finally:
+        conn.close()
+    if out is None:  # csv or json: text (pdf needs --out, checked above)
+        typer.echo(data if isinstance(data, str) else "", nl=False)
+        return
+    try:
+        if isinstance(data, bytes):
+            out.write_bytes(data)
+        else:
+            out.write_text(data, encoding="utf-8", newline="")
+    except OSError as e:
+        runtime.fail(f"could not write {out}: {e.strerror or e}")
+    typer.echo(f"{len(found)} check(s) exported to {out}", err=True)
