@@ -3,6 +3,7 @@
 - One column per hop. Money flows left to right: for a backward trace the target is on the right and
   its senders' senders on the left; a forward trace is the mirror image.
 - Every trace item is a box: an address reached by two paths appears twice, as in the trace itself.
+  Each column is ordered by its parents' rows, then by share, so a branch stays together.
 - Boxes show at least the first 8 and last 6 characters, so look-alikes stay distinguishable
   (methodology §4); the full address is in the box's tooltip.
 - A coloured mark per category group, and a legend with each bucket's share of the traced value.
@@ -82,11 +83,14 @@ def _layout(trace: Trace) -> tuple[list[_Box], int, int]:
         columns.setdefault(n.hop, []).append(n)
     boxes = []
     rows = 0
+    row_of: dict[tuple[str, ...], int] = {}  # a box's row, by its path key
     for hop, nodes in sorted(columns.items()):
         col = hops - hop if trace.direction == "in" else hop
-        nodes.sort(key=lambda n: (-n.weight, n.address, n.path))
+        # Under its parent first, then by share: each branch stays together, fewer crossing edges.
+        nodes.sort(key=lambda n: (row_of.get(n.path, 0), -n.weight, n.address, n.path))
         rows = max(rows, len(nodes))
         for i, n in enumerate(nodes):
+            row_of[(*n.path, n.address)] = i
             x = MARGIN + col * COL_W
             y = TOP + i * (BOX_H + ROW_GAP)
             boxes.append(_Box((*n.path, n.address), n, x, y))
