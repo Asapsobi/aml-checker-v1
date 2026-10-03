@@ -9,6 +9,7 @@
 - A coloured mark per category group, and a legend with each bucket's share of the traced value.
 - Edge width grows with the amount sent along it.
 - Plain text output with fixed rounding and sorted order: same trace ⇒ same bytes (snapshot test).
+- `layout()` is shared with the case report, which draws the same picture in its PDF (T-7.05).
 """
 
 from __future__ import annotations
@@ -69,14 +70,90 @@ def short(address: str) -> str:
 
 
 @dataclass(frozen=True)
-class _Box:
+class Box:
     key: tuple[str, ...]  # path from the target, ending with this address
     node: Node
     x: int
     y: int
 
+    @property
+    def group(self) -> str:
+        return "target" if self.node.hop == 0 else group(self.node.terminal)
 
-def _layout(trace: Trace) -> tuple[list[_Box], int, int]:
+    @property
+    def what(self) -> str:
+        return "target" if self.node.hop == 0 else (self.node.terminal or "followed")
+
+    @property
+    def tip(self) -> str:
+        n = self.node
+        cls = f" · inferred {n.classification.type}" if n.classification else ""
+        return f"{n.address}\nhop {n.hop} · {self.what}{cls} · share {pct(n.weight)}"
+
+
+@dataclass(frozen=True)
+class Link:
+    """An edge, drawn from the sender's box (left) to the recipient's (right)."""
+
+    x1: int
+    y1: int
+    x2: int
+    y2: int
+    width: float
+    colour: str
+    sender: str
+    recipient: str
+    amount: Decimal
+
+
+@dataclass(frozen=True)
+class Layout:
+    boxes: list[Box]
+    links: list[Link]
+    hops: int
+    width: int
+    height: int  # without the legend
+
+
+def column_x(trace: Trace, hops: int, hop: int) -> int:
+    return MARGIN + (hops - hop if trace.direction == "in" else hop) * COL_W
+
+
+def layout(trace: Trace) -> Layout:
+    boxes, width, height = _boxes(trace)
+    by_key = {b.key: b for b in boxes}
+    amounts = _edge_amounts(trace)
+    biggest = max(amounts.values(), default=Decimal(1)) or Decimal(1)
+    links = []
+    for b in boxes:
+        parent = by_key.get(b.node.path)
+        if parent is None:
+            continue
+        sender, recipient = (
+            (b.node.address, parent.node.address)
+            if trace.direction == "in"
+            else (parent.node.address, b.node.address)
+        )
+        amount = amounts.get((sender, recipient), b.node.weight * trace.target_inflow)
+        left, right = (b, parent) if trace.direction == "in" else (parent, b)
+        links.append(
+            Link(
+                left.x + BOX_W,
+                left.y + BOX_H // 2,
+                right.x,
+                right.y + BOX_H // 2,
+                1 + (MAX_EDGE_W - 1) * float(amount / biggest),
+                GROUPS[group(b.node.terminal) if b.node.terminal else "expanded"][1],
+                sender,
+                recipient,
+                amount,
+            )
+        )
+    hops = max((n.hop for n in trace.nodes), default=0)
+    return Layout(boxes, links, hops, width, height)
+
+
+def _boxes(trace: Trace) -> tuple[list[Box], int, int]:
     hops = max((n.hop for n in trace.nodes), default=0)
     columns: dict[int, list[Node]] = {}
     for n in trace.nodes:
@@ -93,7 +170,7 @@ def _layout(trace: Trace) -> tuple[list[_Box], int, int]:
             row_of[(*n.path, n.address)] = i
             x = MARGIN + col * COL_W
             y = TOP + i * (BOX_H + ROW_GAP)
-            boxes.append(_Box((*n.path, n.address), n, x, y))
+            boxes.append(Box((*n.path, n.address), n, x, y))
     width = MARGIN * 2 + hops * COL_W + BOX_W
     height = TOP + max(rows, 1) * (BOX_H + ROW_GAP)
     return boxes, width, height
@@ -107,10 +184,8 @@ def _edge_amounts(trace: Trace) -> dict[tuple[str, str], Decimal]:
 
 
 def render(trace: Trace) -> str:
-    boxes, width, height = _layout(trace)
-    by_key = {b.key: b for b in boxes}
-    amounts = _edge_amounts(trace)
-    biggest = max(amounts.values(), default=Decimal(1)) or Decimal(1)
+    lay = layout(trace)
+    width, height = lay.width, lay.height
     legend = sorted(trace.partition.items(), key=lambda kv: (-kv[1], kv[0]))
     legend_h = MARGIN + LEGEND_ROW * (len(legend) + 2)
     total_h = height + legend_h
@@ -133,48 +208,28 @@ def render(trace: Trace) -> str:
     )
     out.append(f'<text x="{MARGIN}" y="52" font-size="12" fill="#4b5563">{escape(sub)}</text>')
 
-    hops = max((n.hop for n in trace.nodes), default=0)
-    for hop in range(hops + 1):
-        col = hops - hop if trace.direction == "in" else hop
+    for hop in range(lay.hops + 1):
         head = "target" if hop == 0 else f"hop {hop}"
         out.append(
-            f'<text x="{MARGIN + col * COL_W}" y="{TOP - 12}" font-size="11" '
+            f'<text x="{column_x(trace, lay.hops, hop)}" y="{TOP - 12}" font-size="11" '
             f'letter-spacing="0.5" fill="#6b7280">{head.upper()}</text>'
         )
 
     # Edges first, so boxes sit on top of them.
-    for b in boxes:
-        parent = by_key.get(b.node.path)
-        if parent is None:
-            continue
-        sender, recipient = (
-            (b.node.address, parent.node.address)
-            if trace.direction == "in"
-            else (parent.node.address, b.node.address)
-        )
-        amount = amounts.get((sender, recipient), b.node.weight * trace.target_inflow)
-        left, right = (b, parent) if trace.direction == "in" else (parent, b)
-        x1, y1 = left.x + BOX_W, left.y + BOX_H // 2
-        x2, y2 = right.x, right.y + BOX_H // 2
-        mid = (x1 + x2) // 2
-        w = 1 + (MAX_EDGE_W - 1) * float(amount / biggest)
-        colour = GROUPS[group(b.node.terminal) if b.node.terminal else "expanded"][1]
+    for e in lay.links:
+        mid = (e.x1 + e.x2) // 2
         out.append(
-            f'<path d="M{x1},{y1} C{mid},{y1} {mid},{y2} {x2},{y2}" fill="none" '
-            f'stroke="{colour}" stroke-opacity="0.45" stroke-width="{w:.1f}">'
-            f"<title>{escape(f'{sender} → {recipient}: {dec(amount)} USDT')}</title></path>"
+            f'<path d="M{e.x1},{e.y1} C{mid},{e.y1} {mid},{e.y2} {e.x2},{e.y2}" fill="none" '
+            f'stroke="{e.colour}" stroke-opacity="0.45" stroke-width="{e.width:.1f}">'
+            f"<title>{escape(f'{e.sender} → {e.recipient}: {dec(e.amount)} USDT')}</title></path>"
         )
 
-    for b in boxes:
+    for b in lay.boxes:
         n = b.node
-        g = "target" if n.hop == 0 else group(n.terminal)
-        fill, stroke, _ = GROUPS[g]
-        dash = ' stroke-dasharray="4 3"' if g == "untraced" else ""
-        what = "target" if n.hop == 0 else (n.terminal or "followed")
-        cls = f" · inferred {n.classification.type}" if n.classification else ""
-        tip = f"{n.address}\nhop {n.hop} · {what}{cls} · share {pct(n.weight)}"
+        fill, stroke, _ = GROUPS[b.group]
+        dash = ' stroke-dasharray="4 3"' if b.group == "untraced" else ""
         out.append(
-            f"<g><title>{escape(tip)}</title>"
+            f"<g><title>{escape(b.tip)}</title>"
             f'<rect x="{b.x}" y="{b.y}" width="{BOX_W}" height="{BOX_H}" rx="6" '
             f'fill="{fill}" stroke="{stroke}" stroke-width="1.5"{dash}/>'
             f'<rect x="{b.x}" y="{b.y}" width="6" height="{BOX_H}" rx="2" fill="{stroke}"/>'
@@ -184,7 +239,7 @@ def render(trace: Trace) -> str:
             f'<text x="{b.x + BOX_W - 8}" y="{b.y + 19}" font-size="11.5" font-weight="600" '
             f'text-anchor="end" fill="#111827">{pct(n.weight)}</text>'
             f'<text x="{b.x + 14}" y="{b.y + 36}" font-size="11" fill="#374151">'
-            f"{escape(what)}</text></g>"
+            f"{escape(b.what)}</text></g>"
         )
 
     y = height + MARGIN
