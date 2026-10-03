@@ -26,7 +26,14 @@ from dataclasses import dataclass
 from datetime import datetime, timedelta
 from decimal import Decimal
 
-from amlcheck.chain.base import History, HistorySource, Transfer, canonical_amount, newest_first
+from amlcheck.chain.base import (
+    ContractLookup,
+    History,
+    HistorySource,
+    Transfer,
+    canonical_amount,
+    newest_first,
+)
 from amlcheck.config import Cache
 from amlcheck.core.address import detect
 from amlcheck.core.clock import Clock, ensure_utc, from_iso, to_db, utcnow
@@ -371,3 +378,35 @@ class TransferCache:
                 "AND w.address_norm IN (transfers.sender, transfers.recipient))"
             )
         return len(doomed)
+
+
+class ContractCache:
+    """Whether an address is a contract never changes: asked once, kept forever (PRD F2.6)."""
+
+    def __init__(
+        self,
+        conn: sqlite3.Connection,
+        lookups: Mapping[Chain, ContractLookup],
+        *,
+        clock: Clock = utcnow,
+    ) -> None:
+        self._conn = conn
+        self._lookups = lookups
+        self._clock = clock
+
+    async def is_contract(self, chain: Chain, address: str) -> bool:
+        row = self._conn.execute(
+            "SELECT is_contract FROM contracts WHERE chain = ? AND address_norm = ?",
+            (chain.value, address),
+        ).fetchone()
+        if row is not None:
+            return bool(row[0])
+        lookup = self._lookups[chain]
+        answer = await lookup.is_contract(address)
+        with transaction(self._conn):
+            self._conn.execute(
+                "INSERT OR REPLACE INTO contracts (chain, address_norm, is_contract, checked_at, "
+                "source) VALUES (?, ?, ?, ?, ?)",
+                (chain.value, address, int(answer), to_db(self._clock()), type(lookup).__name__),
+            )
+        return answer

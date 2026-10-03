@@ -230,3 +230,33 @@ _EPOCH = datetime(1970, 1, 1, tzinfo=UTC)
 def ms(dt: datetime) -> int:
     """Exact milliseconds (floor), no float rounding at window edges."""
     return (dt - _EPOCH) // timedelta(milliseconds=1)
+
+
+class TronContractLookup:
+    """Contract detection via `getcontract`: `{}` for a wallet, `contract_address` for a contract
+    (a contract created by a contract has no `bytecode`, so that is not the test; VS-13)."""
+
+    chain = Chain.TRON
+
+    def __init__(
+        self, http: Http, settings: Tron, *, api_key: str | None, limiter: Limiter | None
+    ) -> None:
+        self._http = http
+        self._api = settings.api_url.rstrip("/")
+        self._headers = {"TRON-PRO-API-KEY": api_key} if api_key else {}
+        self._provider = Provider(
+            "trongrid",
+            limiter=limiter,
+            refusal_statuses=frozenset({429, 403}),
+            refusal_wait=suspension_seconds,
+        )
+
+    async def is_contract(self, address: str) -> bool:
+        resp = await self._http.request(
+            self._provider,
+            "POST",
+            f"{self._api}/wallet/getcontract",
+            headers=self._headers,
+            json={"value": address, "visible": True},
+        )
+        return bool(json_object(resp).get("contract_address"))

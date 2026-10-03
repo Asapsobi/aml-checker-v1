@@ -126,3 +126,5 @@ hypersync_url = "https://bsc.hypersync.xyz"
 hypersync_fallback_url = "https://56.hypersync.xyz"
 usdt_contract = "0x55d398326f99059fF775485246999027B3197955"
 seconds_per_block = 0.45
+rpc_url = "https://bsc-dataseed.bnbchain.org"
+rpc_requests_per_second = 2.0
