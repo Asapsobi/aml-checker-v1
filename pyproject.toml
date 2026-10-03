@@ -1,6 +1,6 @@
 [project]
 name = "amlcheck"
-version = "0.2.0"
+version = "0.3.0"
 description = "Counterparty intelligence for USDT on TRON and BNB Smart Chain"
 readme = "README.md"
 requires-python = ">=3.12"
@@ -59,6 +59,7 @@ ignore = ["RUF001", "RUF002", "RUF003"]
 
 [tool.ruff.lint.per-file-ignores]
 "tests/**" = ["S101", "S105", "S106", "S311"]  # asserts, fake keys, seeded randomness
+"tests/unit/test_check_output.py" = ["S101", "E501"]  # the snapshot holds full output lines
 
 [tool.mypy]
 strict = true

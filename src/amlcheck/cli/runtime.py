@@ -6,7 +6,7 @@ Limiters are created here once per process and shared by every source (architect
 from __future__ import annotations
 
 import sqlite3
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from datetime import UTC, datetime, timedelta
 from typing import NoReturn
 
@@ -15,6 +15,7 @@ import typer
 
 from amlcheck.chain.base import History, HistorySource
 from amlcheck.chain.bsc import HyperSyncSource
+from amlcheck.chain.cache import TransferCache
 from amlcheck.chain.tron import TronGridSource
 from amlcheck.config import (
     ConfigError,
@@ -31,6 +32,7 @@ from amlcheck.net.http import Http, Limiter, Mode, SourceError
 from amlcheck.net.limits import BudgetPacer, TokenBucket
 from amlcheck.screening.base import SourceAdapter
 from amlcheck.screening.bsc_freeze import BscFreezeSource
+from amlcheck.screening.exposure import ExposureSource
 from amlcheck.screening.sanctions import SanctionsSource
 from amlcheck.screening.tron_freeze import (
     TronBlacklistSource,
@@ -54,6 +56,9 @@ class Runtime:
     settings: Settings
     secrets: Secrets
     clock: Clock = utcnow
+    # One limiter per provider for the whole process (architecture §5): every source that talks to
+    # TronGrid shares one bucket, so together they stay under the key's limit (VS-05, D-036).
+    limiters: dict[str, Limiter] = field(default_factory=dict, compare=False)
 
 
 def load() -> Runtime:
@@ -92,8 +97,17 @@ class _Unavailable:
 
 
 def trongrid_limiter(rt: Runtime) -> Limiter:
-    key = rt.secrets.trongrid_api_key
-    return TokenBucket(rt.settings.tron.requests_per_second if key else KEYLESS_TRONGRID_RPS)
+    if "trongrid" not in rt.limiters:
+        key = rt.secrets.trongrid_api_key
+        rate = rt.settings.tron.requests_per_second if key else KEYLESS_TRONGRID_RPS
+        rt.limiters["trongrid"] = TokenBucket(rate)
+    return rt.limiters["trongrid"]
+
+
+def hypersync_pacer(rt: Runtime) -> Limiter:
+    if "hypersync" not in rt.limiters:
+        rt.limiters["hypersync"] = BudgetPacer(rt.settings.network.max_pacer_wait_seconds)
+    return rt.limiters["hypersync"]
 
 
 def make_tether(rt: Runtime, http: Http, limiter: Limiter) -> TronTether:
@@ -103,17 +117,22 @@ def make_tether(rt: Runtime, http: Http, limiter: Limiter) -> TronTether:
 def make_screening_sources(
     rt: Runtime, conn: sqlite3.Connection, client: httpx.AsyncClient, mode: Mode, chain: Chain
 ) -> list[SourceAdapter]:
-    """The P2 sources for a check on `chain` (methodology §2.1)."""
+    """The sources for a check on `chain` (methodology §2.1)."""
     http = Http(client, rt.settings.network, mode=mode)
     sanctions = SanctionsSource(conn, rt.settings.freshness, clock=rt.clock)
+    cache = TransferCache(conn, make_sources(rt, client, mode), rt.settings.cache, clock=rt.clock)
+    exposure = ExposureSource(
+        cache, conn, rt.settings.exposure, rt.settings.heuristics, clock=rt.clock
+    )
     if chain is Chain.BSC:
-        return [sanctions, BscFreezeSource(clock=rt.clock)]
+        return [sanctions, BscFreezeSource(clock=rt.clock), exposure]
     tether = make_tether(rt, http, trongrid_limiter(rt))
     index = TronFreezeIndex(tether, conn, clock=rt.clock)
     return [
         sanctions,
         TronFreezeSource(index, rt.settings.freshness, clock=rt.clock),
         TronBlacklistSource(tether, clock=rt.clock),
+        exposure,
     ]
 
 
@@ -132,7 +151,7 @@ def make_sources(rt: Runtime, client: httpx.AsyncClient, mode: Mode) -> dict[Cha
             http,
             rt.settings.bsc,
             token=rt.secrets.hypersync_token,
-            pacer=BudgetPacer(rt.settings.network.max_pacer_wait_seconds),
+            pacer=hypersync_pacer(rt),
             clock=rt.clock,
         )
     else:

@@ -129,6 +129,7 @@ def as_dict(r: CheckResult) -> dict[str, Any]:
                 "status": s.status.value,
                 "detail": s.detail,
                 "observed_at": to_iso(s.observed_at),
+                "evidence": s.evidence,
             }
             for s in r.sources
         ],
@@ -154,6 +155,9 @@ def _print(r: CheckResult) -> None:
     for s in r.sources:
         need = "" if s.required else "  (not required)"
         echo(f"  {s.status.value:<8} {s.label:<28} {s.detail or ''}{need}")
+    exposure = next((s for s in r.sources if s.source == "exposure" and s.evidence), None)
+    if exposure is not None:
+        _print_exposure(r.address.chain, exposure.evidence)
     echo("")
     extra = f" · {canonical_amount(r.amount)} USDT" if r.amount is not None else ""
     who = f" · client {r.client}" if r.client else ""
@@ -162,3 +166,29 @@ def _print(r: CheckResult) -> None:
         f"audit {r.record_hash[:16]} · amlcheck {r.tool_version}"
     )
     echo(DISCLAIMER)
+
+
+def _print_exposure(chain: Chain, ev: dict[str, Any]) -> None:
+    """History summary and the largest counterparties, full addresses (methodology §4)."""
+    echo = typer.echo
+    first = ev.get("first_activity") or "none found"
+    echo("")
+    echo(
+        f"History  {ev['transfers']} transfer(s) since {str(ev['since'])[:10]} · received "
+        f"{ev['received_usdt']} · sent {ev['sent_usdt']} USDT · first activity {first}"
+    )
+    if ev.get("zero_value_dropped"):
+        echo(f"         {ev['zero_value_dropped']} 0-value transfer(s) dropped (address poisoning)")
+    shown = ev.get("counterparties") or []
+    if not shown:
+        return
+    width = 42 if chain is Chain.BSC else 34
+    echo("")
+    echo(f"Counterparties  (largest {len(shown)} of {ev['counterparty_count']})")
+    echo(f"  {'address':<{width}}  {'received':>16}  {'sent':>16}  {'txs':>5}  flags")
+    for c in shown:
+        flags = ", ".join(c["flags"]) or "-"
+        echo(
+            f"  {c['address']:<{width}}  {c['received_usdt']:>16}  {c['sent_usdt']:>16}  "
+            f"{c['transfers']:>5}  {flags}"
+        )
