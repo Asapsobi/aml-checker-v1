@@ -277,3 +277,13 @@
   operator's own risk labels).
 - **Consequences:** `screening/exposure.py`. A risky-tagged counterparty can raise both R-EXP-02 (share)
   and R-HEU-05 (dealt with it).
+
+### D-043 · Cache retention for addresses nobody needs (Q-05)
+- **Status:** Accepted
+- **Date:** 2026-10-03 · **Phase:** P4
+- **Context:** Q-05: how long to keep cached histories of addresses that are not counterparties,
+  labelled or own wallets.
+- **Decision:** 30 days unused (`[cache] history_keep_days`). Registry counterparties, labelled addresses
+  (labels.csv and active intel labels) and entity members are kept regardless; own wallets join in P10.
+- **Alternatives:** Keep everything (unbounded growth); a shorter period (more provider reads).
+- **Consequences:** `cache prune`'s keep rule (T-4.07).
