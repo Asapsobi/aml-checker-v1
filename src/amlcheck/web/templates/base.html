@@ -1,0 +1,25 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+{% block head %}{% endblock %}
+<title>{% block title %}amlcheck{% endblock %} · amlcheck</title>
+<link rel="stylesheet" href="/static/app.css">
+</head>
+<body>
+<header class="top">
+  <a class="brand" href="/">amlcheck</a>
+  <nav>
+    <a href="/" {% if path == "/" %}class="on"{% endif %}>Check</a>
+    <a href="/checks" {% if path.startswith("/checks") %}class="on"{% endif %}>History</a>
+    <a href="/counterparties" {% if path.startswith("/counterparties") %}class="on"{% endif %}>Counterparties</a>
+  </nav>
+  <span class="internal">Internal use only</span>
+</header>
+<main>
+{% block body %}{% endblock %}
+</main>
+<footer>NO_HITS means nothing was found in the sources checked, as of the times shown; it is not a clearance.</footer>
+</body>
+</html>

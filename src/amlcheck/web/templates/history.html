@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+{% from "_macros.html" import checks_table %}
+{% block title %}History{% endblock %}
+{% block body %}
+<h1>History</h1>
+<form method="get" action="/checks" class="filters">
+  <input name="address" value="{{ q.address }}" placeholder="Address" class="mono">
+  <select name="verdict">
+    <option value="">any verdict</option>
+    {% for v in ["BLOCK", "INCOMPLETE", "REVIEW", "NO_HITS"] %}<option {% if q.verdict == v %}selected{% endif %}>{{ v }}</option>{% endfor %}
+  </select>
+  <input name="client" value="{{ q.client }}" placeholder="Client">
+  <button type="submit">Filter</button>
+</form>
+{% if error %}<p class="error">{{ error }}</p>{% endif %}
+{{ checks_table(rows) }}
+<p class="muted small">Newest first, at most 200. Everything: <code>amlcheck audit export</code>.</p>
+{% endblock %}

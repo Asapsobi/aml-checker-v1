@@ -104,6 +104,10 @@ rescreen_days = 7
 trace_amount_usdt = 10000
 # webhook_url = ""   # unset by default
 
+# The local web UI (PRD F11.4): always on 127.0.0.1.
+[web]
+port = 8765
+
 # Name recorded on decisions (Q-12).
 [operator]
 name = ""

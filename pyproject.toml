@@ -1,6 +1,6 @@
 [project]
 name = "amlcheck"
-version = "0.7.0"
+version = "0.8.0"
 description = "Counterparty intelligence for USDT on TRON and BNB Smart Chain"
 readme = "README.md"
 requires-python = ">=3.12"
@@ -8,12 +8,16 @@ license = { text = "Proprietary" }
 dependencies = [
     "base58>=2.1",
     "eth-hash[pycryptodome]>=0.7",
+    "fastapi>=0.115",
     "httpx>=0.27",
+    "jinja2>=3.1",
     "pydantic>=2.8",
     "python-dotenv>=1.0",
+    "python-multipart>=0.0.9",
     "reportlab>=4.2",
     "rich>=13",
     "typer>=0.12",
+    "uvicorn>=0.30",
 ]
 
 [project.scripts]

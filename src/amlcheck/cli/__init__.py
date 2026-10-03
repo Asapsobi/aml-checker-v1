@@ -12,6 +12,7 @@ import typer
 
 from amlcheck.cli import (
     audit,
+    batch,
     cache,
     check,
     classify,
@@ -22,6 +23,8 @@ from amlcheck.cli import (
     status,
     sync,
     trace,
+    watch,
+    web,
 )
 
 app = typer.Typer(
@@ -33,16 +36,19 @@ app = typer.Typer(
 )
 app.command("status")(status.status)
 app.command("check")(check.check)
+app.command("batch")(batch.batch)
 app.command("history")(history.history)
 app.command("classify")(classify.classify)
 app.command("trace")(trace.trace)
 app.command("investigate")(trace.investigate)
 app.command("sync")(sync.sync)
+app.command("web")(web.web)
 app.add_typer(audit.app, name="audit")
 app.add_typer(labels.app, name="labels")
 app.add_typer(cp.app, name="cp")
 app.add_typer(intel.app, name="intel")
 app.add_typer(cache.app, name="cache")
+app.add_typer(watch.app, name="watch")
 
 
 def _version(value: bool) -> None:

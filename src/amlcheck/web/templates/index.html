@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+{% from "_macros.html" import checks_table %}
+{% block title %}Check{% endblock %}
+{% block body %}
+<h1>Check an address</h1>
+{% if error %}<p class="error">{{ error }}</p>{% endif %}
+<form method="post" action="/check" class="card form">
+  <input type="hidden" name="token" value="{{ token }}">
+  <label>Address <input name="address" value="{{ form.address or '' }}" placeholder="T… or 0x…" required autocomplete="off" class="mono wide"></label>
+  <div class="row">
+    <label>Chain for 0x
+      <select name="chain"><option value="">auto (bsc)</option><option value="bsc" {% if form.chain == "bsc" %}selected{% endif %}>bsc</option></select>
+    </label>
+    <label>Amount (USDT) <input name="amount" value="{{ form.amount or '' }}" inputmode="decimal"></label>
+    <label>Client <input name="client" value="{{ form.client or '' }}"></label>
+  </div>
+  <label>Note <input name="note" value="{{ form.note or '' }}" class="wide"></label>
+  <label class="check"><input type="checkbox" name="trace" value="1" {% if form.trace %}checked{% endif %}> Trace the source of funds (always on from 10,000 USDT)</label>
+  <button type="submit">Check</button>
+  <p class="muted small">The check runs now and is recorded in the audit log before it is shown. A trace can take a few minutes.</p>
+</form>
+<h2>Recent checks</h2>
+{{ checks_table(recent) }}
+{% endblock %}

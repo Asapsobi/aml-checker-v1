@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+{% from "_macros.html" import verdict, addr, checks_table %}
+{% block title %}{{ short(a.norm) }}{% endblock %}
+{% block body %}
+<p class="muted small">{{ a.chain.value | upper }} counterparty{% if watched %} · watched{% endif %}</p>
+<h1 class="mono">{{ addr(a.chain.value, a.norm) }}</h1>
+<div class="card">
+  {% if cp %}
+  <p>Last verdict {{ verdict(cp.last_verdict) }} · score {{ shown(cp.last_score, cp.last_verdict) }} · checked {{ cp.check_count }} time(s), first {{ cp.first_screened_at[:10] }}, last {{ cp.last_screened_at[:10] }} · clients {{ cp.clients | join(", ") or "-" }}</p>
+  {% else %}
+  <p class="muted">Never checked.</p>
+  {% endif %}
+  {% if terminal %}<p>Category <b>{{ terminal.category }}</b> <span class="muted">({{ terminal.provenance }}, {{ terminal.source_ref }})</span></p>{% endif %}
+  {% if entity %}<p>Entity #{{ entity.id }} <b>{{ entity.name }}</b> ({{ entity.kind }}), this address is the {{ entity.role }}</p>{% endif %}
+  {% for x in labels %}<p class="small">Label #{{ x.id }}: {{ x.category }} ({{ x.provenance }}){% if x.note %} · {{ x.note }}{% endif %}</p>{% endfor %}
+  {% for m in looks_like %}<p class="bad">Looks like {{ addr(a.chain.value, m.address) }} ({{ m.why_known }}): possible address poisoning.</p>{% endfor %}
+</div>
+
+<h2>Source of funds</h2>
+<form method="post" action="/trace" class="inline">
+  <input type="hidden" name="token" value="{{ token }}">
+  <input type="hidden" name="address" value="{{ a.norm }}">
+  <select name="direction"><option value="in">where its money came from</option><option value="out">where its money went</option></select>
+  <button type="submit">Start a trace</button>
+</form>
+{% if trace %}<p class="small">Latest trace: <a href="/traces/{{ trace.trace_id }}">{{ trace.status }}, {{ trace.created_at.isoformat()[:19] }}</a></p>{% endif %}
+
+<h2>Checks</h2>
+{{ checks_table(checks) }}
+{% endblock %}

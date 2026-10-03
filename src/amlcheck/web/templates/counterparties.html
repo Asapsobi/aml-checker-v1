@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+{% from "_macros.html" import verdict, addr %}
+{% block title %}Counterparties{% endblock %}
+{% block body %}
+<h1>Counterparties</h1>
+<form method="get" action="/counterparties" class="filters">
+  <select name="chain"><option value="">any chain</option>{% for c in ["tron", "bsc"] %}<option {% if q.chain == c %}selected{% endif %}>{{ c }}</option>{% endfor %}</select>
+  <select name="verdict"><option value="">any last verdict</option>{% for v in ["BLOCK", "INCOMPLETE", "REVIEW", "NO_HITS"] %}<option {% if q.verdict == v %}selected{% endif %}>{{ v }}</option>{% endfor %}</select>
+  <input name="client" value="{{ q.client }}" placeholder="Client">
+  <button type="submit">Filter</button>
+</form>
+<table>
+  <thead><tr><th>Address</th><th>Last verdict</th><th>Score</th><th class="num">Checks</th><th>Last checked (UTC)</th><th>Clients</th></tr></thead>
+  <tbody>
+  {% for c in rows %}
+    <tr><td>{{ c.chain.value }} {{ addr(c.chain.value, c.address_norm) }}</td><td>{{ verdict(c.last_verdict) }}</td>
+      <td>{{ shown(c.last_score, c.last_verdict) }}</td><td class="num">{{ c.check_count }}</td>
+      <td>{{ c.last_screened_at[:19] }}</td><td>{{ c.clients | join(", ") }}</td></tr>
+  {% else %}
+    <tr><td colspan="6" class="muted">No counterparties yet.</td></tr>
+  {% endfor %}
+  </tbody>
+</table>
+{% endblock %}

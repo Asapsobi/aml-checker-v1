@@ -1,0 +1,63 @@
+{% extends "base.html" %}
+{% from "_macros.html" import verdict, addr %}
+{% set r = d.record %}
+{% block title %}{{ r.verdict }} · {{ short(d.address.norm) }}{% endblock %}
+{% block body %}
+<p class="muted small">{{ d.address.chain.value | upper }} counterparty</p>
+<h1 class="mono">{{ addr(d.address.chain.value, d.address.norm) }}</h1>
+<div class="card verdictbox {{ verdict_class(r.verdict) }}">
+  <div>{{ verdict(r.verdict) }} <span class="action">{{ action(r.verdict) }}</span></div>
+  {% if score %}
+  <div class="score">Score <b>{{ score.shown }}</b> <span class="muted">({{ score.breakdown }}{% if score.lower_bound %}; lower bound: a required source is missing{% endif %})</span></div>
+  {% else %}
+  <div class="muted">No score: recorded before scores existed.</div>
+  {% endif %}
+  <div class="muted small">Check {{ r.check_id }} · recorded {{ r.created_at[:19] }}Z{% if r.amount %} · {{ r.amount }} USDT{% endif %}{% if r.client %} · client {{ r.client }}{% endif %}{% if r.operator_note %} · note: {{ r.operator_note }}{% endif %} · amlcheck {{ r.tool_version }}</div>
+  <div class="links"><a href="/checks/{{ r.check_id }}/report.pdf">Case report (PDF)</a>
+    {% if r.trace_id %} · <a href="/traces/{{ r.trace_id }}">Source of funds</a>{% endif %}
+    · <a href="/counterparties/{{ d.address.chain.value }}/{{ d.address.norm }}">Counterparty</a></div>
+</div>
+
+<h2>Findings</h2>
+<table>
+  <thead><tr><th>Rule</th><th>Severity</th><th>What was found</th></tr></thead>
+  <tbody>
+  {% for f in r.findings | sort(attribute="rule_id") %}
+    <tr><td>{{ f.rule_id }}</td><td>{{ f.severity }}</td><td>{{ f.summary }}{% if f.evidence.get("priority") == "low" %} <span class="muted">(low priority)</span>{% endif %}</td></tr>
+  {% else %}
+    <tr><td colspan="3" class="muted">None: nothing was found in the sources checked, as of the times shown.</td></tr>
+  {% endfor %}
+  </tbody>
+</table>
+
+<h2>Sources</h2>
+<table>
+  <thead><tr><th>Source</th><th>Status</th><th>Detail</th><th>As of</th></tr></thead>
+  <tbody>
+  {% for s in r.sources | sort(attribute="source") %}
+    <tr><td>{{ labels.get(s.source, s.source) }}{% if not s.required %} <span class="muted">(not required)</span>{% endif %}</td>
+      <td class="status {{ s.status }}">{{ s.status }}</td><td>{{ s.summary }}</td><td class="small">{{ (s.as_of or "")[:19] }}</td></tr>
+  {% endfor %}
+  </tbody>
+</table>
+
+{% if exposure %}
+<h2>USDT history</h2>
+<p>{{ exposure.transfers }} transfer(s) since {{ exposure.since[:10] }} · received {{ exposure.received_usdt }} · sent {{ exposure.sent_usdt }} USDT · first activity {{ exposure.first_activity or "none found" }}
+{% if exposure.zero_value_dropped %}<br><span class="muted">{{ exposure.zero_value_dropped }} 0-value transfer(s) dropped (address poisoning)</span>{% endif %}</p>
+{% if exposure.counterparties %}
+<table>
+  <thead><tr><th>Counterparty (largest {{ exposure.counterparties | length }} of {{ exposure.counterparty_count }})</th><th class="num">Received</th><th class="num">Sent</th><th class="num">Txs</th><th>Flags</th></tr></thead>
+  <tbody>
+  {% for c in exposure.counterparties %}
+    <tr><td>{{ addr(d.address.chain.value, c.address) }}</td><td class="num">{{ c.received_usdt }}</td><td class="num">{{ c.sent_usdt }}</td><td class="num">{{ c.transfers }}</td><td>{{ c.flags | join(", ") or "-" }}</td></tr>
+  {% endfor %}
+  </tbody>
+</table>
+{% endif %}
+{% endif %}
+
+<h2>Record</h2>
+<p class="small">Audit record #{{ d.seq }}, hash <span class="mono">{{ d.record_hash }}</span>:
+{% if d.hash_ok %}matches its contents.{% else %}<b class="bad">does not match its contents</b> — run <code>amlcheck audit verify</code>.{% endif %}</p>
+{% endblock %}

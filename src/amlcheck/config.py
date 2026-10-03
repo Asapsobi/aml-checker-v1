@@ -180,6 +180,19 @@ class Monitor(_Section):
     trace_amount_usdt: PosDec = Decimal("10000")
     webhook_url: str | None = None
 
+    @field_validator("webhook_url")
+    @classmethod
+    def _http(cls, v: str | None) -> str | None:
+        if v is not None and not v.startswith(("http://", "https://")):
+            raise ValueError("must be an http:// or https:// URL (D-054)")
+        return v
+
+
+class Web(_Section):
+    """The local web UI (PRD F11.4): always on 127.0.0.1."""
+
+    port: Annotated[int, Field(ge=1024, le=65535)] = 8765
+
 
 class Operator(_Section):
     """Name recorded on decisions (Q-12)."""
@@ -228,6 +241,7 @@ class Settings(_Section):
     trace: Trace = Trace()
     score: Score = Score()
     monitor: Monitor = Monitor()
+    web: Web = Web()
     operator: Operator = Operator()
     ofac: Ofac = Ofac()
     tron: Tron = Tron()

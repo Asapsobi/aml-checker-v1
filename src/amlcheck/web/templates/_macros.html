@@ -1,0 +1,22 @@
+{% macro verdict(v) %}<span class="verdict {{ verdict_class(v) }}">{{ v }}</span>{% endmacro %}
+{% macro addr(chain, a, full=True) %}<a class="mono" href="/counterparties/{{ chain }}/{{ a }}">{{ a if full else short(a) }}</a> <a class="ext" href="{{ explorer(chain, a) }}" target="_blank" rel="noopener noreferrer" title="Open in the block explorer">↗</a>{% endmacro %}
+{% macro checks_table(rows) %}
+<table>
+  <thead><tr><th>#</th><th>Recorded (UTC)</th><th>Verdict</th><th>Score</th><th>Address</th><th>Client</th><th>Rules</th></tr></thead>
+  <tbody>
+  {% for r in rows %}
+    <tr>
+      <td><a href="/checks/{{ r.check_id }}">{{ r.seq }}</a></td>
+      <td>{{ r.created_at[:19] }}</td>
+      <td>{{ verdict(r.verdict) }}</td>
+      <td>{{ shown(r.score[0], r.verdict) }}</td>
+      <td>{{ r.chain }} {{ addr(r.chain, r.address, False) }}</td>
+      <td>{{ r.client or "" }}</td>
+      <td class="small">{{ r.rules | join(" ") }}</td>
+    </tr>
+  {% else %}
+    <tr><td colspan="7" class="muted">No checks.</td></tr>
+  {% endfor %}
+  </tbody>
+</table>
+{% endmacro %}
