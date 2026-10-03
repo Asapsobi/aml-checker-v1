@@ -23,6 +23,7 @@ from amlcheck.cli import (
     status,
     sync,
     trace,
+    watch,
 )
 
 app = typer.Typer(
@@ -45,6 +46,7 @@ app.add_typer(labels.app, name="labels")
 app.add_typer(cp.app, name="cp")
 app.add_typer(intel.app, name="intel")
 app.add_typer(cache.app, name="cache")
+app.add_typer(watch.app, name="watch")
 
 
 def _version(value: bool) -> None:

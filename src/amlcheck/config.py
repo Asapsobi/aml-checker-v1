@@ -180,6 +180,13 @@ class Monitor(_Section):
     trace_amount_usdt: PosDec = Decimal("10000")
     webhook_url: str | None = None
 
+    @field_validator("webhook_url")
+    @classmethod
+    def _http(cls, v: str | None) -> str | None:
+        if v is not None and not v.startswith(("http://", "https://")):
+            raise ValueError("must be an http:// or https:// URL (D-054)")
+        return v
+
 
 class Operator(_Section):
     """Name recorded on decisions (Q-12)."""
