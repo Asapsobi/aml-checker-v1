@@ -75,7 +75,8 @@ class Rules(_Section):
             if rule_id in FIXED:
                 raise ValueError(f"{rule_id} is fixed at INCOMPLETE and can't be overridden")
             if rule_id in NEVER_BLOCK and sev == Severity.BLOCK:
-                raise ValueError(f"{rule_id} is an inference and can never be BLOCK (D-017)")
+                why = "the score" if rule_id == "R-SCR-01" else "an inference"
+                raise ValueError(f"{rule_id} is {why} and can never be BLOCK (D-017, D-051)")
         return v
 
 

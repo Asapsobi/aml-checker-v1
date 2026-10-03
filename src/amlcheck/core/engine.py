@@ -21,8 +21,21 @@ from amlcheck.chain.base import canonical_amount
 from amlcheck.config import Settings
 from amlcheck.core.audit import AuditFinding, AuditRecord, AuditSource, append
 from amlcheck.core.clock import Clock, to_db, to_iso, utcnow
-from amlcheck.core.models import Address, CheckResult, Finding, SourceResult, SourceStatus
-from amlcheck.core.rules import RULES_VERSION, apply_overrides, system_findings
+from amlcheck.core.models import (
+    Address,
+    CheckResult,
+    Finding,
+    SourceResult,
+    SourceStatus,
+    Verdict,
+)
+from amlcheck.core.rules import (
+    RULES_VERSION,
+    SYSTEM_SOURCE,
+    apply_overrides,
+    finding,
+    system_findings,
+)
 from amlcheck.core.score import compute
 from amlcheck.core.verdict import decide
 from amlcheck.intel import registry
@@ -66,9 +79,23 @@ async def screen(
     findings.sort(key=lambda f: (f.rule_id, f.source, f.summary))
     verdict = decide(findings)
     trace_evidence = next((r.evidence for r in ordered if r.source == "trace"), None)
-    score = compute(
-        verdict, findings, trace_evidence
-    )  # after the verdict, never feeding it (F10.2)
+    # After the verdict, never feeding it (F10.2).
+    score = compute(verdict, findings, trace_evidence)
+    threshold = settings.score.review_at
+    if threshold and verdict is not Verdict.BLOCK and score.score >= threshold:
+        # R-SCR-01, only when the owner turned it on (D-051): REVIEW at most, decided again.
+        findings.append(
+            finding(
+                "R-SCR-01",
+                SYSTEM_SOURCE,
+                f"Score {score.shown} reaches the review threshold {threshold}",
+                started,
+                {"score": score.score, "review_at": threshold, "band": score.band},
+                overrides=settings.rules.severity,
+            )
+        )
+        findings.sort(key=lambda f: (f.rule_id, f.source, f.summary))
+        verdict = decide(findings)
     check_id = str(uuid.uuid4())
     tool_version = version("amlcheck")
     config_hash = settings.hash()

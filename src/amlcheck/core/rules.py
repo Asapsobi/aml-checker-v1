@@ -38,8 +38,8 @@ DEFAULT_SEVERITY: dict[str, Severity] = {
 #: Severity can't be changed at all (PRD §7.2 "fixed").
 FIXED: frozenset[str] = frozenset({"R-SYS-01"})
 
-#: Inferences never block (methodology §2.5, D-017).
-NEVER_BLOCK: frozenset[str] = frozenset({"R-HEU-07", "R-TRC-05"})
+#: Inferences never block (methodology §2.5, D-017), nor does the score (D-051).
+NEVER_BLOCK: frozenset[str] = frozenset({"R-HEU-07", "R-TRC-05", "R-SCR-01"})
 
 #: Stored with every check (methodology: "Screening + behaviour rules").
 RULES_VERSION = 1

@@ -75,6 +75,8 @@ flagged_inflow_share = 0.1
         ('[rules.severity]\n"R-SYS-01" = "REVIEW"\n', "R-SYS-01 is fixed"),
         ('[rules.severity]\n"R-HEU-07" = "BLOCK"\n', "R-HEU-07 is an inference"),
         ('[rules.severity]\n"R-TRC-05" = "BLOCK"\n', "R-TRC-05 is an inference"),
+        ('[rules.severity]\n"R-SCR-01" = "BLOCK"\n', "R-SCR-01 is the score"),
+        ("[score]\nreview_at = 101\n", "[score] review_at"),
         ('[rules.severity]\n"R-EXP-01" = "MAYBE"\n', "[rules] severity.R-EXP-01"),
         ("this is = = not toml", "not valid TOML"),
     ],

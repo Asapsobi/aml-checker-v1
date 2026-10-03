@@ -4,14 +4,15 @@ from pathlib import Path
 
 import pytest
 
-from amlcheck.config import Settings
+from amlcheck.config import Score, Settings
 from amlcheck.core.address import detect
 from amlcheck.core.audit import AuditRecord, append, verify
 from amlcheck.core.clock import fixed
 from amlcheck.core.engine import screen
-from amlcheck.core.models import SourceStatus, Verdict
+from amlcheck.core.models import Address, Severity, SourceResult, SourceStatus, Verdict
 from amlcheck.core.score import from_json
 from amlcheck.intel import registry
+from amlcheck.screening.base import SourceHealth
 from amlcheck.storage.db import open_db
 from amlcheck.trace.adapter import TraceSource
 from amlcheck.trace.jobs import TraceJobs
@@ -124,3 +125,53 @@ async def test_at44_old_and_new_records_verify(conn: sqlite3.Connection) -> None
     broken = verify(conn)
     assert not broken.ok  # a changed score breaks the chain
     assert broken.break_at == 2
+
+
+class TraceLike:
+    """A trace source's evidence without the trace: an inferred hub took all the money."""
+
+    source = "trace"
+    label = "Source-of-funds trace"
+    required = True
+    timeout: float | None = None
+
+    async def check(self, address: Address) -> SourceResult:
+        evidence = {"trace_id": "t1", "hazard": "0.095", "coverage": "0.95", "complete": True}
+        return SourceResult(self.source, self.label, True, SourceStatus.OK, NOW, (), "ok", evidence)
+
+    async def health(self) -> SourceHealth:
+        return SourceHealth(self.source, self.label, SourceStatus.OK, None, "test")
+
+
+# T-7.03, D-051: R-SCR-01 is off by default; when on, a score at the threshold → REVIEW, not BLOCK.
+@pytest.mark.parametrize(
+    ("review_at", "verdict", "scr"),
+    [(0, Verdict.NO_HITS, False), (52, Verdict.REVIEW, True), (53, Verdict.NO_HITS, False)],
+)
+async def test_r_scr_01(
+    conn: sqlite3.Connection, review_at: int, verdict: Verdict, scr: bool
+) -> None:
+    settings = Settings(score=Score(review_at=review_at))
+    result = await screen(detect(T), [TraceLike()], conn=conn, settings=settings, now=fixed(NOW))
+    assert result.score is not None
+    assert result.score.shown == "52 · high"  # E 51.9 + U 0.5, no rule fired
+    assert result.verdict is verdict
+    assert ("R-SCR-01" in {f.rule_id for f in result.findings}) is scr
+    if scr:
+        (f,) = result.findings
+        assert f.severity is Severity.REVIEW
+        assert f.evidence == {"score": 52, "review_at": 52, "band": "high"}
+        assert verify(conn).ok
+
+
+async def test_r_scr_01_not_added_to_block(conn: sqlite3.Connection) -> None:
+    settings = Settings(score=Score(review_at=1))
+    result = await screen(
+        detect(T),
+        [Source("ofac_sdn", rules=("R-SAN-01",))],
+        conn=conn,
+        settings=settings,
+        now=fixed(NOW),
+    )
+    assert result.verdict is Verdict.BLOCK
+    assert [f.rule_id for f in result.findings] == ["R-SAN-01"]
