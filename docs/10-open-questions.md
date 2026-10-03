@@ -12,9 +12,9 @@
 | Q-04 | R-EXP-01 (a direct counterparty is sanctioned/frozen): REVIEW or BLOCK? | P3 | REVIEW (D-014) | REVIEW, as proposed (D-014 accepted) | Answered |
 | Q-05 | How long to keep cached histories of addresses that are not counterparties, labelled or own? | P4 | 30 days | 30 days, as proposed (= `[cache] history_keep_days`; D-043) | Answered |
 | Q-06 | Do you have existing address lists (own wallets, known OTC partners, known bad actors) to import as labels at P4? | P4 | Import as `labels.csv` and operator labels | | Open |
-| Q-07 | Accept proportional trace shares as an *estimated* metric next to absolute amounts (D-016)? | P6 | Yes | | Open |
-| Q-08 | R-TRC-01 (sanctioned wallet 2–3 hops upstream, ≥ 1,000 USDT): REVIEW or BLOCK? | P6 | REVIEW | | Open |
-| Q-09 | If the free HyperSync plan can't meet the trace budget, is a paid tier OK, and at what monthly budget? | P6 | Decide after VS-07 | | Open |
+| Q-07 | Accept proportional trace shares as an *estimated* metric next to absolute amounts (D-016)? | P6 | Yes | Yes, as proposed (D-016 accepted) | Answered |
+| Q-08 | R-TRC-01 (sanctioned wallet 2–3 hops upstream, ≥ 1,000 USDT): REVIEW or BLOCK? | P6 | REVIEW | REVIEW, as proposed (D-044) | Answered |
+| Q-09 | If the free HyperSync plan can't meet the trace budget, is a paid tier OK, and at what monthly budget? | P6 | Decide after VS-07 | Decide after VS-07 (T-6.11), as proposed | Open |
 | Q-10 | Should the score ever change the verdict (R-SCR-01)? | P7 | Off | | Open |
 | Q-11 | Notifications: macOS notification only, or also a local webhook (e.g. into a Telegram bot you run)? | P8 | Notification only; webhook optional | | Open |
 | Q-12 | Operator name on decisions: one name from config, or asked each time? | P9 | From config | | Open |

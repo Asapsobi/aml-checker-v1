@@ -40,7 +40,7 @@
 | D-013 | More transfers than `max_transfers` (5,000) in the lookback → exposure `stale` → INCOMPLETE | Never a clean result over part of a history | Proposed |
 | D-014 | R-EXP-01 is REVIEW by default (configurable to BLOCK) | A counterparty's sin is not the address's own | Accepted (Q-04, 2026-10-03) |
 | D-015 | Flags on neighbours come from local data only (sanctions snapshot, freeze index, labels) | No API quota spent on neighbours | Proposed |
-| D-016 | Proportional (haircut) trace shares are shown as **estimated**, always next to absolute bottleneck amounts; blocking-grade trace rules use amounts | Money is fungible inside a wallet | Proposed |
+| D-016 | Proportional (haircut) trace shares are shown as **estimated**, always next to absolute bottleneck amounts; blocking-grade trace rules use amounts | Money is fungible inside a wallet | Accepted (Q-07, 2026-10-03) |
 | D-017 | Inferred classifications never produce BLOCK; R-HEU-07 and R-TRC-05 cannot be raised to BLOCK | An inference must not look like a fact | Proposed |
 | D-018 | Audit log: hash-chained, append-only, no delete path; nullable fields hashed only when set; decisions in a second chain | Tamper evidence that survives schema growth | Proposed |
 | D-019 | Exit codes: 0 NO_HITS, 1 could not run, 3 REVIEW, 4 INCOMPLETE, 5 BLOCK, 6 a watched or monitored verdict needs attention | Scripts can react | Proposed |
@@ -287,3 +287,45 @@
   (labels.csv and active intel labels) and entity members are kept regardless; own wallets join in P10.
 - **Alternatives:** Keep everything (unbounded growth); a shorter period (more provider reads).
 - **Consequences:** `cache prune`'s keep rule (T-4.07).
+
+### D-044 · R-TRC-01 is REVIEW (Q-08)
+- **Status:** Accepted
+- **Date:** 2026-10-03 · **Phase:** P6
+- **Context:** Q-08: a sanctioned wallet 2–3 hops upstream with a bottleneck ≥ 1,000 USDT.
+- **Decision:** REVIEW by default; configurable to BLOCK (`[rules.severity]`).
+- **Alternatives:** BLOCK (indirect money would block payments the address may not control).
+- **Consequences:** PRD §7.2 default unchanged.
+
+### D-045 · In a trace, DEPOSIT uses only stored facts about the top recipient
+- **Status:** Accepted
+- **Date:** 2026-10-03 · **Phase:** P6
+- **Context:** Methodology §7.5 test 9 classifies read nodes; DEPOSIT needs to know whether the node's
+  top recipient is a hub. Reading every top recipient would add up to one read per node and break the
+  trace budget (PRD G8: ≤ 120 BSC queries, ≤ 200 TRON requests).
+- **Decision:** In a trace the top recipient counts as a hub only from what is stored: an unexpired
+  classification (HUB) or a label/entity of an exchange or service kind. No extra read.
+- **Alternatives:** Read top recipients (budget); skip DEPOSIT in traces (loses the commonest terminal).
+- **Consequences:** `trace/engine.py`. `amlcheck classify` and checks still read the top recipient (P5).
+
+### D-046 · Senders already on the path go to `untraced:cycle`
+- **Status:** Accepted
+- **Date:** 2026-10-03 · **Phase:** P6
+- **Context:** Methodology §7.2 says inflows from addresses on the current path are excluded from a
+  node's window; §7.6 and AT-41 say such a sender's weight goes to `untraced:cycle`. If excluded, its
+  weight could never reach that bucket.
+- **Decision:** A sender on the item's own path stays in the node's inflow and takes its share like any
+  sender (pruning included); terminal test 1 then puts that weight in `untraced:cycle` and the trace does
+  not follow it. A sender seen on a different path is not a cycle (§7.6).
+- **Alternatives:** Exclude path senders (weight silently spread over the others; AT-41 unreachable).
+- **Consequences:** Partition keeps summing to 1; the cycle is visible in the result.
+
+### D-047 · §7.11: A resolves from its named entity without a read
+- **Status:** Accepted
+- **Date:** 2026-10-03 · **Phase:** P6
+- **Context:** The worked example reads A (a hub) and then resolves it to `exchange_regulated` through the
+  entity the operator named, counting 4 reads (AT-37). Under §7.5's order, test 4 (labels and entity
+  kinds, local data) comes before any read, so A resolves without being read.
+- **Decision:** Follow §7.5's order (local data first saves the budget, principle P4). AT-37 expects 3
+  addresses read (T, B, E); the partition, coverage and findings are unchanged.
+- **Alternatives:** Read hubs before checking their entity (wastes the budget on the biggest nodes).
+- **Consequences:** AT-37 and the §7.11 table updated; no formula changes, no version bump.

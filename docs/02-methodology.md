@@ -397,14 +397,14 @@ Target T received **20,000 USDT** in its window: A 12,000, B 6,000, C 2,000.
 | Step | What happens | Bucket |
 |---|---|---|
 | Prune T's senders | A (60%) kept, B kept (60% < 80% before adding), C dropped (90% ≥ 80%) | `untraced:pruned` 0.10 |
-| A, hop 1 | Read: 4,800 transfers in window → `HUB`; operator named its entity "Binance", kind `exchange_regulated` | `exchange_regulated` 0.60 |
+| A, hop 1 | Member of the entity the operator named "Binance", kind `exchange_regulated`: test 4, no read (D-047) | `exchange_regulated` 0.60 |
 | B, hop 1 | Read: in window B received 6,000: D 4,000, E 2,000 | expand |
 | D, hop 2 | On OFAC | `sanctioned` 0.20 |
 | E, hop 2 | Read, classified `COLLECTOR` (confidence 0.8) | `suspicious_collector` 0.10 |
 
 Result: coverage 0.90. Path T ← B ← D has bottleneck min(6,000, 4,000) = **4,000 ≥ 1,000** →
 **R-TRC-01**. High-risk share 20% ≥ 5% → **R-TRC-03**. Collector share 10% ≥ 10% → **R-TRC-05**
-(low). Verdict REVIEW. Reads: T, A, B, E = 4 addresses.
+(low). Verdict REVIEW. Reads: T, B, E = 3 addresses (D-047).
 
 ---
 

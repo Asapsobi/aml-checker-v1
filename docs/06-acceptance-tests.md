@@ -42,7 +42,7 @@
 | AT-34 | P5 | 120 senders, 92% of inbound < 100 USDT, 85% forwarded to one address | `COLLECTOR` ≥ 0.7 → R-HEU-07 (low) |
 | AT-35 | P5 | Config raises R-HEU-07 to BLOCK | Refused at load |
 | AT-36 | P5 | Each classifier condition at and just past its threshold | Fires / does not fire exactly at the boundary |
-| AT-37 | P6 | Methodology §7.11 fixture | Partition `{exchange_regulated 0.60, sanctioned 0.20, suspicious_collector 0.10, untraced:pruned 0.10}`; coverage 0.90; R-TRC-01 (bottleneck 4,000), R-TRC-03, R-TRC-05; 4 addresses read |
+| AT-37 | P6 | Methodology §7.11 fixture | Partition `{exchange_regulated 0.60, sanctioned 0.20, suspicious_collector 0.10, untraced:pruned 0.10}`; coverage 0.90; R-TRC-01 (bottleneck 4,000), R-TRC-03, R-TRC-05; 3 addresses read (T, B, E; A resolves from its named entity, D-047) |
 | AT-38 | P6 | 500 random synthetic graphs (property test) | Partition = 1 ± 0.001; reads ≤ `max_nodes`; identical JSON on re-run |
 | AT-39 | P6 | A node's history read fails | `INCOMPLETE`, R-SYS-01 naming the node; partial trace saved |
 | AT-40 | P6 | `max_nodes = 3` on the §7.11 fixture | Remaining weight in `untraced:budget`; not INCOMPLETE |
