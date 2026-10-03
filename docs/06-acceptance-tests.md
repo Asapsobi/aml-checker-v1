@@ -45,7 +45,7 @@
 | AT-37 | P6 | Methodology §7.11 fixture | Partition `{exchange_regulated 0.60, sanctioned 0.20, suspicious_collector 0.10, untraced:pruned 0.10}`; coverage 0.90; R-TRC-01 (bottleneck 4,000), R-TRC-03, R-TRC-05; 3 addresses read (T, B, E; A resolves from its named entity, D-047) |
 | AT-38 | P6 | 500 random synthetic graphs (property test) | Partition = 1 ± 0.001; reads ≤ `max_nodes`; identical JSON on re-run |
 | AT-39 | P6 | A node's history read fails | `INCOMPLETE`, R-SYS-01 naming the node; partial trace saved |
-| AT-40 | P6 | `max_nodes = 3` on the §7.11 fixture | Remaining weight in `untraced:budget`; not INCOMPLETE |
+| AT-40 | P6 | `max_nodes = 2` on the §7.11 fixture (3 reads there, D-047) | Remaining weight in `untraced:budget`; not INCOMPLETE |
 | AT-41 | P6 | Cycle A → B → A | Weight to `untraced:cycle`; terminates |
 | AT-42 | P7 | §7.11 fixture with R-HEU-01 | Score 66, band `high`, components E 59.5, D 0, B 5, U 1 |
 | AT-43 | P7 | A BLOCK check; an INCOMPLETE check with E = 34 | 100; `≥ 34` band `medium+` |

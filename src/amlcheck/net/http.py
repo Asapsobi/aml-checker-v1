@@ -16,6 +16,7 @@ from __future__ import annotations
 
 import asyncio
 import re
+from collections import Counter
 from collections.abc import Awaitable, Callable, Mapping
 from dataclasses import dataclass, field
 from enum import StrEnum
@@ -88,6 +89,8 @@ class Http:
         self._network = network
         self._mode = mode
         self._sleep = sleep
+        #: Requests sent per provider, every attempt counted (trace budgets, PRD G8).
+        self.sent: Counter[str] = Counter()
 
     @property
     def mode(self) -> Mode:
@@ -112,6 +115,7 @@ class Http:
                     await provider.limiter.acquire()
                 except LimiterError as e:
                     raise SourceError(provider.name, str(e)) from None
+            self.sent[provider.name] += 1
             try:
                 resp = await self._client.request(
                     method,
