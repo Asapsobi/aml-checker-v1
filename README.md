@@ -4,7 +4,7 @@
 address classification, risk scoring and a recorded decision trail. Local-first, built on RPC
 providers and indexers, no own nodes.
 
-> **Status:** P4 (intelligence store) ready for review, release v0.4.0. Released: v0.1.0 – v0.3.0. The product is built from these docs with Claude Code,
+> **Status:** P5 (profiler & classifier) ready for review, release v0.5.0. Released: v0.1.0 – v0.4.0. The product is built from these docs with Claude Code,
 > phase by phase.
 
 ## Setup
@@ -33,11 +33,13 @@ uv run amlcheck status       # creates ~/.amlcheck/ and the database
 
 | Command | What it does |
 |---|---|
-| `amlcheck check <addr> [--amount N] [--client NAME] [--note TEXT] [--json]` | Screen an address: OFAC sanctions, Tether freezes on TRON (index + live `isBlackListed`), and its 180-day USDT history: who it dealt with (sanctioned, frozen or labelled counterparties) and how it behaves (new, pass-through, fan-in, fan-out); and whether it only *looks like* a known counterparty or trusted address (address poisoning, R-HEU-06). More than 5,000 transfers in 180 days → INCOMPLETE. Verdict `BLOCK` / `REVIEW` / `INCOMPLETE` / `NO_HITS`, recorded in the audit log before it is shown. Exit codes: 0 NO_HITS, 3 REVIEW, 4 INCOMPLETE, 5 BLOCK, 1 could not run |
+| `amlcheck check <addr> [--amount N] [--client NAME] [--note TEXT] [--json]` | Screen an address: OFAC sanctions, Tether freezes on TRON (index + live `isBlackListed`), and its 180-day USDT history: who it dealt with (sanctioned, frozen or labelled counterparties) and how it behaves (new, pass-through, fan-in, fan-out); and whether it only *looks like* a known counterparty or trusted address (address poisoning, R-HEU-06); and what kind of address it is (R-HEU-07 for a collector or distributor, low priority). More than 5,000 transfers in 180 days → INCOMPLETE. Verdict `BLOCK` / `REVIEW` / `INCOMPLETE` / `NO_HITS`, recorded in the audit log before it is shown. Exit codes: 0 NO_HITS, 3 REVIEW, 4 INCOMPLETE, 5 BLOCK, 1 could not run |
 | `amlcheck labels import labels.csv` / `labels list` | Your own address tags (`address,chain,tag,note,source`): `mixer`, `bridge`, `high_risk` raise R-HEU-05 and count as flagged; `allowlist` leaves a counterparty out of the behaviour rules. One bad row and nothing is imported |
 | `amlcheck cp list [--chain] [--verdict] [--client]` / `cp show <addr>` / `cp rebuild` | The counterparty registry: every address checked, with its last verdict and clients; `rebuild` recreates it from the audit log |
 | `amlcheck intel label <addr> <category>` / `intel retract <id> --reason` / `intel show <addr> [--all]` / `intel stats` | Operator labels (methodology §8 categories), retracted but never deleted |
 | `amlcheck intel import-pack <file> --name N --licence TEXT` | A licensed third-party label pack (`address,chain,category,note`); refused without a licence |
+| `amlcheck classify <addr> [--json]` | Who an address probably is (HUB, DEPOSIT, COLLECTOR, DISTRIBUTOR, PASS_THROUGH, PERSONAL, CONTRACT, FRESH), with the conditions that held. Deposits are linked to their hub's entity. Inferences, never a verdict |
+| `amlcheck intel entity list` / `entity show <id>` / `entity name <id> <name> --kind K` | Groups of addresses with one owner; naming a hub (e.g. an exchange) carries its kind to its deposits |
 | `amlcheck sync` | Download the OFAC list (about 29 MB) and refresh the Tether TRON freeze index. **Run at least daily**: a list older than 48 h makes checks INCOMPLETE |
 | `amlcheck status [--json]` | Data folder, config, database, source freshness and the audit log head |
 | `amlcheck audit list [--address] [--verdict] [--client] [--since] [--json]` | Recorded checks, newest first |

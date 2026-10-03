@@ -137,3 +137,34 @@ exposure reading intel labels, `cache prune` keep rule (D-043).
   TSpfo[cMSWfjWF1zHYXtusawoB9cP]t2FtwD". `cp show` lists it as LOOKS LIKE the real one.
 - `audit verify`: OK, 13 records.
 
+## P5 · Profiler & classifier
+
+| AT | Tests | Status |
+|---|---|---|
+| AT-32 | `test_classifier.py::test_at32_hub` (600 counterparties → 0.7; capped → 0.95); `test_profiler.py::test_hub_is_capped` | Green locally (2026-10-03) |
+| AT-33 | `test_profiler.py::test_at33_deposit_linked_and_named`; `test_cli_classify.py::test_classify_and_entities` | Green locally |
+| AT-34 | `test_classifier.py::test_at34_collector`; `test_profiler.py::test_at34_collector_raises_heu07` | Green locally |
+| AT-35 | `test_config.py::test_bad_config_refused[R-HEU-07 BLOCK]` (since P0) | Green locally |
+| AT-36 | `test_classifier.py::test_at36_boundaries` (25 cases: every condition at and just past its threshold) | Green locally |
+
+Also: every §5 feature (`test_features.py`), contract lookups on real VS-12/VS-13 answers, cached
+classification with 14-day expiry, operator label beats inference, operator membership never
+overwritten, the top recipient's classification reused.
+
+**Live (2026-10-03, owner's keys, scratch `AMLCHECK_HOME`, `amlcheck classify <addr> --json`):**
+
+| Chain | Address | Role | Result | Time |
+|---|---|---|---|---|
+| BSC | `0x8894e0…e2d4e3` (busy exchange hot wallet) | hub | **HUB 0.95** (capped; 830 senders, 161 recipients in the read) | 36 s |
+| BSC | `0xb7f58a…e3bed6` (sends to it) | deposit | **DEPOSIT 0.9 primary**, FRESH; linked to `hub-0x8894e0` | 12 s |
+| BSC | `0x3fc37b…0812d` (sends to it) | busy deposit | HUB 0.95 primary (its own read is capped) **and DEPOSIT 0.9** | 30 s |
+| TRON | `TN12qS4g…aDGdRY` (busy wallet) | hub | **HUB 0.95** (capped; 751 senders) | 7 s |
+| TRON | `TAyDpm2w…Di9E9P` (sent it 45 transfers) | deposit | **DEPOSIT 0.9 primary**, FRESH; linked to `hub-TN12qS4g` | 5 s |
+
+Each DEPOSIT held all six conditions plus three bonuses (≥ 5 senders, median hold ≤ 12 h, ≥ 99% to the
+hub). `amlcheck check 0xb7f58a…` (8 s): the classifier source reports "DEPOSIT (0.9), also FRESH";
+R-HEU-01 (new) and R-HEU-02 (pass-through) fire. `audit verify`: OK, 14 records.
+
+Notes for P11 calibration: a very busy deposit address is capped and so primary HUB (table order);
+R-HEU-02 fires on deposit addresses by nature (they sweep within hours).
+
