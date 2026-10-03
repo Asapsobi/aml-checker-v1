@@ -5,10 +5,12 @@ import tempfile
 from decimal import Decimal
 from itertools import pairwise
 from pathlib import Path
+from typing import Any
 
 from hypothesis import HealthCheck, given, settings
 from hypothesis import strategies as st
 
+from amlcheck.chain.base import Transfer
 from amlcheck.config import Settings, Trace
 from amlcheck.core.address import detect
 from amlcheck.storage.db import open_db
@@ -28,7 +30,9 @@ edges = st.lists(
 )
 
 
-async def _run(xs: list, sanctioned: list[int], max_nodes: int, branch: int, reverse: bool) -> dict:  # type: ignore[type-arg]
+async def _run(
+    xs: list[Transfer], sanctioned: list[int], max_nodes: int, branch: int, reverse: bool
+) -> dict[str, Any]:
     with tempfile.TemporaryDirectory() as d:
         conn = open_db(Path(d) / "a.db")
         try:
@@ -37,7 +41,7 @@ async def _run(xs: list, sanctioned: list[int], max_nodes: int, branch: int, rev
             if sanctioned:
                 sanction(conn, *(PEOPLE[i] for i in sanctioned))
             t = await eng.run(detect(T))
-            out = t.to_json()
+            out: dict[str, Any] = t.to_json()
             out["budget"].pop("queries")
             out["budget"].pop("cache_hits")
             return out
@@ -62,10 +66,11 @@ async def test_at38_random_graphs(
     ]
     first = await _run(xs, sanctioned, max_nodes, branch, reverse=False)
     if first["partition"]:
-        total = sum(Decimal(v) for v in first["partition"].values())
+        total = sum((Decimal(v) for v in first["partition"].values()), Decimal(0))
         assert abs(total - 1) <= Decimal("0.001"), first["partition"]
         covered = sum(
-            Decimal(v) for k, v in first["partition"].items() if not k.startswith("untraced:")
+            (Decimal(v) for k, v in first["partition"].items() if not k.startswith("untraced:")),
+            Decimal(0),
         )
         assert abs(covered - Decimal(first["coverage"])) <= Decimal("0.000002")
     assert first["budget"]["nodes_read"] <= max(max_nodes, 1)
