@@ -10,7 +10,19 @@ from typing import Annotated
 
 import typer
 
-from amlcheck.cli import audit, cache, check, classify, cp, history, intel, labels, status, sync
+from amlcheck.cli import (
+    audit,
+    cache,
+    check,
+    classify,
+    cp,
+    history,
+    intel,
+    labels,
+    status,
+    sync,
+    trace,
+)
 
 app = typer.Typer(
     name="amlcheck",
@@ -23,6 +35,8 @@ app.command("status")(status.status)
 app.command("check")(check.check)
 app.command("history")(history.history)
 app.command("classify")(classify.classify)
+app.command("trace")(trace.trace)
+app.command("investigate")(trace.investigate)
 app.command("sync")(sync.sync)
 app.add_typer(audit.app, name="audit")
 app.add_typer(labels.app, name="labels")

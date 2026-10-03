@@ -16,7 +16,7 @@ from amlcheck.core.models import Address, SourceResult, SourceStatus
 from amlcheck.screening.base import SourceHealth
 from amlcheck.trace.engine import TraceEngine, TraceFailed
 from amlcheck.trace.jobs import TraceJobs
-from amlcheck.trace.model import Trace, dec
+from amlcheck.trace.model import Trace, dec, pct
 from amlcheck.trace.rules import trace_findings
 
 SOURCE = "trace"
@@ -79,7 +79,7 @@ class TraceSource:
             )
         now = self._clock()
         findings = tuple(trace_findings(trace, self._s.trace, now))
-        coverage = f"{dec(trace.coverage * 100)}%" if trace.coverage is not None else "no inflow"
+        coverage = pct(trace.coverage) if trace.coverage is not None else "no inflow"
         b = trace.budget
         detail = (
             f"coverage {coverage}; {b.nodes_read} addresses read, {b.queries} provider calls, "

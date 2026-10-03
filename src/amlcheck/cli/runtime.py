@@ -212,6 +212,18 @@ def make_trace_engine(
     )
 
 
+def build_trace_engine(
+    rt: Runtime, conn: sqlite3.Connection, client: httpx.AsyncClient, mode: Mode
+) -> TraceEngine:
+    """A trace engine on its own (`amlcheck trace`), with its own counted HTTP client."""
+    http = Http(client, rt.settings.network, mode=mode)
+    cache = TransferCache(
+        conn, make_sources(rt, client, mode, http=http), rt.settings.cache, clock=rt.clock
+    )
+    contracts = ContractCache(conn, make_contract_lookups(rt, http), clock=rt.clock)
+    return make_trace_engine(rt, conn, cache, contracts, IntelStore(conn, clock=rt.clock), http)
+
+
 def make_sources(
     rt: Runtime, client: httpx.AsyncClient, mode: Mode, *, http: Http | None = None
 ) -> dict[Chain, HistorySource]:

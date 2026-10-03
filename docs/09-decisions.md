@@ -343,3 +343,18 @@
 - **Consequences:** An old wallet whose earlier activity is outside the window and not in the cache
   can count as fresh, so `layering` may slightly over-count; it is an annotation, never in the
   partition or a blocking rule.
+
+### D-049 · `investigate` is a check with the trace on; `trace` records no verdict
+- **Status:** Proposed
+- **Date:** 2026-10-03 · **Phase:** P6
+- **Context:** PRD F9.4 names `amlcheck trace` and `investigate` but defines neither. U7 asks "where
+  did this client's 30k come from?" with a graph and breakdown.
+- **Decision:** `investigate <addr>` runs a full check with the trace forced on: one audit record
+  linked to the trace (`trace_id`), the check's verdict and exit codes (D-019), then the trace
+  breakdown and an optional `--svg` graph. `trace <addr> [--direction in|out]` is an investigation
+  only: the trace is stored as a job, R-TRC findings are shown for information, no check record is
+  written. Exit 0 complete, 4 partial (a read failed or time ran out), 1 could not start.
+- **Alternatives:** `trace` also writing a check record (two commands doing one job; a forward
+  trace has no verdict to record); `investigate` as an alias of `trace` (no recorded verdict for U7).
+- **Consequences:** A verdict that considered the trace always comes from `check --trace` or
+  `investigate`, so it is in the audit log; `trace` is safe to run as often as needed.

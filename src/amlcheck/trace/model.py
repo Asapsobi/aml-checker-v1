@@ -32,6 +32,11 @@ def dec(x: Decimal) -> str:
     return canonical_amount(x.quantize(_PLACES)) if x != x.to_integral() else canonical_amount(x)
 
 
+def pct(x: Decimal) -> str:
+    """A share for people: one decimal and a percent sign (CLI, graph, check detail)."""
+    return f"{(x * 100).quantize(Decimal('0.1'))}%"
+
+
 @dataclass(frozen=True)
 class NodeClass:
     type: str

@@ -18,7 +18,7 @@ from xml.sax.saxutils import escape
 
 from amlcheck.core.clock import to_iso
 from amlcheck.intel.categories import CATEGORIES
-from amlcheck.trace.model import Node, Trace, dec
+from amlcheck.trace.model import Node, Trace, dec, pct
 
 COL_W = 270
 BOX_W = 220
@@ -65,10 +65,6 @@ def group(category: str | None) -> str:
 def short(address: str) -> str:
     """First 8 and last 6 characters (methodology §4): enough to tell look-alikes apart."""
     return address if len(address) <= 17 else f"{address[:8]}…{address[-6:]}"
-
-
-def pct(x: Decimal) -> str:
-    return f"{(x * 100).quantize(Decimal('0.1'))}%"
 
 
 @dataclass(frozen=True)

@@ -110,10 +110,14 @@ class TraceJobs:
         ).fetchall()
         return [r[0] for r in rows]
 
-    def _progress_writer(self, trace_id: str) -> Callable[[TraceProgress], None]:
+    def _progress_writer(
+        self, trace_id: str, also: Callable[[TraceProgress], None] | None
+    ) -> Callable[[TraceProgress], None]:
         last = [0.0]
 
         def write(p: TraceProgress) -> None:
+            if also is not None:
+                also(p)
             now = time.monotonic()
             if now - last[0] < PROGRESS_EVERY_S:
                 return
@@ -126,7 +130,12 @@ class TraceJobs:
 
         return write
 
-    async def run(self, trace_id: str, engine: TraceEngine) -> Trace:
+    async def run(
+        self,
+        trace_id: str,
+        engine: TraceEngine,
+        on_progress: Callable[[TraceProgress], None] | None = None,
+    ) -> Trace:
         """Run a claimed or claimable job to the end; `TraceFailed` carries the partial result."""
         job = self.get(trace_id)
         if job is None:
@@ -137,7 +146,7 @@ class TraceJobs:
             raise RuntimeError(f"trace {trace_id} is {job.status} elsewhere")
         try:
             trace = await engine.run(
-                detect(job.address), job.direction, self._progress_writer(trace_id)
+                detect(job.address), job.direction, self._progress_writer(trace_id, on_progress)
             )
         except TraceFailed as e:
             with transaction(self._conn):
