@@ -1,6 +1,6 @@
 [project]
 name = "amlcheck"
-version = "0.3.0"
+version = "0.4.0"
 description = "Counterparty intelligence for USDT on TRON and BNB Smart Chain"
 readme = "README.md"
 requires-python = ">=3.12"

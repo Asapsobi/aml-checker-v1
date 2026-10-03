@@ -113,3 +113,27 @@ R-EXP-01, caps of 10 largest first, R-HEU-01 new/unused, the readable output sna
 live addresses; deposit and trading wallets move money on within a day, so this rule is noisy at the
 methodology's defaults.
 
+## P4 · Intelligence store
+
+| AT | Tests | Status |
+|---|---|---|
+| AT-28 | `test_intel_p4.py::test_at28_rebuild_gives_identical_rows` (10 checks over 4 addresses); `test_cli_intel.py::test_cp_after_checks_and_rebuild` | Green locally (2026-10-03) |
+| AT-29 | `test_intel_p4.py::test_at29_lookalike_of_a_counterparty`, `::test_lookalike_of_a_trusted_label_and_not_of_itself` | Green locally |
+| AT-30 | `test_intel_p4.py::test_at30_pack_without_licence_refused`; `test_cli_intel.py::test_import_pack_needs_licence` | Green locally |
+| AT-31 | `test_store.py::test_at31_add_then_retract`; `test_cli_intel.py::test_label_retract_show` | Green locally |
+
+Also: category table (§8) and provenance rules, `best_terminal()` ordering, entities, packs re-import,
+exposure reading intel labels, `cache prune` keep rule (D-043).
+
+**Live (2026-10-03, owner's keys, scratch `AMLCHECK_HOME` from P2/P3):**
+
+- `amlcheck cp rebuild` on the 11 audit records written before the registry existed: 10 counterparties.
+- **Real address poisoning found in the cache:** 7 groups of look-alike addresses among 8,479 cached
+  addresses, each a real counterparty (millions of USDT) next to a look-alike that sent one dust
+  transfer (~1 USDT), e.g. `TSpfocMSWfjWF1zHYXtusawoB9cPt2FtwD` (21 transfers, 5.1M USDT) and
+  `TSpfopdGbCwmM46iFF9q6ALXiD6rt2FtwD` (one transfer of 1.0001 USDT).
+- After checking the real one (client `corridor`), `amlcheck check TSpfopdG…2FtwD` → **REVIEW,
+  R-HEU-06**: "Looks like a known counterparty but isn't: TSpfo[pdGbCwmM46iFF9q6ALXiD6r]t2FtwD vs
+  TSpfo[cMSWfjWF1zHYXtusawoB9cP]t2FtwD". `cp show` lists it as LOOKS LIKE the real one.
+- `audit verify`: OK, 13 records.
+
