@@ -26,7 +26,7 @@ from typing import Literal
 from amlcheck.chain.base import History, Transfer
 from amlcheck.chain.cache import ContractCache, TransferCache
 from amlcheck.config import Settings
-from amlcheck.core.clock import Clock, utcnow
+from amlcheck.core.clock import Clock, from_iso, utcnow
 from amlcheck.core.models import Address, Chain
 from amlcheck.intel.categories import BY_NAME
 from amlcheck.intel.store import IntelStore
@@ -36,6 +36,7 @@ from amlcheck.profile.adapter import SERVICE_CATEGORIES
 from amlcheck.profile.classifier import ClassifyContext
 from amlcheck.profile.features import profile
 from amlcheck.screening.exposure import local_flags
+from amlcheck.trace.annotate import layering
 from amlcheck.trace.model import (
     TRACE_VERSION,
     UNTRACED,
@@ -203,7 +204,7 @@ class TraceEngine:
                 nodes=tuple(st.nodes),
                 edges=tuple(st.edges),
                 partition=partition,
-                annotations={"layering": Decimal(0)},
+                annotations={"layering": layering(st.nodes)},
                 coverage=coverage,
                 paths=tuple(
                     sorted(
@@ -309,7 +310,31 @@ class TraceEngine:
         in_n = sum((f.amount for f in senders.values()), Decimal(0))
         if not in_n:
             return self._end(item, "untraced:no_inflow", 10, None, True, in_t, st)
-        st.nodes.append(Node(item.address, item.hop, item.weight, None, True, item.path[-1], 11))
+        times = [t.time for t in transfers if item.address in (t.sender, t.recipient)]
+        stored = self._conn.execute(
+            "SELECT min(first_activity) FROM history_windows WHERE chain = ? AND address_norm = ? "
+            "AND first_activity IS NOT NULL",
+            (chain.value, item.address),
+        ).fetchone()[0]
+        # D-048: only what was read (or is already stored); no extra first-activity reads.
+        first_seen = min([*times, *([from_iso(stored)] if stored else [])], default=None)
+        st.nodes.append(
+            Node(
+                item.address,
+                item.hop,
+                item.weight,
+                None,
+                True,
+                item.path[-1],
+                11,
+                path=item.path,
+                n_in=sum(len(f.txs) for f in senders.values()),
+                inflow=in_n,
+                first_seen=first_seen,
+                sent_on=item.edge.amount,
+                fresh=first_seen is not None and first_seen >= item.window[0],
+            )
+        )
         return self._children(
             item.address,
             senders,
@@ -383,7 +408,17 @@ class TraceEngine:
     ) -> list[_Item]:
         st.buckets[category] += item.weight
         st.nodes.append(
-            Node(item.address, item.hop, item.weight, category, read, item.path[-1], test, cls)
+            Node(
+                item.address,
+                item.hop,
+                item.weight,
+                category,
+                read,
+                item.path[-1],
+                test,
+                cls,
+                path=item.path,
+            )
         )
         if category not in UNTRACED:
             st.paths.append(

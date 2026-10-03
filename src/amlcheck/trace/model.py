@@ -48,6 +48,13 @@ class Node:
     via: str | None  # the address this item was reached from (None for the target)
     test: int | None = None  # which terminal test decided it (methodology §7.5)
     classification: NodeClass | None = None
+    path: tuple[str, ...] = ()  # target first, up to `via`
+    # Expanded nodes only, for the peel-chain annotation (methodology §6.1):
+    n_in: int | None = None  # inbound transfers in its window
+    inflow: Decimal | None = None  # USDT into it in its window
+    first_seen: datetime | None = None
+    sent_on: Decimal | None = None  # USDT it sent to `via` (its edge amount)
+    fresh: bool | None = None  # first seen no earlier than 30 days before its edge (§6.1, D-048)
 
 
 @dataclass(frozen=True)
@@ -122,6 +129,12 @@ class Trace:
                         if n.classification
                         else None
                     ),
+                    "path": list(n.path),
+                    "n_in": n.n_in,
+                    "inflow_usdt": dec(n.inflow) if n.inflow is not None else None,
+                    "first_seen": to_iso(n.first_seen) if n.first_seen else None,
+                    "sent_on_usdt": dec(n.sent_on) if n.sent_on is not None else None,
+                    "fresh": n.fresh,
                 }
                 for n in self.nodes
             ],
@@ -183,6 +196,12 @@ class Trace:
                     )
                     if n.get("classification")
                     else None,
+                    tuple(n.get("path", ())),
+                    n.get("n_in"),
+                    Decimal(n["inflow_usdt"]) if n.get("inflow_usdt") is not None else None,
+                    from_iso(n["first_seen"]) if n.get("first_seen") else None,
+                    Decimal(n["sent_on_usdt"]) if n.get("sent_on_usdt") is not None else None,
+                    n.get("fresh"),
                 )
                 for n in d["nodes"]
             ),

@@ -329,3 +329,17 @@
   addresses read (T, B, E); the partition, coverage and findings are unchanged.
 - **Alternatives:** Read hubs before checking their entity (wastes the budget on the biggest nodes).
 - **Consequences:** AT-37 and the §7.11 table updated; no formula changes, no version bump.
+
+### D-048 · Peel-chain freshness from what the trace read
+- **Status:** Proposed
+- **Date:** 2026-10-03 · **Phase:** P6
+- **Context:** Methodology §6.1: a peel-chain node must be first seen within 30 days before its edge.
+  A node's true first activity costs extra reads (TRON 2 requests, BSC up to 2 indexer queries plus
+  ~11 s), up to 31 times per trace, against the G8 budget.
+- **Decision:** A node is fresh when the earliest activity known for it, its earliest transfer in the
+  window the trace read or a first activity already stored in the cache, is no earlier than the window
+  start (30 days before its edge). No extra reads (principle P4: only data already read).
+- **Alternatives:** Look up first activity for every expanded node (budget); drop the condition.
+- **Consequences:** An old wallet whose earlier activity is outside the window and not in the cache
+  can count as fresh, so `layering` may slightly over-count; it is an annotation, never in the
+  partition or a blocking rule.
