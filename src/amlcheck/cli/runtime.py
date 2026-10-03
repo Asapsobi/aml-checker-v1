@@ -44,6 +44,9 @@ from amlcheck.screening.tron_freeze import (
     TronTether,
 )
 from amlcheck.storage.db import MigrationError, open_db
+from amlcheck.trace.adapter import TraceSource
+from amlcheck.trace.engine import TraceEngine
+from amlcheck.trace.jobs import TraceJobs
 
 KEYLESS_TRONGRID_RPS = 1.0  # VS-05: without a key TronGrid allows 1 request/s
 
@@ -136,21 +139,30 @@ def make_tether(rt: Runtime, http: Http, limiter: Limiter) -> TronTether:
 
 
 def make_screening_sources(
-    rt: Runtime, conn: sqlite3.Connection, client: httpx.AsyncClient, mode: Mode, chain: Chain
+    rt: Runtime,
+    conn: sqlite3.Connection,
+    client: httpx.AsyncClient,
+    mode: Mode,
+    chain: Chain,
+    *,
+    trace: bool = False,
 ) -> list[SourceAdapter]:
-    """The sources for a check on `chain` (methodology §2.1)."""
+    """The sources for a check on `chain` (methodology §2.1); the trace when asked (PRD F9.4)."""
     http = Http(client, rt.settings.network, mode=mode)
     sanctions = SanctionsSource(conn, rt.settings.freshness, clock=rt.clock)
-    cache = TransferCache(conn, make_sources(rt, client, mode), rt.settings.cache, clock=rt.clock)
+    cache = TransferCache(
+        conn, make_sources(rt, client, mode, http=http), rt.settings.cache, clock=rt.clock
+    )
     exposure = ExposureSource(
         cache, conn, rt.settings.exposure, rt.settings.heuristics, clock=rt.clock
     )
     lookalike = LookalikeSource(conn, clock=rt.clock)
     store = IntelStore(conn, clock=rt.clock)
+    contracts = ContractCache(conn, make_contract_lookups(rt, http), clock=rt.clock)
     profiler = Profiler(
         conn,
         cache,
-        ContractCache(conn, make_contract_lookups(rt, http), clock=rt.clock),
+        contracts,
         store,
         rt.settings.classifier,
         rt.settings.heuristics,
@@ -158,8 +170,18 @@ def make_screening_sources(
         clock=rt.clock,
     )
     classifier = ClassifierSource(profiler, store, rt.settings.classifier, clock=rt.clock)
+    extra: list[SourceAdapter] = []
+    if trace:
+        # The trace gets its own client: it may wait out a suspension (D-036) and its query count
+        # is its own, not the other sources running beside it. The cache is shared through `conn`.
+        engine = build_trace_engine(rt, conn, client, Mode.BACKGROUND)
+        extra.append(
+            TraceSource(
+                TraceJobs(conn, rt.settings, clock=rt.clock), engine, rt.settings, clock=rt.clock
+            )
+        )
     if chain is Chain.BSC:
-        return [sanctions, BscFreezeSource(clock=rt.clock), exposure, lookalike, classifier]
+        return [sanctions, BscFreezeSource(clock=rt.clock), exposure, lookalike, classifier, *extra]
     tether = make_tether(rt, http, trongrid_limiter(rt))
     index = TronFreezeIndex(tether, conn, clock=rt.clock)
     return [
@@ -169,11 +191,45 @@ def make_screening_sources(
         exposure,
         lookalike,
         classifier,
+        *extra,
     ]
 
 
-def make_sources(rt: Runtime, client: httpx.AsyncClient, mode: Mode) -> dict[Chain, HistorySource]:
+def make_trace_engine(
+    rt: Runtime,
+    conn: sqlite3.Connection,
+    cache: TransferCache,
+    contracts: ContractCache,
+    store: IntelStore,
+    http: Http,
+) -> TraceEngine:
+    return TraceEngine(
+        conn,
+        cache,
+        contracts,
+        store,
+        rt.settings,
+        clock=rt.clock,
+        queries=lambda: sum(http.sent.values()),
+    )
+
+
+def build_trace_engine(
+    rt: Runtime, conn: sqlite3.Connection, client: httpx.AsyncClient, mode: Mode
+) -> TraceEngine:
+    """A trace engine with its own counted HTTP client (`trace`, and the trace in a check)."""
     http = Http(client, rt.settings.network, mode=mode)
+    cache = TransferCache(
+        conn, make_sources(rt, client, mode, http=http), rt.settings.cache, clock=rt.clock
+    )
+    contracts = ContractCache(conn, make_contract_lookups(rt, http), clock=rt.clock)
+    return make_trace_engine(rt, conn, cache, contracts, IntelStore(conn, clock=rt.clock), http)
+
+
+def make_sources(
+    rt: Runtime, client: httpx.AsyncClient, mode: Mode, *, http: Http | None = None
+) -> dict[Chain, HistorySource]:
+    http = http or Http(client, rt.settings.network, mode=mode)
     tron = TronGridSource(
         http,
         rt.settings.tron,

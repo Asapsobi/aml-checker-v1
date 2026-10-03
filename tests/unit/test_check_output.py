@@ -1,6 +1,6 @@
 from datetime import UTC, datetime
 
-from amlcheck.cli.check import _print
+from amlcheck.cli.check import print_result
 from amlcheck.core.address import detect
 from amlcheck.core.models import CheckResult, Finding, Severity, SourceResult, SourceStatus, Verdict
 
@@ -107,5 +107,5 @@ def result() -> CheckResult:
 
 
 def test_human_output_snapshot(capsys) -> None:  # type: ignore[no-untyped-def]
-    _print(result())
+    print_result(result())
     assert capsys.readouterr().out == EXPECTED
