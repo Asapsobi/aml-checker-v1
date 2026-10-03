@@ -11,6 +11,7 @@ import typer
 from amlcheck.cli import runtime
 from amlcheck.core.address import AddressError, detect
 from amlcheck.core.models import Chain, Verdict
+from amlcheck.core.score import shown
 from amlcheck.intel import registry
 from amlcheck.intel.lookalike import lookalikes
 from amlcheck.intel.store import IntelStore
@@ -51,6 +52,7 @@ def list_(
         who = f"  {', '.join(r.clients)}" if r.clients else ""
         typer.echo(
             f"{r.chain.value:<4} {r.address_norm:<42} {r.last_verdict:<10} "
+            f"{shown(r.last_score, r.last_verdict):<15} "
             f"{r.check_count:>3}×  last {r.last_screened_at[:19]}Z{who}"
         )
     typer.echo(f"{len(rows)} counterpart{'y' if len(rows) == 1 else 'ies'}")
@@ -101,7 +103,8 @@ def show(
     if cp:
         echo(
             f"  checked {cp.check_count}× · first {cp.first_screened_at[:19]}Z · last "
-            f"{cp.last_screened_at[:19]}Z → {cp.last_verdict} · "
+            f"{cp.last_screened_at[:19]}Z → {cp.last_verdict}, score "
+            f"{shown(cp.last_score, cp.last_verdict)} · "
             f"clients {', '.join(cp.clients) or '-'}"
         )
     else:

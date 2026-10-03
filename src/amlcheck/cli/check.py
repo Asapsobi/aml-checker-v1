@@ -125,6 +125,7 @@ def as_dict(r: CheckResult) -> dict[str, Any]:
         "amount_usdt": canonical_amount(r.amount) if r.amount is not None else None,
         "client": r.client,
         "note": r.note,
+        "score": {**r.score.to_json(), "shown": r.score.shown} if r.score else None,
         "findings": [
             {
                 "rule_id": f.rule_id,
@@ -159,6 +160,9 @@ def print_result(r: CheckResult) -> None:
     echo = typer.echo
     echo(f"{r.verdict.value}  ·  {r.address.chain.value.upper()} {r.address.norm}")
     echo(ACTION[r.verdict])
+    if r.score is not None:
+        bound = "  lower bound: a required source is missing" if r.score.lower_bound else ""
+        echo(f"Score {r.score.shown}  ({r.score.breakdown}){bound}")
     if r.findings:
         echo("")
         echo("Findings")

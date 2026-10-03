@@ -64,6 +64,15 @@ def band(score: int) -> str:
     return next(name for floor, name in BANDS if score >= floor)
 
 
+def shown(score: int | None, verdict: str) -> str:
+    """A stored score for lists: `66 · high`, `≥ 34 · medium+` (INCOMPLETE), `-` (before P7)."""
+    if score is None:
+        return "-"
+    if verdict == Verdict.INCOMPLETE.value:
+        return f"≥ {score} · {band(score)}+"
+    return f"{score} · {band(score)}"
+
+
 def _tenth(x: Decimal) -> Decimal:
     return x.quantize(_TENTH, rounding=ROUND_HALF_UP)
 
@@ -83,9 +92,7 @@ class Score:
     @property
     def shown(self) -> str:
         """`66 · high`, or `≥ 34 · medium+` for a lower bound."""
-        if self.lower_bound:
-            return f"≥ {self.score} · {self.band}+"
-        return f"{self.score} · {self.band}"
+        return shown(self.score, Verdict.INCOMPLETE.value if self.lower_bound else "")
 
     @property
     def breakdown(self) -> str:
