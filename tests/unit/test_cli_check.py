@@ -112,7 +112,9 @@ def test_bsc_check_with_real_sources(home: Path) -> None:
     assert by["bsc_freeze"]["status"] == "skipped"
     assert "other chains are not checked" in by["bsc_freeze"]["detail"]
     assert by["ofac_sdn"]["status"] == "stale"
-    assert [f["rule_id"] for f in out["findings"]] == ["R-SYS-01"]
+    assert by["exposure"]["status"] == "error"  # no HyperSync token in this test
+    assert "AMLCHECK_HYPERSYNC_TOKEN" in by["exposure"]["detail"]
+    assert [f["rule_id"] for f in out["findings"]] == ["R-SYS-01", "R-SYS-01"]
 
 
 def test_audit_list_and_verify(home: Path, monkeypatch: pytest.MonkeyPatch) -> None:

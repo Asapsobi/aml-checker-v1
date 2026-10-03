@@ -15,6 +15,7 @@ import typer
 
 from amlcheck.chain.base import History, HistorySource
 from amlcheck.chain.bsc import HyperSyncSource
+from amlcheck.chain.cache import TransferCache
 from amlcheck.chain.tron import TronGridSource
 from amlcheck.config import (
     ConfigError,
@@ -31,6 +32,7 @@ from amlcheck.net.http import Http, Limiter, Mode, SourceError
 from amlcheck.net.limits import BudgetPacer, TokenBucket
 from amlcheck.screening.base import SourceAdapter
 from amlcheck.screening.bsc_freeze import BscFreezeSource
+from amlcheck.screening.exposure import ExposureSource
 from amlcheck.screening.sanctions import SanctionsSource
 from amlcheck.screening.tron_freeze import (
     TronBlacklistSource,
@@ -115,17 +117,22 @@ def make_tether(rt: Runtime, http: Http, limiter: Limiter) -> TronTether:
 def make_screening_sources(
     rt: Runtime, conn: sqlite3.Connection, client: httpx.AsyncClient, mode: Mode, chain: Chain
 ) -> list[SourceAdapter]:
-    """The P2 sources for a check on `chain` (methodology §2.1)."""
+    """The sources for a check on `chain` (methodology §2.1)."""
     http = Http(client, rt.settings.network, mode=mode)
     sanctions = SanctionsSource(conn, rt.settings.freshness, clock=rt.clock)
+    cache = TransferCache(conn, make_sources(rt, client, mode), rt.settings.cache, clock=rt.clock)
+    exposure = ExposureSource(
+        cache, conn, rt.settings.exposure, rt.settings.heuristics, clock=rt.clock
+    )
     if chain is Chain.BSC:
-        return [sanctions, BscFreezeSource(clock=rt.clock)]
+        return [sanctions, BscFreezeSource(clock=rt.clock), exposure]
     tether = make_tether(rt, http, trongrid_limiter(rt))
     index = TronFreezeIndex(tether, conn, clock=rt.clock)
     return [
         sanctions,
         TronFreezeSource(index, rt.settings.freshness, clock=rt.clock),
         TronBlacklistSource(tether, clock=rt.clock),
+        exposure,
     ]
 
 

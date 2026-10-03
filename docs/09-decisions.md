@@ -263,3 +263,17 @@
 - **Decision:** No OFSI in v1; VS-11 is not run now. v1 screens against OFAC SDN only.
 - **Alternatives:** Run VS-11 and add OFSI in P2 (more coverage, more scope).
 - **Consequences:** Defers D-026. PRD F3.5 stays optional. Revisit after v1.0.
+
+### D-042 · "Flagged" counterparties for R-EXP-02
+- **Status:** Proposed
+- **Date:** 2026-10-03 · **Phase:** P3
+- **Context:** R-EXP-02 is "≥ 5% of USDT received came from flagged counterparties", and methodology §3.3
+  lists the flags as `sanctioned`, `frozen` and `label:<tag>`. Read literally, an `allowlist` label
+  would count as a flag.
+- **Decision:** For R-EXP-02 a counterparty is flagged when it is sanctioned, frozen (TRON index), or
+  carries a tag in `[heuristics] risky_tags` (mixer, bridge, high_risk). `allowlist` and free-text tags
+  never flag.
+- **Alternatives:** any label (would count trusted wallets as risk); sanctioned/frozen only (ignores the
+  operator's own risk labels).
+- **Consequences:** `screening/exposure.py`. A risky-tagged counterparty can raise both R-EXP-02 (share)
+  and R-HEU-05 (dealt with it).
