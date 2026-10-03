@@ -24,6 +24,7 @@ from amlcheck.cli import (
     sync,
     trace,
     watch,
+    web,
 )
 
 app = typer.Typer(
@@ -41,6 +42,7 @@ app.command("classify")(classify.classify)
 app.command("trace")(trace.trace)
 app.command("investigate")(trace.investigate)
 app.command("sync")(sync.sync)
+app.command("web")(web.web)
 app.add_typer(audit.app, name="audit")
 app.add_typer(labels.app, name="labels")
 app.add_typer(cp.app, name="cp")

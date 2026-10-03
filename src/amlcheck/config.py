@@ -188,6 +188,12 @@ class Monitor(_Section):
         return v
 
 
+class Web(_Section):
+    """The local web UI (PRD F11.4): always on 127.0.0.1."""
+
+    port: Annotated[int, Field(ge=1024, le=65535)] = 8765
+
+
 class Operator(_Section):
     """Name recorded on decisions (Q-12)."""
 
@@ -235,6 +241,7 @@ class Settings(_Section):
     trace: Trace = Trace()
     score: Score = Score()
     monitor: Monitor = Monitor()
+    web: Web = Web()
     operator: Operator = Operator()
     ofac: Ofac = Ofac()
     tron: Tron = Tron()

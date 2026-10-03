@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+{% from "_macros.html" import addr %}
+{% block head %}{% if running %}<meta http-equiv="refresh" content="2">{% endif %}{% endblock %}
+{% block title %}Trace · {{ short(job.address) }}{% endblock %}
+{% block body %}
+<p class="muted small">{{ "Source" if job.direction == "in" else "Destination" }} of funds · {{ job.chain.value | upper }}</p>
+<h1 class="mono">{{ addr(job.chain.value, job.address) }}</h1>
+{% if running %}
+<div class="card">
+  <p><b>{{ job.status | capitalize }}</b>{% if job.progress %}: hop {{ job.progress.hop }} · {{ job.progress.items_done }} done, {{ job.progress.items_queued }} queued · {{ job.progress.nodes_read }} address(es) read · {{ job.progress.queries }} provider call(s) · {{ job.progress.seconds | round | int }} s{% endif %}</p>
+  <p class="muted small">This page refreshes every 2 seconds until the trace ends.</p>
+</div>
+{% else %}
+{% if job.status == "failed" %}<p class="error">Incomplete: {{ job.failure_reason }}. The partial trace below is not a full picture.</p>{% endif %}
+{% if t %}
+<p>{{ dec(t.target_inflow) }} USDT {{ "received" if t.direction == "in" else "sent" }} in the window · coverage {{ pct(t.coverage) if t.coverage is not none else "no inflow" }} · {{ t.budget.nodes_read }} address(es) read · {{ t.budget.queries }} provider call(s) · {{ "%.1f" | format(t.budget.seconds) }} s</p>
+<p class="muted small">Shares are proportional estimates: USDT is fungible, so no amount is exact.</p>
+<table class="narrow">
+  <thead><tr><th>Category</th><th class="num">Share</th><th class="num">≈ USDT</th></tr></thead>
+  <tbody>
+  {% for cat, share in t.partition.items() | sort(attribute="1", reverse=True) %}
+    <tr><td>{{ cat }}</td><td class="num">{{ pct(share) }}</td><td class="num">{{ dec((share * t.target_inflow).quantize(cents)) }}</td></tr>
+  {% endfor %}
+  </tbody>
+</table>
+{% if t.paths %}
+<h2>Top paths</h2>
+<p class="muted small">Bottleneck: the smallest hop on the path; every hop moved at least that.</p>
+<table>
+  <thead><tr><th>To</th><th class="num">Bottleneck</th><th class="num">Estimate</th><th>Path (target first)</th></tr></thead>
+  <tbody>
+  {% for p in t.paths[:10] %}
+    <tr><td>{{ p.to_category }}</td><td class="num">{{ dec(p.bottleneck.quantize(cents)) }}</td><td class="num">{{ dec(p.estimated.quantize(cents)) }}</td>
+      <td class="mono small">{% for x in p.addresses %}{% if not loop.first %} ← {% endif %}<a href="/counterparties/{{ t.chain.value }}/{{ x }}">{{ short(x) }}</a>{% endfor %}</td></tr>
+  {% endfor %}
+  </tbody>
+</table>
+{% endif %}
+<h2>Graph</h2>
+<div class="graph">{{ svg | safe }}</div>
+{% endif %}
+{% endif %}
+<p class="muted small">Trace {{ job.trace_id }} · requested by {{ job.requested_by }}</p>
+{% endblock %}
