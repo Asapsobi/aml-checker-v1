@@ -64,3 +64,23 @@ First activity (`--first-activity`): BSC quiet wallet 2025-06-06T12:58:05Z in 11
 | AT-20 | `test_audit.py::test_at20_tamper_reported_at_that_record` (6 kinds of tampering), `::test_deleted_record_is_reported`; `test_cli_check.py::test_audit_list_and_verify` | Green locally |
 | AT-21 | `test_sanctions.py::test_at21_shrunk_list_rejected` | Green locally |
 
+**Live (2026-10-03, macOS, owner's TronGrid key, scratch `AMLCHECK_HOME`, a slow line of 12–130 KB/s):**
+
+`amlcheck sync`: first attempt with the 29 MB `SDN.XML` failed after 35 min (stalls, each retry from
+zero), which led to D-040. With the zipped list and resumable download: **385 s**, 1,066 addresses
+(list of 2026-10-02); the TRON freeze index's first sync took ~64 s (10,923 events), later refreshes
+~3 s.
+
+| Chain | Address | Expected | Verdict (exit) | Findings | Time |
+|---|---|---|---|---|---|
+| TRON | OFAC-listed `TA3941uF…oa86mz` (USDT label) | BLOCK | **BLOCK (5)** | R-SAN-01 (CHEIL CREDIT BANK, DPRK4) and R-FRZ-01 twice (index + `isBlackListed`) | 2.9 s |
+| TRON | OFAC-listed `TUCsTq7T…m5Yzq` (filed under **XBT**) | BLOCK | **BLOCK (5)** | R-SAN-01 (entry 45404) and R-FRZ-01 twice | 5.2 s |
+| TRON | Tether-frozen `TNHrhtVn…vXJJaa` | BLOCK | **BLOCK (5)** | R-FRZ-01 (index, since 2026-10-01) and `isBlackListed` | 3.2 s |
+| TRON | never used (random) | NO_HITS | **NO_HITS (0)** | — | 8.1 s |
+| BSC | OFAC-listed `0x4f47bc…96270c` (ARB/BSC/ETH labels) | BLOCK | **BLOCK (5)** | R-SAN-01 (Hyon Sop SIM, NPWMD); BEP20 freeze `skipped` with reason | ~0.5 s |
+| BSC | never used (random) | NO_HITS | **NO_HITS (0)** | — ; BEP20 freeze `skipped` | 0.3 s |
+
+A mixed-case `0x` address typed with a broken checksum was refused (exit 1) and wrote no record
+(AT-07/AT-08 live). `amlcheck audit verify`: OK, 6 records. `amlcheck status`: list 0 h old, TRON index
+1 min behind.
+

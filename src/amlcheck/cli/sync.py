@@ -34,7 +34,7 @@ async def _sync(rt: runtime.Runtime, conn: sqlite3.Connection) -> bool:
     ok = True
     async with httpx.AsyncClient() as client:
         http = Http(client, rt.settings.network, mode=Mode.BACKGROUND)
-        typer.echo("OFAC SDN list: downloading (about 29 MB)…")
+        typer.echo("OFAC SDN list: downloading (about 3 MB, zipped)…")
         try:
             r = await sanctions.sync(http, conn, rt.settings.ofac, rt.clock)
             if r.accepted:
