@@ -101,7 +101,7 @@ def local_flags(
     conn: sqlite3.Connection, chain: Chain, addresses: Iterable[str]
 ) -> Mapping[str, set[str]]:
     """sanctioned (latest OFAC snapshot), frozen (TRON index: latest blacklist event is an add),
-    label:<tag> (labels.csv). Local data only (D-015)."""
+    label:<tag> (labels.csv tags and active intel-label categories). Local data only (D-015)."""
     wanted = sorted(set(addresses))
     flags: dict[str, set[str]] = {}
     snap = conn.execute(
@@ -132,6 +132,15 @@ def local_flags(
                     flags.setdefault(a, set()).add("frozen")
     for a, tags in tags_for(conn, chain, wanted).items():
         flags.setdefault(a, set()).update(f"label:{t}" for t in tags)
+    for i in range(0, len(wanted), _CHUNK):
+        chunk = wanted[i : i + _CHUNK]
+        marks = ",".join("?" * len(chunk))
+        for a, category in conn.execute(
+            "SELECT address_norm, category FROM intel_labels "  # noqa: S608 - placeholders only
+            f"WHERE chain = ? AND retracted_at IS NULL AND address_norm IN ({marks})",
+            [chain.value, *chunk],
+        ):
+            flags.setdefault(a, set()).add(f"label:{category}")
     return flags
 
 
@@ -186,7 +195,8 @@ class ExposureSource:
             if cp_address in cps:
                 cps[cp_address].flags |= f
         risky = {f"label:{t}" for t in self._heu.risky_tags}
-        allow = f"label:{self._heu.allowlist_tag}"
+        # An own_or_trusted intel label means what the allowlist tag means (methodology §8).
+        allow = {f"label:{self._heu.allowlist_tag}", "label:own_or_trusted"}
         findings: list[Finding] = []
 
         # R-EXP-01 · direct counterparty sanctioned or frozen
@@ -258,7 +268,7 @@ class ExposureSource:
         # Behaviour rules leave allowlisted counterparties out (F5.4).
         def counted(t: Transfer) -> bool:
             other = t.recipient if t.sender == a else t.sender
-            return allow not in cps.get(other, Counterparty(other)).flags
+            return not allow & cps.get(other, Counterparty(other)).flags
 
         behaviour = [t for t in history.transfers if counted(t)]
 
