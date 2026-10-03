@@ -116,6 +116,7 @@ class TronTether:
             params["min_block_timestamp"] = ms(since)
         out: list[dict[str, Any]] = []
         query: dict[str, str | int] | None = params
+        seen: set[str] = set()
         while True:
             resp = await self._http.request(
                 self._provider, "GET", url, headers=self._headers, params=query
@@ -130,6 +131,9 @@ class TronTether:
                 return out
             if not isinstance(nxt, str) or not nxt.startswith(self._api + "/"):
                 raise SourceError("trongrid", "next page link points elsewhere")
+            if nxt in seen:
+                raise SourceError("trongrid", "paging does not advance (a page link repeated)")
+            seen.add(nxt)
             url, query = nxt, None
 
 

@@ -14,7 +14,7 @@ from amlcheck.config import Freshness, Network, Tron
 from amlcheck.core.address import detect
 from amlcheck.core.clock import fixed, from_ms, to_db
 from amlcheck.core.models import Severity, SourceStatus
-from amlcheck.net.http import Http, Mode
+from amlcheck.net.http import Http, Mode, SourceError
 from amlcheck.screening.tron_freeze import (
     TronBlacklistSource,
     TronFreezeIndex,
@@ -286,3 +286,13 @@ async def test_is_blacklisted_param_and_error(
     respx.post(f"{API}/wallet/triggerconstantcontract").respond(503)
     r = await TronBlacklistSource(tether, clock=fixed(NOW)).check(detect(FROZEN))
     assert r.status is SourceStatus.ERROR
+
+
+@respx.mock
+async def test_repeated_event_page_link_is_an_error(
+    client: httpx.AsyncClient, conn: sqlite3.Connection
+) -> None:
+    respx.get(url__startswith=EVENTS_URL).respond(json=fx("events_added_blacklist.json"))
+    tether, _, _ = parts(client, conn)
+    with pytest.raises(SourceError, match="paging does not advance"):
+        await tether.events("AddedBlackList", None)

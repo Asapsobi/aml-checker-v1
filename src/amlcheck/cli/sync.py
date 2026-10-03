@@ -1,4 +1,65 @@
-"""`amlcheck sync`: refresh sanctions list and freeze index.
+"""`amlcheck sync`: download the OFAC list and refresh the TRON freeze index (PRD F3, F4.1).
 
-Built in P2.
+Run it at least daily: a sanctions list older than 48 h makes every check INCOMPLETE (AT-15).
+Runs in background mode, so a TronGrid suspension is waited out rather than failing (D-036).
 """
+
+from __future__ import annotations
+
+import asyncio
+import sqlite3
+
+import httpx
+import typer
+
+from amlcheck.cli import runtime
+from amlcheck.net.http import Http, Mode, SourceError
+from amlcheck.screening import sanctions
+from amlcheck.screening.tron_freeze import TronFreezeIndex
+
+
+def sync() -> None:
+    """Download the OFAC SDN list and refresh the Tether TRON freeze index."""
+    rt = runtime.load()
+    conn = runtime.open_database(rt)
+    try:
+        ok = asyncio.run(_sync(rt, conn))
+    finally:
+        conn.close()
+    if not ok:
+        raise typer.Exit(1)
+
+
+async def _sync(rt: runtime.Runtime, conn: sqlite3.Connection) -> bool:
+    ok = True
+    async with httpx.AsyncClient() as client:
+        http = Http(client, rt.settings.network, mode=Mode.BACKGROUND)
+        typer.echo("OFAC SDN list: downloading (about 29 MB)…")
+        try:
+            r = await sanctions.sync(http, conn, rt.settings.ofac, rt.clock)
+            if r.accepted:
+                before = f", {r.previous_count} before" if r.previous_count is not None else ""
+                typer.echo(
+                    f"OFAC SDN list: {r.address_count} addresses (list of "
+                    f"{r.published_at or 'unknown date'}{before})"
+                )
+            else:
+                typer.echo(f"OFAC SDN list: {r.reason}", err=True)
+                ok = False
+        except SourceError as e:
+            typer.echo(f"error: {e}", err=True)
+            ok = False
+        typer.echo("Tether TRON freeze index: refreshing…")
+        index = TronFreezeIndex(
+            runtime.make_tether(rt, http, runtime.trongrid_limiter(rt)), conn, clock=rt.clock
+        )
+        try:
+            res = await index.refresh()
+            typer.echo(
+                f"Tether TRON freeze index: {res.new_events} new events, up to block "
+                f"{res.head_block}"
+            )
+        except SourceError as e:
+            typer.echo(f"error: {e}", err=True)
+            ok = False
+    return ok

@@ -20,7 +20,7 @@ from importlib.metadata import version
 from amlcheck.chain.base import canonical_amount
 from amlcheck.config import Settings
 from amlcheck.core.audit import AuditFinding, AuditRecord, AuditSource, append
-from amlcheck.core.clock import Clock, to_iso, utcnow
+from amlcheck.core.clock import Clock, to_db, to_iso, utcnow
 from amlcheck.core.models import Address, CheckResult, Finding, SourceResult, SourceStatus
 from amlcheck.core.rules import RULES_VERSION, apply_overrides, system_findings
 from amlcheck.core.verdict import decide
@@ -68,7 +68,7 @@ async def screen(
     config_hash = settings.hash()
     record = AuditRecord(
         check_id=check_id,
-        created_at=to_iso(started),
+        created_at=to_db(started),  # fixed width: `audit list --since` compares it as text
         chain=address.chain.value,
         address_norm=address.norm,
         verdict=verdict.value,

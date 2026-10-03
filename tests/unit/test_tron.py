@@ -230,3 +230,10 @@ async def test_first_activity(
     )
     h = await source(client).fetch(HOT, LONG_AGO, NOW, 10, first_activity=True)
     assert h.first_activity == (from_ms(expected_ms) if expected_ms else None)
+
+
+@respx.mock
+async def test_repeated_page_link_is_an_error_not_a_hang(client: httpx.AsyncClient) -> None:
+    respx.get(url__startswith=trc20(HOT)).respond(json=fixture("trc20_transfers_desc.json"))
+    with pytest.raises(SourceError, match="paging does not advance"):
+        await source(client).fetch(HOT, LONG_AGO, NOW, 10_000, first_activity=False)

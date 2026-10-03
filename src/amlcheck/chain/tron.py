@@ -111,6 +111,7 @@ class TronGridSource:
         }
         rows: list[_Row] = []
         zero = 0
+        seen: set[str] = set()
         while True:
             data = await self._get(url, params)
             for raw in _list(data, "data"):
@@ -128,6 +129,9 @@ class TronGridSource:
                 return rows, zero, False
             if not isinstance(nxt, str) or not nxt.startswith(self._api + "/"):
                 raise SourceError("trongrid", "next page link points elsewhere")
+            if nxt in seen:
+                raise SourceError("trongrid", "paging does not advance (a page link repeated)")
+            seen.add(nxt)
             url, params = nxt, None
 
     def _row(self, raw: Any) -> _Row | None:
