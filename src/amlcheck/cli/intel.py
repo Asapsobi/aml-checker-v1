@@ -11,6 +11,7 @@ import typer
 from amlcheck.cli import runtime
 from amlcheck.core.address import AddressError, detect
 from amlcheck.core.clock import to_iso
+from amlcheck.core.models import Chain
 from amlcheck.intel.categories import CATEGORIES
 from amlcheck.intel.packs import import_pack
 from amlcheck.intel.store import IntelError, IntelStore, NewLabel
@@ -19,8 +20,10 @@ app = typer.Typer(help="Labels and what is known about addresses.", no_args_is_h
 _HUMAN_CATEGORIES = ", ".join(c.name for c in CATEGORIES if "operator" in c.provenances)
 
 
-def _by(rt: runtime.Runtime, by: str | None) -> str | None:
-    return by or rt.settings.operator.name or None
+def _by(rt: runtime.Runtime, by: str | None) -> str:
+    # Something human must be recorded: an empty name would make an operator's act look inferred
+    # (an entity named by nobody earns no bonus and doesn't rank as operator-made).
+    return by or rt.settings.operator.name or "operator"
 
 
 @app.command()
@@ -168,3 +171,91 @@ def import_pack_(
     typer.echo(
         f"pack {name}: {r.added} label(s) imported, {r.retracted} earlier label(s) retracted"
     )
+
+
+entity_app = typer.Typer(help="Groups of addresses with one owner.", no_args_is_help=True)
+app.add_typer(entity_app, name="entity")
+
+
+@entity_app.command("list")
+def entity_list(
+    chain: Annotated[Chain | None, typer.Option(help="Only this chain.")] = None,
+    as_json: Annotated[bool, typer.Option("--json", help="Machine-readable output.")] = False,
+) -> None:
+    """Entities, newest first."""
+    rt = runtime.load()
+    rows = IntelStore(runtime.open_database(rt), clock=rt.clock).entities(chain)
+    if as_json:
+        typer.echo(
+            json.dumps(
+                [
+                    {
+                        "id": e.id,
+                        "chain": e.chain.value,
+                        "name": e.name,
+                        "kind": e.kind,
+                        "named_by": e.named_by,
+                        "members": n,
+                    }
+                    for e, n in rows
+                ],
+                indent=2,
+            )
+        )
+        return
+    for e, n in rows:
+        named = f"named by {e.named_by}" if e.named_by else "auto"
+        typer.echo(
+            f"#{e.id:<5} {e.chain.value:<4} {e.name:<28} {e.kind:<20} {n:>4} member(s)  {named}"
+        )
+    typer.echo(f"{len(rows)} entit{'y' if len(rows) == 1 else 'ies'}")
+
+
+@entity_app.command("show")
+def entity_show(
+    entity_id: Annotated[int, typer.Argument()],
+    as_json: Annotated[bool, typer.Option("--json", help="Machine-readable output.")] = False,
+) -> None:
+    """An entity and its members."""
+    rt = runtime.load()
+    store = IntelStore(runtime.open_database(rt), clock=rt.clock)
+    e = store.entity(entity_id)
+    if e is None:
+        runtime.fail(f"no entity #{entity_id}")
+    members = store.members(entity_id)
+    if as_json:
+        typer.echo(
+            json.dumps(
+                {
+                    "id": e.id,
+                    "chain": e.chain.value,
+                    "name": e.name,
+                    "kind": e.kind,
+                    "named_by": e.named_by,
+                    "members": members,
+                },
+                indent=2,
+            )
+        )
+        return
+    typer.echo(f"#{e.id} {e.name} ({e.kind}) on {e.chain.value}")
+    for m in members:
+        typer.echo(f"  {m['role']:<8} {m['address']}  ({m['provenance']})")
+
+
+@entity_app.command("name")
+def entity_name(
+    entity_id: Annotated[int, typer.Argument()],
+    name: Annotated[str, typer.Argument(help='e.g. "Binance".')],
+    kind: Annotated[str, typer.Option(help="A category 3-17, e.g. exchange_regulated.")],
+    by: Annotated[str | None, typer.Option(help="Who. Default: [operator] name.")] = None,
+) -> None:
+    """Name an entity and set its kind; its deposits resolve to that kind (methodology §6)."""
+    rt = runtime.load()
+    try:
+        IntelStore(runtime.open_database(rt), clock=rt.clock).name_entity(
+            entity_id, name, kind.lower(), _by(rt, by)
+        )
+    except IntelError as e:
+        runtime.fail(str(e))
+    typer.echo(f"entity #{entity_id} is now {name} ({kind.lower()})")

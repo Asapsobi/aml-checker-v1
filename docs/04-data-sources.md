@@ -21,7 +21,7 @@
 | TRON chain data | TronGrid | Free with key; limits per key | Use |
 | BSC chain data | Envio HyperSync | Free plan with token | Use |
 | BSC chain data, paid fallback | Etherscan V2 (Lite plan) | $49/month | Fallback only, owner decision |
-| BSC contract detection | Public BSC JSON-RPC `eth_getCode` | Free | Verify endpoint and limits (VS-12) |
+| BSC contract detection | Public BSC JSON-RPC `eth_getCode` at `bsc-dataseed.bnbchain.org`, no key | Free | Use (VS-12): no published limits; amlcheck paces 2/s and caches forever |
 | Attribution | Commercial vendor (Chainalysis, TRM, Elliptic, Crystal) | Paid | Not in v1. Adapter point only |
 | Labels | Own `labels.csv`, operator labels, licensed label packs | — | Use; packs need a recorded licence |
 
@@ -89,7 +89,7 @@ verification log. Third-party freeze APIs are out (D-033); the P0 Eagle Virtual 
 | Limits | **Not published**, set per key in the console. Owner's key (VS-05, 2026-10-01): **15 requests/s**; over it → `429`, body `{"Error":"The key exceeds the frequency limit(15), and the query server is suspended for 30 s"}`, **no `Retry-After` and no rate-limit headers**, key suspended 30 s. Without a key: 1 request/s, suspended 5 s. Treat 403 like 429; read the limit from config (Q-20) |
 | Transfers | `GET /v1/accounts/{address}/transactions/trc20?contract_address=…&only_confirmed=true&min_timestamp=…&order_by=block_timestamp,desc&limit=200`, paged via `meta.links.next`. Rows: `transaction_id`, `block_timestamp` (ms), `from`, `to`, `value`, `type`, `token_info`. **No block number, no event index** (VS-04). One transaction can hold several USDT transfers, and which of them a history shows depends on whose history it is (Q-17) |
 | Account | `POST /wallet/getaccount` → `create_time` (ms); `{}` when never activated. USDT can arrive at a never-activated address. A contract created by a contract has **no** `create_time` (VS-10) |
-| Contract calls | `POST /wallet/triggerconstantcontract`; `POST /wallet/getcontract` for contract detection |
+| Contract calls | `POST /wallet/triggerconstantcontract`; `POST /wallet/getcontract` for contract detection: `{}` for a wallet, an object with `contract_address` for a contract (no `bytecode` when a contract created it; VS-13) |
 | Speed | Newest 5,000 transfers of a busy hot wallet: ~25 pages, ~20 s |
 
 ---

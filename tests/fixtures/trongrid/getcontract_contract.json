@@ -1,0 +1,12 @@
+{
+ "origin_address": "THPvaUhoh2Qn2y9THCZML3H815hhFhn5YC",
+ "contract_address": "TR7NHqjeKQxGTCi8q8ZY4pL8otSzgjLj6t",
+ "consume_user_resource_percent": 30,
+ "name": "TetherToken",
+ "origin_energy_limit": 10000000,
+ "code_hash": "99bb60e56b4cd2642c6847e372b18b6e0f9514229e3086d3a042d60a4c7b78a9",
+ "bytecode": "60806040526000600260146101000a81548160ff021916908315150217905550\u2026(trimmed)",
+ "abi": {
+  "entrys": "\u2026(trimmed)"
+ }
+}

@@ -212,6 +212,8 @@ class Bsc(_Section):
     hypersync_fallback_url: str = "https://56.hypersync.xyz"
     usdt_contract: str = "0x55d398326f99059fF775485246999027B3197955"
     seconds_per_block: PosFloat = 0.45
+    rpc_url: str = "https://bsc-dataseed.bnbchain.org"  # eth_getCode, no key (VS-12)
+    rpc_requests_per_second: PosFloat = 2.0
 
 
 class Settings(_Section):

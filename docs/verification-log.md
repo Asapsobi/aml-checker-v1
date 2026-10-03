@@ -284,3 +284,26 @@ with our own labels? attribution required? any ban on resale or redistribution (
 **Licence string recorded:** the exact `--licence` text (it is stored on every imported label)
 **What this changes:** categories the pack adds, and whether `[heuristics] risky_tags` should include any
 **Decision:** D-NNN if the pack changes scope or cost
+
+---
+
+## VS-12 · BSC contract detection without a key
+**Checked:** 2026-10-03, against `https://bsc-dataseed.bnbchain.org` (`eth_getCode`, no key)
+**Found:** BEP20 USDT → 4,413 bytes of code; Binance hot wallet `0x8894…d4e3` and a never-used address
+→ `"0x"` (no code). 30 calls back to back (≈1/s on this connection, latency-bound): all answered, no
+rate-limit headers, no refusals. The endpoint's limits are not published in its answers.
+**Differs from docs/04-data-sources.md:** none (the doc asked to verify the endpoint and limits).
+**What this changes:** `[bsc] rpc_url` = this endpoint; contract lookups paced at
+`[bsc] rpc_requests_per_second` = 2 and cached forever (PRD F2.6), so each address costs one call ever.
+**Fixtures:** `tests/fixtures/bsc_rpc/eth_getcode_usdt.json` (P0), `eth_getcode_wallet.json`,
+`eth_getcode_never_used.json`
+
+## VS-13 · TRON contract detection via getcontract
+**Checked:** 2026-10-03, against TronGrid `POST /wallet/getcontract` (owner's key)
+**Found:** a contract (USDT) → object with `contract_address`, `origin_address`, `bytecode`, `abi`, `name`,
+`code_hash`…; a **contract created by a contract** (`TZ53…p11`) → `contract_address`, `code_hash`,
+`trx_hash`, `abi` but **no `bytecode`**; a wallet and a never-used address → `{}`.
+**Differs from docs/04-data-sources.md:** none, but `bytecode` can't be the test.
+**What this changes:** TRON `is_contract` = the answer has `contract_address`.
+**Fixtures:** `tests/fixtures/trongrid/getcontract_contract.json`, `getcontract_created_by_contract.json`,
+`getcontract_wallet.json`, `getcontract_never_used.json` (bytecode and ABI trimmed)

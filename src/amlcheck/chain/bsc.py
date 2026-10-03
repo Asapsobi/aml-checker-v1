@@ -363,3 +363,35 @@ def _json(resp: httpx.Response) -> dict[str, Any]:
     if not isinstance(data, dict):
         raise SourceError("hypersync", "answer is not a JSON object")
     return data
+
+
+class BscContractLookup:
+    """Contract detection via public JSON-RPC `eth_getCode` (no key, VS-12): `0x` means no code."""
+
+    chain = Chain.BSC
+
+    def __init__(self, http: Http, settings: Bsc, *, limiter: Limiter | None) -> None:
+        self._http = http
+        self._url = settings.rpc_url
+        self._provider = Provider("bsc_rpc", limiter=limiter)
+
+    async def is_contract(self, address: str) -> bool:
+        resp = await self._http.request(
+            self._provider,
+            "POST",
+            self._url,
+            json={
+                "jsonrpc": "2.0",
+                "id": 1,
+                "method": "eth_getCode",
+                "params": [address, "latest"],
+            },
+        )
+        try:
+            data = resp.json()
+        except json.JSONDecodeError:
+            raise SourceError("bsc_rpc", "answer is not JSON") from None
+        if not isinstance(data, dict) or "error" in data or not isinstance(data.get("result"), str):
+            raise SourceError("bsc_rpc", f"eth_getCode failed: {str(data)[:120]}")
+        code = data["result"].lower()
+        return code not in ("0x", "0x0", "")
