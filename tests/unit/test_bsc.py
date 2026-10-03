@@ -110,6 +110,23 @@ async def test_busy_wallet_newest_limit_incomplete(client: httpx.AsyncClient) ->
     assert fake.queries < 20  # not the ~440 pages a forward read of everything would take
 
 
+# VS-07: a new, busy wallet at the end of a long window, half its logs 0-value spam. The first page
+# proves the blocks before its end are empty, so the read must not walk them again.
+@respx.mock
+async def test_new_busy_wallet_does_not_rescan_empty_blocks(client: httpx.AsyncClient) -> None:
+    fake = FakeHyperSync(page_logs=40)
+    wallet(fake, list(range(97_000, 99_900, 50)))  # 58 real transfers, all near the head
+    fake.logs += [Log(97_010 + 50 * i, 300, f"0xd{i:063x}", peer(9), ME, 0) for i in range(58)]
+    respx.route(host="bsc.hypersync.xyz").mock(side_effect=fake.handler)
+    since = fake.time(12_000)  # a window of ~88,000 blocks, nearly all empty
+    h = await source(client, fake).fetch(ME, since, None, 100, first_activity=False)
+    want, complete = brute(fake, ME, since, fake.head_time() + timedelta(seconds=5), 100)
+    assert h.transfers == want
+    assert h.complete is complete is True
+    assert h.zero_value == 58
+    assert fake.queries <= 5  # was ~45: 2,000-block chunks down to the window's start
+
+
 # AT-05 at the source.
 @respx.mock
 async def test_zero_value_dropped_and_counted(client: httpx.AsyncClient) -> None:

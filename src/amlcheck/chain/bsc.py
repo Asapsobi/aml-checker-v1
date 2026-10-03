@@ -155,27 +155,32 @@ class HyperSyncSource:
         first = await self._page(addr, lo, hi)
         if first.next_block >= hi or _at_archive_end(first):
             return _dedupe(first.logs)  # the whole window in one page
+        # The first page holds every log in [lo, next_block), so the backward read stops there and
+        # reuses it. Without this floor a new, busy wallet (all logs near the end, many of them
+        # 0-value spam that doesn't count) sent the read down to `lo` through millions of empty
+        # blocks, ~160 queries (VS-07).
+        floor = first.next_block
         # Density over the blocks the page actually spanned with data: the window's estimated start
         # can lie long before the wallet's first transfer.
         start = min((log.block for log in first.logs), default=lo)
         density = max(len(first.logs), 1) / max(first.next_block - start, 1)
         got: list[_Log] = []
         cur_hi = hi
-        while cur_hi > lo:
+        while cur_hi > floor:
             in_window = sum(
                 1 for g in got if g.units and since <= self._block_time[g.block] <= until
             )
             need = limit + 1 - in_window
             if need <= 0:
-                break
+                return _dedupe(got)
             size = max(MIN_CHUNK_BLOCKS, math.ceil(need * CHUNK_HEADROOM / density))
-            cur_lo = max(lo, cur_hi - size)
+            cur_lo = max(floor, cur_hi - size)
             chunk = await self._scan(addr, cur_lo, cur_hi)
             got = chunk + got
             if chunk:
                 density = max(density, len(chunk) / (cur_hi - cur_lo))
             cur_hi = cur_lo
-        return _dedupe(got)
+        return _dedupe(list(first.logs) + got)  # down to the floor: the first page has the rest
 
     async def _scan(self, addr: str, lo: int, hi: int) -> list[_Log]:
         page = await self._page(addr, lo, hi)
