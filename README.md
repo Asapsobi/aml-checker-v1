@@ -29,6 +29,12 @@ uv run amlcheck status       # creates ~/.amlcheck/ and the database
    fall back to a default.
 3. Try it without touching real data: `AMLCHECK_HOME=$(mktemp -d) uv run amlcheck status`.
 
+**End-to-end test (live).** `uv run python scripts/e2e.py` runs every feature through the real
+commands on a fresh temporary data folder (sync, checks, investigate and trace, case report, cases,
+batch, watchlist, monitor, exports with the hash chain re-verified, the API and the web UI) and prints
+PASS / FAIL per step. It needs the keys and the network, and never touches `~/.amlcheck`. Don't run
+other amlcheck commands at the same time: they share the TronGrid key's rate limit.
+
 ## Commands
 
 | Command | What it does |
