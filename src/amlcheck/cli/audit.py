@@ -8,6 +8,7 @@ from typing import Annotated, Any, Literal
 
 import typer
 
+from amlcheck.cases import decisions
 from amlcheck.cli import runtime
 from amlcheck.core import audit as chain
 from amlcheck.core.address import AddressError, detect
@@ -81,19 +82,26 @@ def list_(
 
 @app.command()
 def verify() -> None:
-    """Recompute the hash chain; report the first broken record. Keep the head hash elsewhere."""
+    """Recompute both hash chains (checks, decisions); report the first broken record of each.
+    Keep the head hashes elsewhere."""
     rt = runtime.load()
-    v = chain.verify(runtime.open_database(rt))
-    if v.ok:
-        typer.echo(f"audit log OK: {v.records} record(s)")
-        typer.echo(f"head hash: {v.head_hash}")
-        return
-    typer.echo(
-        f"error: audit log broken at record #{v.break_at}: {v.reason}. "
-        f"{v.records} record(s) before it verify; last good hash {v.head_hash}",
-        err=True,
-    )
-    raise typer.Exit(1)
+    conn = runtime.open_database(rt)
+    checks = chain.verify(conn)
+    decided = decisions.verify(conn)
+    broken = False
+    for what, unit, v in (("audit log", "record", checks), ("decision log", "decision", decided)):
+        if v.ok:
+            typer.echo(f"{what} OK: {v.records} {unit}(s)")
+            typer.echo(f"  head hash: {v.head_hash}")
+            continue
+        broken = True
+        typer.echo(
+            f"error: {what} broken at {unit} #{v.break_at}: {v.reason}. "
+            f"{v.records} {unit}(s) before it verify; last good hash {v.head_hash}",
+            err=True,
+        )
+    if broken:
+        raise typer.Exit(1)
 
 
 @app.command()
