@@ -541,3 +541,40 @@
 - **Alternatives:** Reads without a token (the API exposes counterparty data).
 - **Consequences:** The corridor keeps one secret; rotating it is a restart.
 
+### D-066 · Golden-set sources (Q-14)
+- **Status:** Accepted
+- **Date:** 2026-10-04 · **Phase:** P11
+- **Context:** Methodology §10 needs ≥ 40 golden addresses per chain with expected verdict, type and
+  band; no third-party AML data may be used (D-033), and label data needs a recorded licence.
+- **Decision:** BLOCK expectations from our own synced OFAC and Tether TRON lists. HUB expectations
+  from exchanges' own published proof-of-reserves wallet lists, read with the owner's permission, terms
+  checked and the source URL recorded per address; they are test expectations only and are never
+  imported as labels. DEPOSIT expectations derived on-chain (addresses sweeping ≥ 99% to those hubs).
+  COLLECTOR candidates found on-chain and confirmed or rejected by the owner. Known-clean
+  counterparties (≥ 10 per chain) and decided cases come from the owner. The owner approves the list
+  before the live run.
+- **Alternatives:** Owner picks everything (slow); a commercial label set (excluded by D-033).
+- **Consequences:** Every expectation in `tests/golden/` says where it came from.
+
+### D-067 · What the golden set records for replay (Q-34)
+- **Status:** Accepted
+- **Date:** 2026-10-04 · **Phase:** P11
+- **Context:** Thresholds are tuned against the golden set; CI must recompute precision without the
+  network.
+- **Decision:** For each golden address the classifier's inputs (profile features and context) and
+  the live outcome (verdict, types, score and band, versions) are stored in `tests/golden/`. Raw
+  transfer histories are not stored: they are large and can be re-read from the providers.
+- **Alternatives:** Store raw histories for full offline re-screening (megabytes in the repository).
+- **Consequences:** Classifier changes are measured offline; score and verdict changes need a live
+  re-run, which the report states.
+
+### D-068 · The v1 JSON contract (Q-35)
+- **Status:** Accepted
+- **Date:** 2026-10-04 · **Phase:** P11
+- **Context:** At 1.0 the corridor and scripts rely on the check JSON and the API.
+- **Decision:** For all of v1, the check JSON (`check --json`, `investigate --json`, the API) and the
+  API endpoints keep their fields and meanings: fields may be added, never removed, renamed or given a
+  new meaning. A test pins the field names. A breaking change means v2 (`/v2`).
+- **Alternatives:** No promise (integrations break silently).
+- **Consequences:** Additions are safe; anything else waits for v2.
+
