@@ -12,7 +12,7 @@
   {% else %}
   <div class="muted">No score: recorded before scores existed.</div>
   {% endif %}
-  <div class="muted small">Check {{ r.check_id }} · recorded {{ r.created_at[:19] }}Z{% if r.amount %} · {{ r.amount }} USDT{% endif %}{% if r.client %} · client {{ r.client }}{% endif %}{% if r.operator_note %} · note: {{ r.operator_note }}{% endif %} · amlcheck {{ r.tool_version }}</div>
+  <div class="muted small">Check {{ r.check_id }} · recorded {{ r.created_at[:19] }}Z{% if r.amount %} · {{ usdt(r.amount) }} USDT{% endif %}{% if r.client %} · client {{ r.client }}{% endif %}{% if r.operator_note %} · note: {{ r.operator_note }}{% endif %} · amlcheck {{ r.tool_version }}</div>
   <div class="links"><a href="/checks/{{ r.check_id }}/report.pdf">Case report (PDF)</a>
     {% if r.trace_id %} · <a href="/traces/{{ r.trace_id }}">Source of funds</a>{% endif %}
     · <a href="/counterparties/{{ d.address.chain.value }}/{{ d.address.norm }}">Counterparty</a></div>
@@ -60,14 +60,14 @@
 
 {% if exposure %}
 <h2>USDT history</h2>
-<p>{{ exposure.transfers }} transfer(s) since {{ exposure.since[:10] }} · received {{ exposure.received_usdt }} · sent {{ exposure.sent_usdt }} USDT · first activity {{ exposure.first_activity or "none found" }}
+<p>{{ exposure.transfers }} transfer(s) since {{ exposure.since[:10] }} · received {{ usdt(exposure.received_usdt) }} · sent {{ usdt(exposure.sent_usdt) }} USDT · first activity {{ exposure.first_activity or "none found" }}
 {% if exposure.zero_value_dropped %}<br><span class="muted">{{ exposure.zero_value_dropped }} 0-value transfer(s) dropped (address poisoning)</span>{% endif %}</p>
 {% if exposure.counterparties %}
 <table>
-  <thead><tr><th>Counterparty (largest {{ exposure.counterparties | length }} of {{ exposure.counterparty_count }})</th><th class="num">Received</th><th class="num">Sent</th><th class="num">Txs</th><th>Flags</th></tr></thead>
+  <thead><tr><th>Counterparty (largest {{ exposure.counterparties | length }} of {{ exposure.counterparty_count }})</th><th class="num">Received</th><th class="num">Sent</th><th class="num">Txs</th><th>Known as</th></tr></thead>
   <tbody>
   {% for c in exposure.counterparties %}
-    <tr><td>{{ addr(d.address.chain.value, c.address) }}</td><td class="num">{{ c.received_usdt }}</td><td class="num">{{ c.sent_usdt }}</td><td class="num">{{ c.transfers }}</td><td>{{ c.flags | join(", ") or "-" }}</td></tr>
+    <tr><td>{{ addr(d.address.chain.value, c.address) }}</td><td class="num">{{ usdt(c.received_usdt) }}</td><td class="num">{{ usdt(c.sent_usdt) }}</td><td class="num">{{ c.transfers }}</td><td>{{ counterparty_text(c) }}</td></tr>
   {% endfor %}
   </tbody>
 </table>

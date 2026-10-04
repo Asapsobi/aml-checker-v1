@@ -16,7 +16,6 @@ import io
 import sqlite3
 from collections.abc import Sequence
 from dataclasses import dataclass
-from decimal import Decimal
 from importlib.metadata import version
 from typing import Any
 from xml.sax.saxutils import escape
@@ -38,6 +37,7 @@ from reportlab.platypus import (
 )
 
 from amlcheck.cases import decisions as decisions_chain
+from amlcheck.chain.base import usdt
 from amlcheck.core import score as scoring
 from amlcheck.core.audit import AuditRecord, load, record_hash
 from amlcheck.core.models import Address, Verdict
@@ -45,6 +45,7 @@ from amlcheck.core.verdict import ACTION
 from amlcheck.intel import registry
 from amlcheck.intel.lookalike import LABEL as LOOKALIKE_LABEL
 from amlcheck.intel.lookalike import SOURCE as LOOKALIKE
+from amlcheck.intel.names import counterparty_text
 from amlcheck.intel.store import IntelStore
 from amlcheck.profile.adapter import LABEL as CLASSIFIER_LABEL
 from amlcheck.profile.adapter import SOURCE as CLASSIFIER
@@ -59,7 +60,7 @@ from amlcheck.trace import graph
 from amlcheck.trace.adapter import LABEL as TRACE_LABEL
 from amlcheck.trace.adapter import SOURCE as TRACE
 from amlcheck.trace.jobs import read_job
-from amlcheck.trace.model import Trace, dec, pct
+from amlcheck.trace.model import Trace, pct
 
 LABELS = {
     SANCTIONS: SANCTIONS_LABEL,
@@ -318,7 +319,7 @@ def _exposure(d: CaseData) -> list[Flowable]:
         _p(
             text(
                 f"{ev['transfers']} transfer(s) since {str(ev['since'])[:10]} · received "
-                f"{ev['received_usdt']} · sent {ev['sent_usdt']} USDT · first activity "
+                f"{usdt(ev['received_usdt'])} · sent {usdt(ev['sent_usdt'])} USDT · first activity "
                 f"{ev.get('first_activity') or 'none found'}"
             )
         ),
@@ -329,15 +330,15 @@ def _exposure(d: CaseData) -> list[Flowable]:
         )
     shown = ev.get("counterparties") or []
     if shown:
-        rows: list[list[Any]] = [["Counterparty", "Received", "Sent", "Txs", "Flags"]]
+        rows: list[list[Any]] = [["Counterparty", "Received", "Sent", "Txs", "Known as"]]
         for c in shown:
             rows.append(
                 [
                     _p(text(c["address"]), CELL_MONO),
-                    c["received_usdt"],
-                    c["sent_usdt"],
+                    usdt(c["received_usdt"]),
+                    usdt(c["sent_usdt"]),
                     c["transfers"],
-                    _p(text(", ".join(c["flags"]) or "-"), CELL),
+                    _p(text(counterparty_text(c)), CELL),
                 ]
             )
         out += [
@@ -363,7 +364,7 @@ def _trace(d: CaseData) -> list[Flowable]:
         _p("Source of funds", H2),
         _p(
             text(
-                f"{dec(t.target_inflow)} USDT received in the window · coverage {coverage} · "
+                f"{usdt(t.target_inflow)} USDT received in the window · coverage {coverage} · "
                 f"{t.budget.nodes_read} address(es) read · trace {d.record.trace_id}{state}"
             )
         ),
@@ -371,8 +372,7 @@ def _trace(d: CaseData) -> list[Flowable]:
     ]
     rows: list[list[Any]] = [["Category", "Share", "~ USDT"]]
     for category, share in sorted(t.partition.items(), key=lambda kv: (-kv[1], kv[0])):
-        usdt = (share * t.target_inflow).quantize(Decimal("0.01"))
-        rows.append([category, pct(share), dec(usdt)])
+        rows.append([category, pct(share), usdt(share * t.target_inflow)])
     layering = t.annotations.get("layering")
     if layering:
         rows.append(["layering (annotation)", pct(layering), ""])
@@ -383,8 +383,8 @@ def _trace(d: CaseData) -> list[Flowable]:
             prows.append(
                 [
                     _p(text(p.to_category), CELL),
-                    dec(p.bottleneck.quantize(Decimal("0.01"))),
-                    dec(p.estimated.quantize(Decimal("0.01"))),
+                    usdt(p.bottleneck),
+                    usdt(p.estimated),
                     _p(text(" <- ".join(graph.short(a) for a in p.addresses)), CELL_MONO),
                 ]
             )

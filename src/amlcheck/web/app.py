@@ -40,6 +40,7 @@ from starlette.middleware.trustedhost import TrustedHostMiddleware
 from amlcheck.cases import cases as store_cases
 from amlcheck.cases import decisions
 from amlcheck.cases.cases import CaseError
+from amlcheck.chain.base import usdt
 from amlcheck.cli import check as check_cli
 from amlcheck.cli import runtime
 from amlcheck.core.address import AddressError, detect
@@ -49,6 +50,7 @@ from amlcheck.core.verdict import ACTION
 from amlcheck.intel import registry
 from amlcheck.intel.categories import CATEGORIES
 from amlcheck.intel.lookalike import lookalikes
+from amlcheck.intel.names import counterparty_text
 from amlcheck.intel.store import IntelStore
 from amlcheck.monitor import watchlist
 from amlcheck.net.http import Mode
@@ -95,7 +97,8 @@ def _env() -> Environment:
     )
     env.globals.update(
         explorer=explorer,
-        cents=Decimal("0.01"),
+        usdt=usdt,
+        counterparty_text=counterparty_text,
         short=short,
         pct=pct,
         dec=dec,

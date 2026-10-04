@@ -15,13 +15,14 @@ from typing import Annotated, Any
 import httpx
 import typer
 
-from amlcheck.chain.base import canonical_amount
+from amlcheck.chain.base import usdt
 from amlcheck.cli import runtime
 from amlcheck.core.address import AddressError, detect
 from amlcheck.core.clock import to_iso
 from amlcheck.core.engine import screen
 from amlcheck.core.models import Address, Chain, CheckResult, Verdict
 from amlcheck.core.verdict import ACTION, DISCLAIMER
+from amlcheck.intel.names import counterparty_text
 from amlcheck.net.http import Mode
 from amlcheck.report.check_json import check_json
 
@@ -129,7 +130,7 @@ def print_result(r: CheckResult) -> None:
     if exposure is not None:
         _print_exposure(r.address.chain, exposure.evidence)
     echo("")
-    extra = f" · {canonical_amount(r.amount)} USDT" if r.amount is not None else ""
+    extra = f" · {usdt(r.amount)} USDT" if r.amount is not None else ""
     who = f" · client {r.client}" if r.client else ""
     echo(
         f"Check {r.check_id} · {to_iso(r.checked_at)}{extra}{who} · "
@@ -145,7 +146,7 @@ def _print_exposure(chain: Chain, ev: dict[str, Any]) -> None:
     echo("")
     echo(
         f"History  {ev['transfers']} transfer(s) since {str(ev['since'])[:10]} · received "
-        f"{ev['received_usdt']} · sent {ev['sent_usdt']} USDT · first activity {first}"
+        f"{usdt(ev['received_usdt'])} · sent {usdt(ev['sent_usdt'])} USDT · first activity {first}"
     )
     if ev.get("zero_value_dropped"):
         echo(f"         {ev['zero_value_dropped']} 0-value transfer(s) dropped (address poisoning)")
@@ -155,10 +156,9 @@ def _print_exposure(chain: Chain, ev: dict[str, Any]) -> None:
     width = 42 if chain is Chain.BSC else 34
     echo("")
     echo(f"Counterparties  (largest {len(shown)} of {ev['counterparty_count']})")
-    echo(f"  {'address':<{width}}  {'received':>16}  {'sent':>16}  {'txs':>5}  flags")
+    echo(f"  {'address':<{width}}  {'received':>14}  {'sent':>14}  {'txs':>5}  known as")
     for c in shown:
-        flags = ", ".join(c["flags"]) or "-"
         echo(
-            f"  {c['address']:<{width}}  {c['received_usdt']:>16}  {c['sent_usdt']:>16}  "
-            f"{c['transfers']:>5}  {flags}"
+            f"  {c['address']:<{width}}  {usdt(c['received_usdt']):>14}  "
+            f"{usdt(c['sent_usdt']):>14}  {c['transfers']:>5}  {counterparty_text(c)}"
         )

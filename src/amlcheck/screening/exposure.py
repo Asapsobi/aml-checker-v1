@@ -32,7 +32,7 @@ from datetime import datetime, timedelta
 from decimal import Decimal
 from typing import Any
 
-from amlcheck.chain.base import History, Transfer, canonical_amount
+from amlcheck.chain.base import History, Transfer, canonical_amount, usdt
 from amlcheck.chain.cache import TransferCache
 from amlcheck.config import Exposure, Heuristics
 from amlcheck.core import risk
@@ -40,7 +40,7 @@ from amlcheck.core.clock import Clock, to_iso, utcnow
 from amlcheck.core.models import Address, Chain, Finding, SourceResult, SourceStatus
 from amlcheck.core.rules import finding
 from amlcheck.intel.labels_csv import tags_for
-from amlcheck.intel.names import entity_name
+from amlcheck.intel.names import entity_name, known_as
 from amlcheck.screening.base import SourceHealth
 from amlcheck.screening.heuristics import busiest_window, pass_through, recipients, senders
 
@@ -62,7 +62,7 @@ class Counterparty:
     def volume(self) -> Decimal:
         return self.received + self.sent
 
-    def summary(self, address: str) -> dict[str, Any]:
+    def summary(self, address: str, known: str | None = None) -> dict[str, Any]:
         largest = sorted(self.transfers, key=lambda t: (-t.amount, t.time, t.tx_hash, t.idx))[:3]
         return {
             "address": self.address,
@@ -70,6 +70,7 @@ class Counterparty:
             "sent_usdt": canonical_amount(self.sent),
             "transfers": len(self.transfers),
             "flags": sorted(self.flags),
+            "known_as": known,  # who it is, from local data (methodology §11.6)
             "largest": [
                 {
                     "tx_hash": t.tx_hash,
@@ -214,7 +215,7 @@ class ExposureSource:
                     "R-EXP-01",
                     SOURCE,
                     f"Dealt directly with a {what} address {c.address} (received "
-                    f"{canonical_amount(c.received)}, sent {canonical_amount(c.sent)} USDT)",
+                    f"{usdt(c.received)}, sent {usdt(c.sent)} USDT)",
                     now,
                     {"counterparty": c.summary(a)},
                 )
@@ -230,8 +231,8 @@ class ExposureSource:
                 finding(
                     "R-EXP-02",
                     SOURCE,
-                    f"{_pct(share)} of USDT received ({canonical_amount(from_flagged)} of "
-                    f"{canonical_amount(received)}) came from flagged counterparties",
+                    f"{_pct(share)} of USDT received ({usdt(from_flagged)} of "
+                    f"{usdt(received)}) came from flagged counterparties",
                     now,
                     {
                         "share": _share(share),
@@ -356,7 +357,10 @@ class ExposureSource:
             "received_usdt": canonical_amount(received),
             "sent_usdt": canonical_amount(sent),
             "counterparty_count": len(cps),
-            "counterparties": [c.summary(a) for c in _by_size(cps.values())[:SHOWN_COUNTERPARTIES]],
+            "counterparties": [
+                c.summary(a, known_as(self._conn, address.chain, c.address, now))
+                for c in _by_size(cps.values())[:SHOWN_COUNTERPARTIES]
+            ],
             "exposures": [e.to_json() for e in exposures],
         }
         return findings, evidence

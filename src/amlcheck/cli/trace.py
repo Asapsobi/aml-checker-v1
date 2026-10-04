@@ -13,13 +13,13 @@ import asyncio
 import json
 import sqlite3
 import sys
-from decimal import Decimal
 from pathlib import Path
 from typing import Annotated, Any
 
 import httpx
 import typer
 
+from amlcheck.chain.base import usdt
 from amlcheck.cli import check as check_cli
 from amlcheck.cli import runtime
 from amlcheck.core.address import AddressError, detect
@@ -29,7 +29,7 @@ from amlcheck.report.check_json import check_json
 from amlcheck.trace.engine import Direction, TraceFailed, TraceProgress
 from amlcheck.trace.graph import render, short
 from amlcheck.trace.jobs import TraceJobs
-from amlcheck.trace.model import Trace, dec, pct
+from amlcheck.trace.model import Trace, pct
 from amlcheck.trace.rules import trace_findings
 
 EXIT_COMPLETE = 0
@@ -146,12 +146,12 @@ def print_trace(t: Trace, trace_id: str) -> None:
     flow = "received" if t.direction == "in" else "sent"
     coverage = pct(t.coverage) if t.coverage is not None else "no inflow in the window"
     echo(f"{what}  ·  {t.chain.value.upper()} {t.target}")
-    echo(f"{dec(t.target_inflow)} USDT {flow} in the window · coverage {coverage}")
+    echo(f"{usdt(t.target_inflow)} USDT {flow} in the window · coverage {coverage}")
     if t.partition:
         echo("")
         echo(f"  {'category':<24} {'share':>7}  {'≈ USDT':>14}")
         for category, share in sorted(t.partition.items(), key=lambda kv: (-kv[1], kv[0])):
-            echo(f"  {category:<24} {pct(share):>7}  {dec(_cents(share * t.target_inflow)):>14}")
+            echo(f"  {category:<24} {pct(share):>7}  {usdt(share * t.target_inflow):>14}")
         layering = t.annotations.get("layering")
         if layering:
             echo(f"  {'layering (annotation)':<24} {pct(layering):>7}")
@@ -162,8 +162,8 @@ def print_trace(t: Trace, trace_id: str) -> None:
         for p in t.paths[:5]:
             chain_text = arrow.join(short(a) for a in p.addresses)
             echo(
-                f"  {p.to_category:<22} {dec(_cents(p.bottleneck)):>12} / "
-                f"{dec(_cents(p.estimated)):<12} {chain_text}"
+                f"  {p.to_category:<22} {usdt(p.bottleneck):>12} / "
+                f"{usdt(p.estimated):<12} {chain_text}"
             )
     b = t.budget
     echo("")
@@ -172,10 +172,6 @@ def print_trace(t: Trace, trace_id: str) -> None:
         f"{b.cache_hits} cache hit(s) · {b.seconds:.1f} s · trace {trace_id}"
     )
     echo("Shares are proportional estimates (D-016): USDT is fungible, so no amount is exact.")
-
-
-def _cents(x: Decimal) -> Decimal:
-    return x.quantize(Decimal("0.01"))
 
 
 def investigate(

@@ -10,7 +10,7 @@ from __future__ import annotations
 from collections.abc import Iterable
 from dataclasses import dataclass
 from datetime import datetime
-from decimal import Decimal
+from decimal import ROUND_HALF_UP, Decimal
 from typing import Protocol
 
 from amlcheck.core.models import Chain
@@ -76,6 +76,16 @@ def canonical_amount(amount: Decimal) -> str:
     if "." in text:
         text = text.rstrip("0").rstrip(".")
     return text or "0"
+
+
+def usdt(amount: Decimal | str) -> str:
+    """An amount for people (AT-66): two decimals, half up, thousands separated (`78,951.06`);
+    `<0.01` for dust. Records and JSON keep the exact amount (`canonical_amount`)."""
+    d = Decimal(amount)
+    q = d.quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
+    if q == 0 and d != 0:
+        return "<0.01" if d > 0 else "-<0.01"
+    return f"{q:,.2f}"
 
 
 def newest_first(transfers: Iterable[Transfer]) -> tuple[Transfer, ...]:

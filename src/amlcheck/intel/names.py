@@ -6,10 +6,12 @@ from __future__ import annotations
 
 import sqlite3
 from collections.abc import Mapping, Sequence
+from datetime import datetime
 from typing import Any
 
 from amlcheck.core.models import Chain
 from amlcheck.intel.store import IntelStore
+from amlcheck.profile import classifier as clf
 
 
 def sanctions_entry(conn: sqlite3.Connection, address: str) -> str | None:
@@ -106,3 +108,20 @@ def label_text(label: Mapping[str, Any] | None) -> str | None:
     if label["source"] == "entity" and label["category"]:
         return f"{label['name']} ({label['category']})"
     return str(label["name"])
+
+
+def known_as(conn: sqlite3.Connection, chain: Chain, address: str, now: datetime) -> str | None:
+    """Who a counterparty is, for the counterparty table: its label as for a checked address, with
+    the classifier's cached types (inferred) when nothing better is known. No provider call."""
+    cached = clf.cached(conn, chain, address, now) or []
+    types = [
+        {"type": c.type, "confidence": str(c.confidence), "primary": c.primary} for c in cached
+    ]
+    return label_text(address_label(conn, chain, address, types))
+
+
+def counterparty_text(c: Mapping[str, Any]) -> str:
+    """The "known as" cell of a stored counterparty; records from before P12 have only flags."""
+    if c.get("known_as"):
+        return str(c["known_as"])
+    return ", ".join(c["flags"]) or "-"

@@ -19,13 +19,13 @@ Sources
   ok       OFAC SDN list                list of 2026-09-30, downloaded 1 h ago (1066 addresses)
   ok       USDT history (exposure)      2 transfer(s) with 2 counterparties since 2026-04-04
 
-History  2 transfer(s) since 2026-04-04 · received 1250 · sent 0 USDT · first activity 2026-09-28T00:00:00Z
+History  2 transfer(s) since 2026-04-04 · received 1,250.00 · sent 0.00 USDT · first activity 2026-09-28T00:00:00Z
          3 0-value transfer(s) dropped (address poisoning)
 
 Counterparties  (largest 2 of 2)
-  address                                     received              sent    txs  flags
-  TFROZENxxxxxxxxxxxxxxxxxxxxxxxxxxx              1200                 0      1  frozen
-  TOKxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx                50                 0      1  -
+  address                                   received            sent    txs  known as
+  TFROZENxxxxxxxxxxxxxxxxxxxxxxxxxxx        1,200.00            0.00      1  frozen
+  TOKxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx           50.00            0.00      1  -
 
 Check c-1 · 2026-10-01T12:00:00Z · audit 0123456789abcdef · amlcheck 0.3.0
 Internal use only. NO_HITS means nothing was found in the sources checked, as of the times shown; it is not a clearance.
