@@ -82,8 +82,9 @@ curl -s -H "Authorization: Bearer $AMLCHECK_API_TOKEN" http://127.0.0.1:8766/v1/
 
 ## The scheduled jobs
 
-One oneshot service per job, each with a timer. They share the run lock, so they never overlap; a job
-that finds another running exits 1 and the next tick picks the work up.
+One oneshot service per job, each with a timer. `monitor run` and `watch run` (and any `batch`) share
+the run lock, so they never overlap: one that finds another running exits 1 and the next tick picks
+the work up. `sync` runs on its own.
 
 | Unit | Runs | Timer |
 |---|---|---|
