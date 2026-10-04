@@ -1,10 +1,13 @@
 """Risk policy v2: exposures (methodology §11, D-071)."""
 
 import sqlite3
+from datetime import UTC, datetime
 from decimal import Decimal
 
 from amlcheck.core.address import detect
-from amlcheck.core.risk import RISK, Exposure, flag_category, ordered, risk_category
+from amlcheck.core.models import Chain
+from amlcheck.core.risk import RISK, Exposure, flag_category, from_trace, ordered, risk_category
+from amlcheck.trace.model import Budget, Node, NodeClass, Trace
 from tests.unit.test_exposure import ME, conn, source, tr
 
 __all__ = ["conn"]  # the fixture, shared with test_exposure
@@ -84,3 +87,64 @@ def test_json_round_trip_and_order() -> None:
     c = Exposure("in", 1, "TC", "sanctioned", "s", Decimal(9), Decimal("0.02"), ("T", "TC"))
     assert Exposure.from_json(a.to_json()) == a
     assert ordered([a, b, c]) == [c, b, a]  # in before out; heavier first
+
+
+def _trace(nodes: list[Node], direction: str = "in") -> Trace:
+    return Trace(
+        chain=Chain.TRON,
+        target="T0",
+        direction=direction,
+        as_of=datetime(2026, 10, 1, tzinfo=UTC),
+        target_inflow=Decimal(20_000),
+        nodes=(Node("T0", 0, Decimal(1), None, True, None), *nodes),
+        edges=(),
+        partition={},
+        annotations={},
+        coverage=Decimal(1),
+        paths=(),
+        budget=Budget(0, 0, 0, 0.0),
+    )
+
+
+# AT-61: a sanctioned terminal at hop 2 (weight 0.1) and a scam terminal at hop 3 are indirect
+# exposures; with decay 0.4 they count × 0.6 and × 0.36, with decay 0 in full.
+def test_at61_indirect_exposures_with_decay() -> None:
+    trace = _trace(
+        [
+            Node("TA", 1, Decimal("0.5"), None, True, "T0", 11, path=("T0",)),
+            Node("TS", 2, Decimal("0.1"), "sanctioned", False, "TA", 2, path=("T0", "TA")),
+            Node("TB", 2, Decimal("0.3"), None, True, "TA", 11, path=("T0", "TA")),
+            Node("TC", 3, Decimal("0.05"), "scam", False, "TB", 4, path=("T0", "TA", "TB")),
+            Node("TU", 2, Decimal("0.1"), "service_unattributed", True, "TA", 8, path=("T0", "TA")),
+        ]
+    )
+    got = from_trace(trace, lambda a, c: f"name of {a}")
+    assert [(e.address, e.hop, e.category, e.exposure_type) for e in got] == [
+        ("TS", 2, "sanctioned", "indirect"),
+        ("TC", 3, "scam", "indirect"),
+    ]  # an unknown service is no exposure (D-071)
+    sanctioned, scam = got
+    assert sanctioned.volume == Decimal(2000)  # weight × flow, an estimate (D-016)
+    assert sanctioned.path == ("T0", "TA", "TS")
+    assert sanctioned.entity == "name of TS"
+    assert sanctioned.contribution(Decimal("0.4")) == Decimal("0.06")
+    assert scam.contribution(Decimal("0.4")) == Decimal("0.7") * Decimal("0.05") * Decimal("0.36")
+    assert sanctioned.contribution(Decimal(0)) == Decimal("0.1")
+
+
+def test_hop1_flagged_is_direct_not_indirect() -> None:
+    """Hop-1 terminals from local flags (tests 2–4) are already direct exposures, with exact
+    amounts; a hop-1 terminal from a classification (test 9) is not, so the trace adds it."""
+    cls = NodeClass("COLLECTOR", Decimal("0.8"))
+    trace = _trace(
+        [
+            Node("TS", 1, Decimal("0.2"), "sanctioned", False, "T0", 2, path=("T0",)),
+            Node("TK", 1, Decimal("0.4"), "suspicious_collector", True, "T0", 9, cls, ("T0",)),
+        ],
+        direction="out",
+    )
+    (e,) = from_trace(trace, lambda a, c: "unused")
+    assert (e.address, e.direction, e.hop, e.inferred) == ("TK", "out", 1, True)
+    assert e.entity == "COLLECTOR (inferred)"
+    assert e.confidence == Decimal("0.8")
+    assert e.contribution(Decimal("0.4")) == Decimal("0.5") * Decimal("0.4") * Decimal("0.8")

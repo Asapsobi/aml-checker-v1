@@ -7,14 +7,14 @@ estimate, D-016). The score (§11.3) is built from these and nothing else but be
 
 from __future__ import annotations
 
-from collections.abc import Iterable, Mapping
+from collections.abc import Callable, Iterable, Mapping
 from dataclasses import dataclass
 from decimal import Decimal
 from typing import Any
 
 from amlcheck.chain.base import canonical_amount
 from amlcheck.intel.categories import BY_NAME, LABELS_CSV_CATEGORY
-from amlcheck.trace.model import dec
+from amlcheck.trace.model import Trace, dec
 
 RISK_VERSION = 2
 
@@ -117,8 +117,41 @@ def ordered(exposures: Iterable[Exposure]) -> list[Exposure]:
             e.hop,
             e.address,
             e.category,
+            e.path,
         ),
     )
+
+
+#: Terminal tests that read local flags (§7.5 tests 2–4): on hop 1 those counterparties are already
+#: direct exposures, from exact amounts.
+_LOCAL_TESTS = (2, 3, 4)
+
+
+def from_trace(trace: Trace, name: Callable[[str, str], str]) -> list[Exposure]:
+    """Indirect exposures (§11.1): the trace's risk terminals at hop ≥ 2, plus hop-1 terminals a
+    classification decided (tests 5, 8, 9), which local flags can't see. Volume is the
+    proportional estimate `weight × flow` (D-016); an inferred category carries the confidence of
+    the classification behind it. `name(address, category)` names the risk end."""
+    out: list[Exposure] = []
+    for n in trace.nodes:
+        if n.terminal not in RISK or (n.hop == 1 and n.test in _LOCAL_TESTS):
+            continue
+        inferred = BY_NAME[n.terminal].provenances == frozenset({"inferred"})
+        cls = n.classification
+        out.append(
+            Exposure(
+                trace.direction,
+                n.hop,
+                n.address,
+                n.terminal,
+                f"{cls.type} (inferred)" if inferred and cls else name(n.address, n.terminal),
+                n.weight * trace.target_inflow,
+                n.weight,
+                (*n.path, n.address),
+                (cls.confidence if cls else Decimal(1)) if inferred else None,
+            )
+        )
+    return ordered(out)
 
 
 def flag_category(flag: str) -> str | None:

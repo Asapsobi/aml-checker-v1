@@ -7,13 +7,16 @@ the partial trace kept for display. The trace's id goes into the check's audit r
 
 from __future__ import annotations
 
+from collections.abc import Callable
 from decimal import Decimal
 from typing import Any
 
 from amlcheck.config import Settings
+from amlcheck.core import risk
 from amlcheck.core.clock import Clock, utcnow
 from amlcheck.core.models import Address, SourceResult, SourceStatus
 from amlcheck.core.score import hazard
+from amlcheck.intel.names import entity_name
 from amlcheck.screening.base import SourceHealth
 from amlcheck.trace.engine import TraceEngine, TraceFailed
 from amlcheck.trace.jobs import TraceJobs
@@ -24,7 +27,9 @@ SOURCE = "trace"
 LABEL = "Source-of-funds trace"
 
 
-def summary(trace: Trace) -> dict[str, Any]:
+def summary(trace: Trace, name: Callable[[str, str], str] | None = None) -> dict[str, Any]:
+    """The trace's part of the check record. With `name`, also its indirect exposures (§11.1)."""
+    exposures = risk.from_trace(trace, name) if name is not None else []
     return {
         "partition": {k: dec(v) for k, v in sorted(trace.partition.items(), key=lambda kv: -kv[1])},
         "coverage": dec(trace.coverage) if trace.coverage is not None else None,
@@ -47,6 +52,7 @@ def summary(trace: Trace) -> dict[str, Any]:
             "seconds": f"{trace.budget.seconds:.1f}",
         },
         "estimated": True,  # shares are proportional estimates (D-016)
+        "exposures": [e.to_json() for e in exposures],
     }
 
 
@@ -64,6 +70,9 @@ class TraceSource:
         self._clock = clock
         self.timeout: float | None = float(settings.trace.time_budget_seconds + 60)
 
+    def _namer(self, address: Address) -> Callable[[str, str], str]:
+        return lambda a, category: entity_name(self._engine.conn, address.chain, a, category)
+
     async def check(self, address: Address) -> SourceResult:
         trace_id = self._jobs.create(address.chain, address.norm, "in", requested_by="check")
         try:
@@ -77,7 +86,11 @@ class TraceSource:
                 self._clock(),
                 (),
                 f"trace incomplete: {e.reason}",
-                {"trace_id": trace_id, **summary(e.partial), "complete": False},
+                {
+                    "trace_id": trace_id,
+                    **summary(e.partial, self._namer(address)),
+                    "complete": False,
+                },
             )
         now = self._clock()
         findings = tuple(trace_findings(trace, self._s.trace, now))
@@ -95,7 +108,7 @@ class TraceSource:
             now,
             findings,
             detail,
-            {"trace_id": trace_id, **summary(trace), "complete": True},
+            {"trace_id": trace_id, **summary(trace, self._namer(address)), "complete": True},
         )
 
     async def health(self) -> SourceHealth:
