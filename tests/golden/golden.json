@@ -1,0 +1,242 @@
+[
+ {
+  "chain": "bsc",
+  "address": "0x0330070fd38ec3bb94f58fa55d40368271e9e54a",
+  "expect": {
+   "verdict": "BLOCK",
+   "type": null,
+   "clean": false
+  },
+  "source": "OFAC SDN list of 2026-10-02",
+  "note": "AMNOKGANG TECHNOLOGY DEVELOPMENT COMPANY (DPRK4)",
+  "recorded": null
+ },
+ {
+  "chain": "bsc",
+  "address": "0x038989cbb1710c72b9920dc4fa529158f463e72c",
+  "expect": {
+   "verdict": "BLOCK",
+   "type": null,
+   "clean": false
+  },
+  "source": "OFAC SDN list of 2026-10-02",
+  "note": "Armando de Jesus OJEDA AVILES (ILLICIT-DRUGS-EO14059, SDGT)",
+  "recorded": null
+ },
+ {
+  "chain": "bsc",
+  "address": "0x04dba1194ee10112fe6c3207c0687def0e78bacf",
+  "expect": {
+   "verdict": "BLOCK",
+   "type": null,
+   "clean": false
+  },
+  "source": "OFAC SDN list of 2026-10-02",
+  "note": "Alex Adrianus Martinus PEIJNENBURG (ILLICIT-DRUGS-EO14059)",
+  "recorded": null
+ },
+ {
+  "chain": "bsc",
+  "address": "0x08723392ed15743cc38513c4925f5e6be5c17243",
+  "expect": {
+   "verdict": "BLOCK",
+   "type": null,
+   "clean": false
+  },
+  "source": "OFAC SDN list of 2026-10-02",
+  "note": "LAZARUS GROUP (DPRK3)",
+  "recorded": null
+ },
+ {
+  "chain": "bsc",
+  "address": "0x08b2efdcdb8822efe5ad0eae55517cf5dc544251",
+  "expect": {
+   "verdict": "BLOCK",
+   "type": null,
+   "clean": false
+  },
+  "source": "OFAC SDN list of 2026-10-02",
+  "note": "Alex Adrianus Martinus PEIJNENBURG (ILLICIT-DRUGS-EO14059)",
+  "recorded": null
+ },
+ {
+  "chain": "bsc",
+  "address": "0x0931ca4d13bb4ba75d9b7132ab690265d749a5e7",
+  "expect": {
+   "verdict": "BLOCK",
+   "type": null,
+   "clean": false
+  },
+  "source": "OFAC SDN list of 2026-10-02",
+  "note": "CRYPTEX (CYBER2, RUSSIA-EO14024)",
+  "recorded": null
+ },
+ {
+  "chain": "bsc",
+  "address": "0x098b716b8aaf21512996dc57eb0615e2383e2f96",
+  "expect": {
+   "verdict": "BLOCK",
+   "type": null,
+   "clean": false
+  },
+  "source": "OFAC SDN list of 2026-10-02",
+  "note": "LAZARUS GROUP (DPRK3)",
+  "recorded": null
+ },
+ {
+  "chain": "bsc",
+  "address": "0x0ee5067b06776a89ccc7dc8ee369984ad7db5e06",
+  "expect": {
+   "verdict": "BLOCK",
+   "type": null,
+   "clean": false
+  },
+  "source": "OFAC SDN list of 2026-10-02",
+  "note": "Alex Adrianus Martinus PEIJNENBURG (ILLICIT-DRUGS-EO14059)",
+  "recorded": null
+ },
+ {
+  "chain": "bsc",
+  "address": "0x12de548f79a50d2bd05481c8515c1ef5183666a9",
+  "expect": {
+   "verdict": "BLOCK",
+   "type": null,
+   "clean": false
+  },
+  "source": "OFAC SDN list of 2026-10-02",
+  "note": "OLD VECTOR LLC (CYBER4)",
+  "recorded": null
+ },
+ {
+  "chain": "bsc",
+  "address": "0x14779cec0b117d5194c750c55ea1f42086631964",
+  "expect": {
+   "verdict": "BLOCK",
+   "type": null,
+   "clean": false
+  },
+  "source": "OFAC SDN list of 2026-10-02",
+  "note": "Armando de Jesus OJEDA AVILES (ILLICIT-DRUGS-EO14059, SDGT)",
+  "recorded": null
+ },
+ {
+  "chain": "tron",
+  "address": "T9yD14Nj9j7xAB4dbGeiX9h8unxZPcVb1B",
+  "expect": {
+   "verdict": "BLOCK",
+   "type": null,
+   "clean": false
+  },
+  "source": "Tether TRON blacklist event of 2021-08-05T17:58:48.000000Z",
+  "note": null,
+  "recorded": null
+ },
+ {
+  "chain": "tron",
+  "address": "T9yD14Nj9j7xAB4dbGeiX9h8uo2Qpmiwc6",
+  "expect": {
+   "verdict": "BLOCK",
+   "type": null,
+   "clean": false
+  },
+  "source": "Tether TRON blacklist event of 2022-01-21T15:41:21.000000Z",
+  "note": null,
+  "recorded": null
+ },
+ {
+  "chain": "tron",
+  "address": "T9yD14Nj9j7xAB4dbGeiX9h8uo3tUeJYV2",
+  "expect": {
+   "verdict": "BLOCK",
+   "type": null,
+   "clean": false
+  },
+  "source": "Tether TRON blacklist event of 2022-01-21T15:41:51.000000Z",
+  "note": null,
+  "recorded": null
+ },
+ {
+  "chain": "tron",
+  "address": "T9yD14Nj9j7xAB4dbGeiX9h8uo57MpD28W",
+  "expect": {
+   "verdict": "BLOCK",
+   "type": null,
+   "clean": false
+  },
+  "source": "Tether TRON blacklist event of 2021-11-09T15:46:21.000000Z",
+  "note": null,
+  "recorded": null
+ },
+ {
+  "chain": "tron",
+  "address": "T9yD14Nj9j7xAB4dbGeiX9h8uo5kKupXs6",
+  "expect": {
+   "verdict": "BLOCK",
+   "type": null,
+   "clean": false
+  },
+  "source": "Tether TRON blacklist event of 2022-03-10T16:19:33.000000Z",
+  "note": null,
+  "recorded": null
+ },
+ {
+  "chain": "tron",
+  "address": "TA3941uFAvmVibSkQ6fMJXxmaSNovX86mz",
+  "expect": {
+   "verdict": "BLOCK",
+   "type": null,
+   "clean": false
+  },
+  "source": "OFAC SDN list of 2026-10-02",
+  "note": "CHEIL CREDIT BANK (DPRK4)",
+  "recorded": null
+ },
+ {
+  "chain": "tron",
+  "address": "TA39q3p75XRSWYAEaSF7dANtyksoa3sLge",
+  "expect": {
+   "verdict": "BLOCK",
+   "type": null,
+   "clean": false
+  },
+  "source": "OFAC SDN list of 2026-10-02",
+  "note": "CHEIL CREDIT BANK (DPRK4)",
+  "recorded": null
+ },
+ {
+  "chain": "tron",
+  "address": "TA3rH2A7iHnm6pKH8gr9cK1EZnShnmZdFg",
+  "expect": {
+   "verdict": "BLOCK",
+   "type": null,
+   "clean": false
+  },
+  "source": "OFAC SDN list of 2026-10-02",
+  "note": "ISIL KHORASAN (FTO, SDGT)",
+  "recorded": null
+ },
+ {
+  "chain": "tron",
+  "address": "TA82wQ77kb9DieW4C8q7C4KwMfnCzfziqN",
+  "expect": {
+   "verdict": "BLOCK",
+   "type": null,
+   "clean": false
+  },
+  "source": "OFAC SDN list of 2026-10-02",
+  "note": "ISIL KHORASAN (FTO, SDGT)",
+  "recorded": null
+ },
+ {
+  "chain": "tron",
+  "address": "TAQPzv9941nVuTj4ng2vd6L11Re57r42pW",
+  "expect": {
+   "verdict": "BLOCK",
+   "type": null,
+   "clean": false
+  },
+  "source": "OFAC SDN list of 2026-10-02",
+  "note": "XINBI GUARANTEE (TCO)",
+  "recorded": null
+ }
+]
