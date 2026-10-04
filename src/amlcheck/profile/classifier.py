@@ -14,7 +14,7 @@ from __future__ import annotations
 import json
 import sqlite3
 from collections.abc import Sequence
-from dataclasses import asdict, dataclass, field
+from dataclasses import asdict, dataclass, field, fields
 from datetime import datetime, timedelta
 from decimal import Decimal
 from typing import Any
@@ -301,6 +301,25 @@ def profile_json(p: Profile) -> dict[str, Any]:
         return v
 
     return {k: conv(v) for k, v in asdict(p).items()}
+
+
+_DECIMALS = frozenset(f.name for f in fields(Profile) if "Decimal" in str(f.type))
+_TIMES = frozenset(f.name for f in fields(Profile) if "datetime" in str(f.type))
+
+
+def profile_from_json(d: dict[str, Any]) -> Profile:
+    """The inverse of `profile_json` (golden-set replay, D-067); decimals as stored (6 places)."""
+
+    def conv(k: str, v: Any) -> Any:
+        if v is None:
+            return None
+        if k in _DECIMALS:
+            return Decimal(str(v))
+        if k in _TIMES:
+            return from_iso(str(v))
+        return v
+
+    return Profile(**{f.name: conv(f.name, d.get(f.name)) for f in fields(Profile)})
 
 
 def save(
