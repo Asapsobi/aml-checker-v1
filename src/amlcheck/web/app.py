@@ -11,8 +11,9 @@ Security, in order of what a request meets:
 - Templates autoescape everything; the server only listens on 127.0.0.1.
 
 Pages: check form and recent checks, a check's detail (the case report's data, explorer links, the
-PDF), history, counterparties and one counterparty, and traces with progress. One check and one
-trace at a time per process (architecture §5).
+PDF), history, counterparties and one counterparty, traces with progress, and cases with the
+decision form and confirm/reject of inferred types (P9; the name is `[operator] name`, D-058).
+One check and one trace at a time per process (architecture §5).
 """
 
 from __future__ import annotations
@@ -20,12 +21,15 @@ from __future__ import annotations
 import asyncio
 import contextlib
 import hmac
+import json
 import secrets
 import sqlite3
 from collections.abc import Awaitable, Callable
 from decimal import Decimal, InvalidOperation
+from importlib.metadata import version
 from pathlib import Path
 from typing import Any
+from urllib.parse import urlencode
 
 import httpx
 from fastapi import BackgroundTasks, FastAPI, Form, Request, Response
@@ -34,6 +38,9 @@ from fastapi.staticfiles import StaticFiles
 from jinja2 import Environment, FileSystemLoader, select_autoescape
 from starlette.middleware.trustedhost import TrustedHostMiddleware
 
+from amlcheck.cases import cases as store_cases
+from amlcheck.cases import decisions
+from amlcheck.cases.cases import CaseError
 from amlcheck.cli import check as check_cli
 from amlcheck.cli import runtime
 from amlcheck.core.address import AddressError, detect
@@ -41,6 +48,7 @@ from amlcheck.core.models import Address, Chain, Verdict
 from amlcheck.core.score import from_json, shown
 from amlcheck.core.verdict import ACTION
 from amlcheck.intel import registry
+from amlcheck.intel.categories import CATEGORIES
 from amlcheck.intel.lookalike import lookalikes
 from amlcheck.intel.store import IntelStore
 from amlcheck.monitor import watchlist
@@ -93,6 +101,7 @@ def _env() -> Environment:
         pct=pct,
         dec=dec,
         shown=shown,
+        json_score=lambda text: json.loads(text)["score"] if text else None,
         verdict_class=lambda v: VERDICT_CLASS.get(str(v), ""),
         action=lambda v: ACTION[Verdict(v)],
     )
@@ -249,6 +258,8 @@ def create_app(rt: runtime.Runtime, token: str) -> FastAPI:
             if addr is None:
                 return page(request, "error.html", 404, message=f"No check {check_id}.")
             data = case_report.gather(conn, addr, check_id)
+            still_open = store_cases.cases(conn, status="open", address=addr)
+            open_case = still_open[0] if still_open else None
         finally:
             conn.close()
         score = from_json(data.record.score_json) if data.record.score_json else None
@@ -257,7 +268,13 @@ def create_app(rt: runtime.Runtime, token: str) -> FastAPI:
             None,
         )
         return page(
-            request, "check.html", d=data, score=score, exposure=exposure, labels=case_report.LABELS
+            request,
+            "check.html",
+            d=data,
+            score=score,
+            exposure=exposure,
+            labels=case_report.LABELS,
+            open_case=open_case,
         )
 
     @app.get("/checks/{check_id}/report.pdf")
@@ -391,6 +408,143 @@ def create_app(rt: runtime.Runtime, token: str) -> FastAPI:
             svg=svg,
             running=job.status in ("queued", "running"),
         )
+
+    # --- cases (P9) ------------------------------------------------------------------------------
+
+    label_categories = [c.name for c in CATEGORIES if "operator" in c.provenances]
+    entity_kinds = [c.name for c in CATEGORIES if c.entity_kind and "operator" in c.provenances]
+
+    def operator() -> str | None:
+        return rt.settings.operator.name or None
+
+    @app.get("/cases", response_class=HTMLResponse)
+    async def case_list(request: Request, status: str = "") -> HTMLResponse:
+        conn = db()
+        try:
+            rows = store_cases.cases(conn, status=status or None)
+            latest: dict[str, decisions.Stored | None] = {}
+            for c in rows:
+                made = decisions.stored(conn, case_id=c.case_id)
+                latest[c.case_id] = made[-1] if made else None
+        finally:
+            conn.close()
+        return page(request, "cases.html", rows=rows, latest=latest, q={"status": status})
+
+    @app.post("/cases")
+    async def case_open(
+        request: Request, check_id: str = Form(""), token_: str = Form("", alias="token")
+    ) -> Response:
+        if (refused := posted(token_)) is not None:
+            return refused
+        conn = db()
+        try:
+            addr = _check_address(conn, check_id)
+            if addr is None:
+                return page(request, "error.html", 404, message=f"No check {check_id}.")
+            case, _ = store_cases.open_case(
+                conn, addr, by=operator(), now=rt.clock(), check_id=check_id
+            )
+        except CaseError as e:
+            return page(request, "error.html", 400, message=str(e))
+        finally:
+            conn.close()
+        return RedirectResponse(f"/cases/{case.case_id}", status_code=303)
+
+    @app.get("/cases/{case_id}", response_class=HTMLResponse)
+    async def case_page(request: Request, case_id: str, error: str = "") -> HTMLResponse:
+        conn = db()
+        try:
+            case = store_cases.get(conn, case_id)
+            if case is None:
+                return page(request, "error.html", 404, message=f"No case {case_id}.")
+            check = conn.execute(
+                "SELECT verdict, score_json, created_at FROM checks WHERE check_id = ?",
+                (case.opened_from,),
+            ).fetchone()
+            ctx = {
+                "case": case,
+                "check": check,
+                "decided": decisions.stored(conn, case_id=case.case_id),
+                "feedback": store_cases.feedback(conn, case.case_id),
+                "types": store_cases.latest_types(conn, case.chain, case.address),
+                "operator": operator(),
+                "label_categories": label_categories,
+                "entity_kinds": entity_kinds,
+                "label_types": sorted(store_cases.LABEL_TYPES),
+                "error": error or None,
+            }
+        finally:
+            conn.close()
+        return page(request, "case.html", **ctx)
+
+    def _back(case_id: str, error: str | None = None) -> Response:
+        where = f"/cases/{case_id}" + (f"?{urlencode({'error': error})}" if error else "")
+        return RedirectResponse(where, status_code=303)
+
+    @app.post("/cases/{case_id}/decide")
+    async def case_decide(
+        case_id: str,
+        decision: str = Form(""),
+        note: str = Form(""),
+        token_: str = Form("", alias="token"),
+    ) -> Response:
+        if (refused := posted(token_)) is not None:
+            return refused
+        conn = db()
+        try:
+            case = store_cases.find(conn, case_id)
+            store_cases.decide(
+                conn,
+                case,
+                decision,
+                note,
+                by=operator(),
+                now=rt.clock(),
+                tool_version=version("amlcheck"),
+            )
+        except CaseError as e:
+            return _back(case_id, str(e))
+        finally:
+            conn.close()
+        return _back(case_id)
+
+    @app.post("/cases/{case_id}/feedback")
+    async def case_feedback(
+        case_id: str,
+        type_: str = Form("", alias="type"),
+        verdict: str = Form(""),
+        category: str = Form(""),
+        name: str = Form(""),
+        kind: str = Form(""),
+        token_: str = Form("", alias="token"),
+    ) -> Response:
+        if (refused := posted(token_)) is not None:
+            return refused
+        conn = db()
+        try:
+            case = store_cases.find(conn, case_id)
+            store = IntelStore(conn, clock=rt.clock)
+            if verdict == "confirmed":
+                store_cases.confirm(
+                    conn,
+                    store,
+                    case,
+                    type_,
+                    by=operator(),
+                    now=rt.clock(),
+                    category=category or None,
+                    entity_name=name or None,
+                    kind=kind or None,
+                )
+            elif verdict == "rejected":
+                store_cases.reject(conn, store, case, type_, by=operator(), now=rt.clock())
+            else:
+                return _back(case_id, "choose confirm or reject")
+        except CaseError as e:
+            return _back(case_id, str(e))
+        finally:
+            conn.close()
+        return _back(case_id)
 
     return app
 
