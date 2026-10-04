@@ -15,15 +15,20 @@ from typing import Annotated, Any
 import httpx
 import typer
 
-from amlcheck.chain.base import canonical_amount
+from amlcheck.chain.base import usdt
 from amlcheck.cli import runtime
+from amlcheck.core import risk
 from amlcheck.core.address import AddressError, detect
 from amlcheck.core.clock import to_iso
 from amlcheck.core.engine import screen
 from amlcheck.core.models import Address, Chain, CheckResult, Verdict
+from amlcheck.core.score import Score
 from amlcheck.core.verdict import ACTION, DISCLAIMER
+from amlcheck.intel.names import counterparty_text, label_text
 from amlcheck.net.http import Mode
 from amlcheck.report.check_json import check_json
+from amlcheck.trace.graph import short
+from amlcheck.trace.model import pct
 
 EXIT = {Verdict.NO_HITS: 0, Verdict.REVIEW: 3, Verdict.INCOMPLETE: 4, Verdict.BLOCK: 5}
 
@@ -111,9 +116,17 @@ def print_result(r: CheckResult) -> None:
     echo = typer.echo
     echo(f"{r.verdict.value}  ·  {r.address.chain.value.upper()} {r.address.norm}")
     echo(ACTION[r.verdict])
+    who = label_text(r.label)
+    if who:
+        echo(f"Who    {who}")
+    exposures = risk.from_evidence(s.evidence for s in r.sources)
     if r.score is not None:
         bound = "  lower bound: a required source is missing" if r.score.lower_bound else ""
         echo(f"Score {r.score.shown}  ({r.score.breakdown}){bound}")
+        for line in risk.detail_list(exposures):
+            echo(f"       {line}")
+    if exposures and isinstance(r.score, Score):
+        _print_exposures(risk.ranked(exposures, r.score.decay))
     if r.findings:
         echo("")
         echo("Findings")
@@ -129,13 +142,34 @@ def print_result(r: CheckResult) -> None:
     if exposure is not None:
         _print_exposure(r.address.chain, exposure.evidence)
     echo("")
-    extra = f" · {canonical_amount(r.amount)} USDT" if r.amount is not None else ""
+    extra = f" · {usdt(r.amount)} USDT" if r.amount is not None else ""
     who = f" · client {r.client}" if r.client else ""
     echo(
         f"Check {r.check_id} · {to_iso(r.checked_at)}{extra}{who} · "
         f"audit {r.record_hash[:16]} · amlcheck {r.tool_version}"
     )
     echo(DISCLAIMER)
+
+
+SHOWN_EXPOSURES = 10
+
+
+def _print_exposures(exposures: list[risk.Exposure]) -> None:
+    """The heaviest exposures (methodology §11.1): direct amounts are exact; an indirect one is its
+    path volume, the smallest amount on the path, which every hop moved (D-078)."""
+    echo = typer.echo
+    echo("")
+    echo(
+        f"Exposures  (heaviest {min(len(exposures), SHOWN_EXPOSURES)} of {len(exposures)}; "
+        "direct: exact; indirect: the smallest amount on the path)"
+    )
+    echo(f"  {'dir':<4}{'hop':>3}  {'risk type':<18} {'share':>7}  {'USDT':>14}  entity · address")
+    for e in exposures[:SHOWN_EXPOSURES]:
+        inferred = f" (inferred, {e.confidence})" if e.confidence is not None else ""
+        echo(
+            f"  {e.direction:<4}{e.hop:>3}  {e.risk_type:<18} {pct(e.percent):>7}  "
+            f"{usdt(e.volume):>14}  {e.entity}{inferred} · {short(e.address)}"
+        )
 
 
 def _print_exposure(chain: Chain, ev: dict[str, Any]) -> None:
@@ -145,7 +179,7 @@ def _print_exposure(chain: Chain, ev: dict[str, Any]) -> None:
     echo("")
     echo(
         f"History  {ev['transfers']} transfer(s) since {str(ev['since'])[:10]} · received "
-        f"{ev['received_usdt']} · sent {ev['sent_usdt']} USDT · first activity {first}"
+        f"{usdt(ev['received_usdt'])} · sent {usdt(ev['sent_usdt'])} USDT · first activity {first}"
     )
     if ev.get("zero_value_dropped"):
         echo(f"         {ev['zero_value_dropped']} 0-value transfer(s) dropped (address poisoning)")
@@ -155,10 +189,9 @@ def _print_exposure(chain: Chain, ev: dict[str, Any]) -> None:
     width = 42 if chain is Chain.BSC else 34
     echo("")
     echo(f"Counterparties  (largest {len(shown)} of {ev['counterparty_count']})")
-    echo(f"  {'address':<{width}}  {'received':>16}  {'sent':>16}  {'txs':>5}  flags")
+    echo(f"  {'address':<{width}}  {'received':>14}  {'sent':>14}  {'txs':>5}  known as")
     for c in shown:
-        flags = ", ".join(c["flags"]) or "-"
         echo(
-            f"  {c['address']:<{width}}  {c['received_usdt']:>16}  {c['sent_usdt']:>16}  "
-            f"{c['transfers']:>5}  {flags}"
+            f"  {c['address']:<{width}}  {usdt(c['received_usdt']):>14}  "
+            f"{usdt(c['sent_usdt']):>14}  {c['transfers']:>5}  {counterparty_text(c)}"
         )

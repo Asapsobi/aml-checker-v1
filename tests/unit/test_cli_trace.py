@@ -63,13 +63,13 @@ def test_trace_human(home: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     assert r.exit_code == 0, r.output
     out = r.output
     assert "Source of funds  ·  BSC " + T in out
-    assert "20000 USDT received in the window · coverage 90.0%" in out
+    assert "20,000.00 USDT received in the window · coverage 90.0%" in out
     assert "exchange_regulated" in out
     assert "60.0%" in out
-    assert "12000" in out  # ≈ USDT for 60% of 20,000
+    assert "12,000.00" in out  # ≈ USDT for 60% of 20,000
     assert "Top paths" in out
     assert "R-TRC-01" in out
-    assert "every hop on the path moved at least 4000 USDT" in out  # the bottleneck, §7.3
+    assert "every hop on the path moved at least 4,000.00 USDT" in out  # the bottleneck, §7.3
     assert "Budget  3 address(es) read" in out
     assert "INCOMPLETE" not in out
     conn = db(home)

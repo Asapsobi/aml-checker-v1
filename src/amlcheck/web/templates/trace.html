@@ -13,13 +13,13 @@
 {% else %}
 {% if job.status == "failed" %}<p class="error">Incomplete: {{ job.failure_reason }}. The partial trace below is not a full picture.</p>{% endif %}
 {% if t %}
-<p>{{ dec(t.target_inflow) }} USDT {{ "received" if t.direction == "in" else "sent" }} in the window · coverage {{ pct(t.coverage) if t.coverage is not none else "no inflow" }} · {{ t.budget.nodes_read }} address(es) read · {{ t.budget.queries }} provider call(s) · {{ "%.1f" | format(t.budget.seconds) }} s</p>
+<p>{{ usdt(t.target_inflow) }} USDT {{ "received" if t.direction == "in" else "sent" }} in the window · coverage {{ pct(t.coverage) if t.coverage is not none else "no inflow" }} · {{ t.budget.nodes_read }} address(es) read · {{ t.budget.queries }} provider call(s) · {{ "%.1f" | format(t.budget.seconds) }} s</p>
 <p class="muted small">Shares are proportional estimates: USDT is fungible, so no amount is exact.</p>
 <table class="narrow">
   <thead><tr><th>Category</th><th class="num">Share</th><th class="num">≈ USDT</th></tr></thead>
   <tbody>
   {% for cat, share in t.partition.items() | sort(attribute="1", reverse=True) %}
-    <tr><td>{{ cat }}</td><td class="num">{{ pct(share) }}</td><td class="num">{{ dec((share * t.target_inflow).quantize(cents)) }}</td></tr>
+    <tr><td>{{ cat }}</td><td class="num">{{ pct(share) }}</td><td class="num">{{ usdt(share * t.target_inflow) }}</td></tr>
   {% endfor %}
   </tbody>
 </table>
@@ -30,7 +30,7 @@
   <thead><tr><th>To</th><th class="num">Bottleneck</th><th class="num">Estimate</th><th>Path (target first)</th></tr></thead>
   <tbody>
   {% for p in t.paths[:10] %}
-    <tr><td>{{ p.to_category }}</td><td class="num">{{ dec(p.bottleneck.quantize(cents)) }}</td><td class="num">{{ dec(p.estimated.quantize(cents)) }}</td>
+    <tr><td>{{ p.to_category }}</td><td class="num">{{ usdt(p.bottleneck) }}</td><td class="num">{{ usdt(p.estimated) }}</td>
       <td class="mono small">{% for x in p.addresses %}{% if not loop.first %} ← {% endif %}<a href="/counterparties/{{ t.chain.value }}/{{ x }}">{{ short(x) }}</a>{% endfor %}</td></tr>
   {% endfor %}
   </tbody>

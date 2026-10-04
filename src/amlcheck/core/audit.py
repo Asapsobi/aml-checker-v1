@@ -24,7 +24,7 @@ from amlcheck.storage.db import transaction
 GENESIS = "0" * 64
 
 #: Columns of `checks` that are hashed only when not NULL (F6.4). New nullable columns go here.
-_OPTIONAL = ("amount", "client", "operator_note", "score_json", "trace_id")
+_OPTIONAL = ("amount", "client", "operator_note", "score_json", "trace_id", "label_json")
 
 
 def canonical_json(obj: Any) -> str:
@@ -119,6 +119,7 @@ class AuditRecord:
     operator_note: str | None = None
     score_json: str | None = None
     trace_id: str | None = None
+    label_json: str | None = None  # P12: who the address is (methodology §11.6)
 
     def body(self) -> dict[str, Any]:
         check: dict[str, Any] = {
@@ -161,8 +162,8 @@ def append(conn: sqlite3.Connection, record: AuditRecord) -> Appended:
         cur = conn.execute(
             "INSERT INTO checks (check_id, created_at, chain, address_norm, verdict, amount, "
             "client, operator_note, score_json, trace_id, tool_version, rules_version, "
-            "config_hash, prev_hash, record_hash) "
-            "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+            "config_hash, prev_hash, record_hash, label_json) "
+            "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
             (
                 record.check_id,
                 record.created_at,
@@ -179,6 +180,7 @@ def append(conn: sqlite3.Connection, record: AuditRecord) -> Appended:
                 record.config_hash,
                 prev,
                 digest,
+                record.label_json,
             ),
         )
         conn.executemany(
@@ -225,7 +227,7 @@ def load(conn: sqlite3.Connection, seq: int) -> tuple[AuditRecord, str, str] | N
     row = conn.execute(
         "SELECT check_id, created_at, chain, address_norm, verdict, amount, client, "
         "operator_note, score_json, trace_id, tool_version, rules_version, config_hash, "
-        "prev_hash, record_hash FROM checks WHERE seq = ?",
+        "prev_hash, record_hash, label_json FROM checks WHERE seq = ?",
         (seq,),
     ).fetchone()
     if row is None:
@@ -278,6 +280,7 @@ def load(conn: sqlite3.Connection, seq: int) -> tuple[AuditRecord, str, str] | N
         config_hash=row[12],
         sources=sources,
         findings=findings,
+        label_json=row[15],
     )
     return record, row[13], row[14]
 

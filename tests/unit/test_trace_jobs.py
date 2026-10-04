@@ -151,14 +151,21 @@ async def test_trace_source_in_a_check(conn: sqlite3.Connection) -> None:
     eng, _ = world(conn)
     src = TraceSource(jobs(conn), eng, Settings(), clock=fixed(NOW))
     result = await screen(detect(T), [src], conn=conn, settings=Settings(), now=fixed(NOW))
-    # Methodology §7.11: R-TRC-01, R-TRC-03 and R-TRC-05 (low); verdict REVIEW.
-    assert {f.rule_id for f in result.findings} == {"R-TRC-01", "R-TRC-03", "R-TRC-05"}
+    # Methodology §7.11: R-TRC-01, R-TRC-03 and R-TRC-05 (INFO); the exposures score 69, so
+    # R-SCR-01 makes it REVIEW (D-072).
+    assert {f.rule_id for f in result.findings} == {"R-TRC-01", "R-TRC-03", "R-TRC-05", "R-SCR-01"}
     assert result.verdict is Verdict.REVIEW
+    assert result.score is not None
+    assert result.score.shown == "68 · moderate"
     (r,) = result.sources
     assert r.evidence["complete"] is True
     assert r.evidence["coverage"] == "0.9"
     assert r.evidence["partition"]["sanctioned"] == "0.2"
     assert r.evidence["top_paths"][0]["addresses"][0] == T
+    assert [(e["category"], e["hop"]) for e in r.evidence["exposures"]] == [
+        ("sanctioned", 2),
+        ("suspicious_collector", 2),
+    ]
     trace_id = r.evidence["trace_id"]
     job = jobs(conn).get(trace_id)
     assert job is not None
@@ -174,8 +181,7 @@ async def test_trace_source_failure_is_incomplete(conn: sqlite3.Connection) -> N
     src = TraceSource(jobs(conn), eng, Settings(), clock=fixed(NOW))
     result = await screen(detect(T), [src], conn=conn, settings=Settings(), now=fixed(NOW))
     assert result.verdict is Verdict.INCOMPLETE
-    (sys01,) = result.findings
-    assert sys01.rule_id == "R-SYS-01"
+    sys01 = next(f for f in result.findings if f.rule_id == "R-SYS-01")
     assert E in sys01.summary  # names the node (AT-39)
     assert "hop 2" in sys01.summary
     (r,) = result.sources

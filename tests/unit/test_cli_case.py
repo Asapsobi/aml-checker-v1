@@ -33,7 +33,7 @@ def named(home: Path, name: str = "sobhan") -> None:
 
 
 def review(monkeypatch: pytest.MonkeyPatch) -> None:
-    use(monkeypatch, Fake("ofac_sdn"), Fake("exposure", rules=("R-HEU-07",)))
+    use(monkeypatch, Fake("ofac_sdn"), Fake("exposure", rules=("R-HEU-07", "R-EXP-01")))
     assert runner.invoke(app, ["check", TRON, "--client", "acme"]).exit_code == 3
 
 
@@ -125,7 +125,7 @@ def test_confirm_reject_and_export(home: Path, monkeypatch: pytest.MonkeyPatch) 
     assert line["decision"]["note"] == "scam collector"
     assert line["case"]["address"] == TRON
     assert line["check"]["verdict"] == "REVIEW"
-    assert line["check"]["rules"] == ["R-HEU-07"]
+    assert line["check"]["rules"] == ["R-EXP-01", "R-HEU-07"]
     assert line["check"]["score"]["score"] == 15
     assert line["feedback"] == [
         {"type": "COLLECTOR", "verdict": "confirmed", "classifier_version": 1, "label_id": 1}

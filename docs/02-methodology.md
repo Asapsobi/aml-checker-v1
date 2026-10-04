@@ -10,7 +10,8 @@
 | Profiler + classifier | `classifier_version = 1` | each classification |
 | Source-of-funds trace | `trace_version = 1` | each trace |
 | Category list + weights | `category_version = 1` | each label, score components |
-| Score | `score_version = 1` | each check |
+| Score | `score_version = 2` from v2 (§11); `1` for checks made by v1 (§9) | each check |
+| Risk policy (exposures, levels, verdict defaults) | `risk_version = 2` (§11) | each check |
 
 ---
 
@@ -439,6 +440,8 @@ Entity kinds are the categories 3–17 that the operator may assign.
 
 ## 9. Score (version 1)
 
+> Checks made by v1 keep this score as stored. New checks use §11 (D-071).
+
 | Part | Formula | Range |
 |---|---|---|
 | Hazard `H` | `Σ w_c × share_c` over the partition, where inferred categories also multiply by the mean confidence of the terminals behind them, `+ 0.5 × annotations.layering` | 0–1 |
@@ -483,3 +486,131 @@ The components are stored with the check, so an old score can be explained after
 | Run every golden address live; record classifier precision per type and band agreement | table in `docs/acceptance.md` |
 | Adjust thresholds in config only. A change to a formula bumps its version | D-entries for every change |
 | Target: `DEPOSIT` and `HUB` precision ≥ 0.9, `COLLECTOR` ≥ 0.8, no golden-clean address in `high`/`severe` | exit criteria of P11 |
+
+---
+
+## 11. Risk policy (version 2, from P12)
+
+> Built so that results read like a professional screening platform's (MistTrack's published levels,
+> risk types and hop decay, D-070), from our own data only (D-033). Replaces §9 for new checks and
+> the §2.5 default severities. Verdict precedence (§2.5) is unchanged.
+
+### 11.1 Exposures
+
+An **exposure** is money the checked address exchanged with a risk category, directly or through
+others. Every exposure is shown and stored with the check.
+
+| Field | Meaning |
+|---|---|
+| `direction` | `in` (money it received) or `out` (money it sent) |
+| `exposure_type` | `direct`: hop 1, a counterparty. `indirect`: hop 2 or more, found by a trace |
+| `hop` | 1 = a counterparty; 2 = a counterparty's counterparty; and so on |
+| `entity` | Who it is: the list entry (`OFAC SDN: …`), `Tether-frozen`, the label or entity name, or the inferred type |
+| `category` | Its §8 category |
+| `risk_type` | §11.2 |
+| `volume_usdt` | Direct: the USDT exchanged with it in that direction (exact). Indirect: the **path volume**, the smallest edge on the path, which every hop moved; paths through one first-hop counterparty are capped together at what it sent (D-078) |
+| `estimated_usdt` | Indirect only: the trace's proportional estimate, `weight × flow` (D-016) |
+| `percent` | `volume_usdt` over the address's whole flow in that direction (0–1) |
+| `inferred`, `confidence` | Inferred categories only: the classification's confidence |
+| `address`, `path` | The risk end; the path from the checked address to it |
+
+- **Direct exposures** come from the whole history read (§3.1), every counterparty, not only the 20
+  shown. Counterparties are flagged from local data only (§3.3). Both directions.
+- **Indirect exposures** come from the trace's terminals at hop ≥ 2, and from hop-1 terminals decided
+  by a classification (tests 5, 8, 9), which local flags can't see. Without a trace there are none.
+- A category with weight 0 (§11.2) is not an exposure.
+
+### 11.2 Risk types and weights
+
+The six risk types MistTrack publishes, plus `frozen`: Tether's blacklist is a fact we read directly
+from the chain, so it is shown as itself.
+
+| Category (§8) | `risk_type` | Weight `w` |
+|---|---|---|
+| `sanctioned` | `sanctioned_entity` | 1.0 |
+| `frozen` | `frozen` | 0.9 |
+| `stolen_funds`, `darknet` | `illicit_activity` | 0.9 |
+| `mixer` | `mixer` | 0.8 |
+| `scam` | `illicit_activity` | 0.7 |
+| `high_risk` | `illicit_activity` | 0.6 |
+| `suspicious_collector` (inferred) | `illicit_activity` | 0.5 × confidence |
+| `gambling` | `gambling` | 0.3 |
+| `exchange_nokyc` | `risk_exchange` | 0.3 |
+| `bridge` | `bridge` | 0.2 |
+| `otc_desk`, `service_unattributed`, `contract_unattributed`, `exchange_regulated`, `payment_processor`, `own_or_trusted` | — | 0 (not a risk) |
+
+An unknown service is not a risk in itself. v1 counted it at 0.1, which raised scores for wallets
+that only dealt with unlabelled exchanges.
+
+### 11.3 Score (version 2)
+
+```
+c(e)    = w(category) × (1 − decay)^(hop − 1) × percent × confidence   (confidence 1 for facts)
+H_dir   = min(1, Σ c(e) over the exposures in that direction)           dir = in, out
+H       = 1 − (1 − H_in) × (1 − H_out)
+X       = 100 × (1 − e^(−k·H))                                          exposure points, 0–100
+B       = min(30, Σ behaviour points)                                   behaviour points, 0–30
+score   = 100 if BLOCK, else min(99, ⌊X + (100 − X) × B / 100 + 0.5⌋)
+```
+
+| Setting | Default | Meaning |
+|---|---|---|
+| `[score] decay` | 0.4 | Each extra hop counts 40% less (MistTrack's documented risk decay); 0 turns decay off |
+| `[score] k` | 8 | How fast exposure turns into points |
+| `[score] review_at` | 31 | R-SCR-01: REVIEW from this score (the Moderate floor) |
+| `[score] indirect` | `path` | An indirect exposure's volume: the path volume, or `proportional` (the estimate; less sensitive) (D-078) |
+
+Behaviour points: R-HEU-01 +5, R-HEU-02 +10, R-HEU-03 +10, R-HEU-04 +5, R-HEU-06 +20, R-HEU-07 +15,
+R-FRZ-02 +15. R-HEU-05 is no longer counted: its counterparties are direct exposures now. Behaviour
+alone stays Low (at most 30). `X` and `B` are stored to 0.1, half up, and the score is computed from
+the stored values.
+
+**Feel** (one exposure, nothing else):
+
+| Exposure | `H` | `X` | Level |
+|---|---|---|---|
+| 1% scam, direct | 0.007 | 5.4 | Low |
+| 2% sanctioned, direct | 0.02 | 14.8 | Low |
+| 5% mixer, direct | 0.04 | 27.4 | Low |
+| 5% sanctioned, direct | 0.05 | 33.0 | Moderate |
+| 10% sanctioned, direct | 0.10 | 55.1 | Moderate |
+| 10% sanctioned, hop 2 | 0.06 | 38.1 | Moderate |
+| 10% sanctioned, hop 3 | 0.036 | 25.0 | Low |
+| 20% sanctioned, direct | 0.20 | 79.8 | High |
+| 30% sanctioned, direct | 0.30 | 90.9 | Severe |
+| 60% regulated exchange | 0 | 0 | Low |
+
+`k`, `decay` and the weights are calibrated against the owner's benchmark set in P15. A change of
+formula bumps `score_version`; a change of default is a config change with a decision.
+
+### 11.4 Levels
+
+| Level | Score | Suggested action |
+|---|---|---|
+| `low` | 0–30 | Minimal supervision. Proceed per policy; not a clearance |
+| `moderate` | 31–70 | Review by hand before transacting |
+| `high` | 71–90 | Investigate before transacting; keep under close watch |
+| `severe` | 91–100 | Do not transact; escalate |
+
+`INCOMPLETE` shows the score as a lower bound with a `+` on the level (`≥ 34 · moderate+`).
+
+### 11.5 Verdict defaults (version 2)
+
+A new severity, `INFO`: the finding is shown and explains the score, but never changes the verdict.
+
+| Rule | v1 default | v2 default |
+|---|---|---|
+| R-SAN-01, R-FRZ-01 | BLOCK | BLOCK |
+| R-SYS-01 | INCOMPLETE (fixed) | INCOMPLETE (fixed) |
+| R-EXP-01 (a counterparty is sanctioned or frozen), R-FRZ-02, R-HEU-06 (look-alike) | REVIEW | REVIEW |
+| R-SCR-01 (score ≥ `review_at`) | off | REVIEW from 31 |
+| R-EXP-02, R-HEU-01 to R-HEU-05, R-HEU-07, R-TRC-01 to R-TRC-05 | REVIEW | INFO |
+
+The owner can set any rule back with `[rules] severity`. Inferences and the score still never BLOCK.
+
+### 11.6 The checked address's own label
+
+The first that applies: the sanctions entry (`OFAC SDN: <name>`); `Tether-frozen`; an own wallet's
+name; the intelligence store's entity name and kind, or label category; otherwise the classifier's
+primary type with its confidence, marked inferred. None of these is a source of new findings: they
+say who the address is.

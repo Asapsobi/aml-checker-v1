@@ -25,7 +25,7 @@ from dotenv import dotenv_values
 from pydantic import BaseModel, ConfigDict, Field, ValidationError, field_validator
 
 from amlcheck.core.models import Severity
-from amlcheck.core.rules import DEFAULT_SEVERITY, FIXED, NEVER_BLOCK
+from amlcheck.core.rules import DEFAULT_SEVERITY, FIXED, NEVER_BLOCK, NEVER_INFO
 
 HOME_ENV = "AMLCHECK_HOME"
 CONFIG_ENV = "AMLCHECK_CONFIG"
@@ -64,7 +64,7 @@ class Network(_Section):
 class Rules(_Section):
     """Severity overrides by rule ID (PRD §7.2). R-SYS-01 is fixed; inferences never BLOCK."""
 
-    severity: dict[str, Literal["BLOCK", "REVIEW"]] = Field(default_factory=dict)
+    severity: dict[str, Literal["BLOCK", "REVIEW", "INFO"]] = Field(default_factory=dict)
 
     @field_validator("severity")
     @classmethod
@@ -77,6 +77,11 @@ class Rules(_Section):
             if rule_id in NEVER_BLOCK and sev == Severity.BLOCK:
                 why = "the score" if rule_id == "R-SCR-01" else "an inference"
                 raise ValueError(f"{rule_id} is {why} and can never be BLOCK (D-017, D-051)")
+            if rule_id in NEVER_INFO and sev == Severity.INFO:
+                raise ValueError(
+                    f"{rule_id} is a hit on the address itself and always changes the verdict; "
+                    "it can't be INFO (D-072)"
+                )
         return v
 
 
@@ -168,9 +173,14 @@ class Trace(_Section):
 
 
 class Score(_Section):
-    """Methodology §9. `review_at` = 0 keeps R-SCR-01 off (Q-10)."""
+    """Methodology §11.3. `review_at` = 0 turns R-SCR-01 off; 31 is the Moderate floor (D-072)."""
 
-    review_at: Annotated[int, Field(ge=0, le=100)] = 0
+    review_at: Annotated[int, Field(ge=0, le=100)] = 31
+    decay: Annotated[Decimal, Field(ge=0, lt=1)] = Decimal("0.4")
+    k: PosDec = Decimal("8")
+    # D-078: an indirect exposure's volume is its path's bottleneck ("path"), or the trace's
+    # proportional estimate ("proportional", less sensitive).
+    indirect: Literal["path", "proportional"] = "path"
 
 
 class Monitor(_Section):

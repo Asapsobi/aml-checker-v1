@@ -18,6 +18,7 @@ from datetime import datetime
 from decimal import Decimal
 from typing import Any
 
+from amlcheck.chain.base import usdt
 from amlcheck.config import Trace as TraceSettings
 from amlcheck.core.models import Finding
 from amlcheck.core.rules import finding
@@ -66,7 +67,7 @@ def trace_findings(trace: Trace, s: TraceSettings, now: datetime) -> list[Findin
                     rule,
                     SOURCE,
                     f"Funds trace back to a {word} wallet {best.hops} hops away "
-                    f"(every hop on the path moved at least {dec(best.bottleneck)} USDT)",
+                    f"(every hop on the path moved at least {usdt(best.bottleneck)} USDT)",
                     now,
                     {
                         "paths": [_path(p) for p in paths[:5]],

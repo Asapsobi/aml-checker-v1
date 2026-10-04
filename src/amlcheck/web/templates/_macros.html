@@ -9,7 +9,7 @@
       <td><a href="/checks/{{ r.check_id }}">{{ r.seq }}</a></td>
       <td>{{ r.created_at[:19] }}</td>
       <td>{{ verdict(r.verdict) }}</td>
-      <td>{{ shown(r.score[0], r.verdict) }}</td>
+      <td>{{ r.score_shown }}</td>
       <td>{{ r.chain }} {{ addr(r.chain, r.address, False) }}</td>
       <td>{{ r.client or "" }}</td>
       <td class="small">{{ r.rules | join(" ") }}</td>

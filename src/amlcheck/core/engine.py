@@ -5,12 +5,16 @@
 2. Collect findings, apply config severity overrides, add R-SYS-01 for required gaps, decide.
 3. Append the audit record **before** anything is returned for display (non-negotiable #2). If the
    append fails, the check fails: a result that isn't recorded is never shown.
-4. Upsert the counterparty registry (P4). Score (P7) joins later.
+4. Upsert the counterparty registry (P4).
+
+The score (methodology §11.3) comes from the sources' exposures after the verdict; R-SCR-01 can
+then raise a REVIEW, never a BLOCK (D-072).
 """
 
 from __future__ import annotations
 
 import asyncio
+import json
 import sqlite3
 import uuid
 from collections.abc import Sequence
@@ -29,6 +33,7 @@ from amlcheck.core.models import (
     SourceStatus,
     Verdict,
 )
+from amlcheck.core.risk import Exposure
 from amlcheck.core.rules import (
     RULES_VERSION,
     SYSTEM_SOURCE,
@@ -39,6 +44,7 @@ from amlcheck.core.rules import (
 from amlcheck.core.score import compute
 from amlcheck.core.verdict import decide
 from amlcheck.intel import registry
+from amlcheck.intel.names import address_label
 from amlcheck.net.http import SourceError
 from amlcheck.screening.base import SourceAdapter, failed
 
@@ -78,9 +84,9 @@ async def screen(
     findings = apply_overrides(found, settings.rules.severity) + system_findings(ordered, started)
     findings.sort(key=lambda f: (f.rule_id, f.source, f.summary))
     verdict = decide(findings)
-    trace_evidence = next((r.evidence for r in ordered if r.source == "trace"), None)
-    # After the verdict, never feeding it (F10.2).
-    score = compute(verdict, findings, trace_evidence)
+    exposures = [Exposure.from_json(e) for r in ordered for e in r.evidence.get("exposures", ())]
+    # After the verdict, never feeding it except through R-SCR-01 (F10.2, D-072).
+    score = compute(verdict, findings, exposures, settings.score)
     threshold = settings.score.review_at
     if threshold and verdict is not Verdict.BLOCK and score.score >= threshold:
         # R-SCR-01, only when the owner turned it on (D-051): REVIEW at most, decided again.
@@ -90,12 +96,14 @@ async def screen(
                 SYSTEM_SOURCE,
                 f"Score {score.shown} reaches the review threshold {threshold}",
                 started,
-                {"score": score.score, "review_at": threshold, "band": score.band},
+                {"score": score.score, "review_at": threshold, "level": score.level},
                 overrides=settings.rules.severity,
             )
         )
         findings.sort(key=lambda f: (f.rule_id, f.source, f.summary))
         verdict = decide(findings)
+    types = next((r.evidence.get("types", ()) for r in ordered if r.source == "classifier"), ())
+    label = address_label(conn, address.chain, address.norm, types)  # §11.6, at check time
     check_id = str(uuid.uuid4())
     tool_version = version("amlcheck")
     config_hash = settings.hash()
@@ -134,6 +142,7 @@ async def screen(
         client=client,
         operator_note=note,
         score_json=score.dumps(),
+        label_json=json.dumps(label, sort_keys=True, separators=(",", ":")) if label else None,
         trace_id=next(
             (
                 str(r.evidence["trace_id"])
@@ -155,6 +164,7 @@ async def screen(
             record.verdict,
             client,
             score.score,
+            score.version,
         ),
     )
     return CheckResult(
@@ -171,6 +181,7 @@ async def screen(
         client=client,
         note=note,
         score=score,
+        label=label,
     )
 
 

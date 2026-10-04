@@ -73,7 +73,7 @@ def test_at09_clean_check(home: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     assert r.exit_code == 0, r.output
     assert r.output.startswith(f"NO_HITS  ·  TRON {TRON}")
     assert "not a clearance" in r.output
-    assert "50000 USDT · client ACME" in r.output
+    assert "50,000.00 USDT · client ACME" in r.output
     assert records(home) == 1
 
 

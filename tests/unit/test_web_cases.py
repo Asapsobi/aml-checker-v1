@@ -43,7 +43,7 @@ def check(web: TestClient, address: str) -> str:
 
 def test_case_from_the_web(home: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     w = World(monkeypatch)
-    w.rules[TRON] = ("R-HEU-07",)
+    w.rules[TRON] = ("R-HEU-07", "R-EXP-01")
     web = client(home, "sobhan")
     review = check(web, TRON)
     clean = check(web, OTHER)
@@ -77,7 +77,7 @@ def test_case_from_the_web(home: Path, monkeypatch: pytest.MonkeyPatch) -> None:
 
 def test_no_operator_name(home: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     w = World(monkeypatch)
-    w.rules[TRON] = ("R-HEU-02",)
+    w.rules[TRON] = ("R-HEU-06",)
     web = client(home, None)
     review = check(web, TRON)
     r = web.post("/cases", data={"check_id": review, "token": TOKEN})
@@ -87,7 +87,7 @@ def test_no_operator_name(home: Path, monkeypatch: pytest.MonkeyPatch) -> None:
 
 def test_reject_a_type_from_the_web(home: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     w = World(monkeypatch)
-    w.rules[TRON] = ("R-HEU-07",)
+    w.rules[TRON] = ("R-HEU-07", "R-EXP-01")
     web = client(home, "sobhan")
     review = check(web, TRON)
     conn = sqlite3.connect(home / "amlcheck.db")

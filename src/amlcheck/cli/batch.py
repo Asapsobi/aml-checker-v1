@@ -5,7 +5,7 @@
   every problem listed by line (AT-45).
 - Then one check at a time, like `check` (the trace runs at `[trace] auto_amount_usdt`), within the
   process's rate limits; each result is written as soon as it is known.
-- Output CSV `row,address,chain,verdict,score,band,rules,check_id,record_hash`, guarded against
+- Output CSV `row,address,chain,verdict,score,level,rules,check_id,record_hash`, guarded against
   spreadsheet formula injection. Exit: the most serious verdict (5 BLOCK, 4, 3, 0).
 - Takes the run lock: never two batch or watch runs at once.
 """
@@ -37,7 +37,7 @@ OUT_COLUMNS = (
     "chain",
     "verdict",
     "score",
-    "band",
+    "level",  # methodology §11.4 (D-071); `band` until v2
     "rules",
     "check_id",
     "record_hash",
@@ -166,7 +166,7 @@ def _cells(row: Row, r: CheckResult) -> list[object]:
         r.address.chain.value,
         r.verdict.value,
         r.score.score if r.score else "",
-        (r.score.band + ("+" if r.score.lower_bound else "")) if r.score else "",
+        (r.score.level + ("+" if r.score.lower_bound else "")) if r.score else "",
         " ".join(sorted({f.rule_id for f in r.findings})),
         r.check_id,
         r.record_hash,

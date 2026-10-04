@@ -1,15 +1,18 @@
 import json
 import sqlite3
+from decimal import Decimal
 from pathlib import Path
 
 import pytest
 
-from amlcheck.config import Score, Settings
+from amlcheck.config import Rules, Score, Settings
 from amlcheck.core.address import detect
 from amlcheck.core.audit import AuditRecord, append, verify
 from amlcheck.core.clock import fixed
 from amlcheck.core.engine import screen
 from amlcheck.core.models import Address, Severity, SourceResult, SourceStatus, Verdict
+from amlcheck.core.risk import Exposure
+from amlcheck.core.rules import finding
 from amlcheck.core.score import from_json
 from amlcheck.intel import registry
 from amlcheck.screening.base import SourceHealth
@@ -31,7 +34,8 @@ def traced(conn: sqlite3.Connection) -> TraceSource:
     return TraceSource(TraceJobs(conn, Settings(), clock=fixed(NOW)), eng, Settings())
 
 
-# AT-42 through a check: the score is computed, stored (hashed) and put in the registry.
+# AT-42 through a check (v2): the §7.11 trace's exposures make the score; it is stored (hashed)
+# and put in the registry with its version.
 async def test_check_carries_its_score(conn: sqlite3.Connection) -> None:
     result = await screen(
         detect(T),
@@ -40,25 +44,28 @@ async def test_check_carries_its_score(conn: sqlite3.Connection) -> None:
         settings=Settings(),
         now=fixed(NOW),
     )
-    assert result.verdict is Verdict.REVIEW
     assert result.score is not None
-    assert (result.score.score, result.score.band) == (66, "high")
-    assert result.score.breakdown == "E 59.5 · D 0 · B 5 · U 1"
+    # H_in = 0.6 × (1.0 × 0.2 + 0.5 × 0.1 × 0.8) = 0.144 → X 68.4; B 5 → ⌊68.4 + 31.6 × 0.05 + 0.5⌋
+    assert (result.score.score, result.score.level) == (70, "moderate")
+    assert result.score.breakdown == "exposure 68.4 · behaviour 5"
+    assert result.verdict is Verdict.REVIEW  # R-SCR-01 at 31 (D-072); the other rules are INFO
+    assert {f.rule_id: f.severity for f in result.findings}["R-SCR-01"] is Severity.REVIEW
+    assert {f.severity for f in result.findings if f.rule_id != "R-SCR-01"} == {Severity.INFO}
     stored = conn.execute(
         "SELECT score_json FROM checks WHERE check_id = ?", (result.check_id,)
     ).fetchone()[0]
     assert from_json(stored) == result.score
-    assert json.loads(stored)["hazard"] == "0.24"
+    assert json.loads(stored)["hazard"] == {"in": "0.144", "out": "0"}
     cp = registry.get(conn, result.address.chain, result.address.norm)
     assert cp is not None
-    assert cp.last_score == 66
+    assert (cp.last_score, cp.last_score_version) == (70, 2)
     registry.rebuild(conn)
     again = registry.get(conn, result.address.chain, result.address.norm)
     assert again is not None
-    assert again.last_score == 66  # rebuilt from the audit log's score_json
+    assert (again.last_score, again.last_score_version) == (70, 2)  # rebuilt from score_json
 
 
-async def test_no_trace_scores_rules_only(conn: sqlite3.Connection) -> None:
+async def test_no_exposure_scores_behaviour_only(conn: sqlite3.Connection) -> None:
     result = await screen(
         detect(T),
         [Source("ofac_sdn"), Source("exposure", rules=("R-EXP-01", "R-HEU-02"))],
@@ -67,8 +74,8 @@ async def test_no_trace_scores_rules_only(conn: sqlite3.Connection) -> None:
         now=fixed(NOW),
     )
     assert result.score is not None
-    assert result.score.shown == "35 · medium"  # D 25 + B 10
-    assert result.score.hazard is None
+    assert result.score.shown == "10 · low"  # R-EXP-01 is in the exposures, not in points
+    assert result.verdict is Verdict.REVIEW  # R-EXP-01 is REVIEW by itself (D-072)
 
 
 async def test_block_and_incomplete_through_a_check(conn: sqlite3.Connection) -> None:
@@ -90,7 +97,7 @@ async def test_block_and_incomplete_through_a_check(conn: sqlite3.Connection) ->
     )
     assert gap.verdict is Verdict.INCOMPLETE
     assert gap.score is not None
-    assert gap.score.shown == "≥ 20 · medium+"
+    assert gap.score.shown == "≥ 20 · low+"
 
 
 # AT-44: records written before score_json existed and after it both verify; the score is hashed.
@@ -127,41 +134,76 @@ async def test_at44_old_and_new_records_verify(conn: sqlite3.Connection) -> None
     assert broken.break_at == 2
 
 
-class TraceLike:
-    """A trace source's evidence without the trace: an inferred hub took all the money."""
+class Exposed:
+    """A source whose evidence carries one direct exposure, and the given rules."""
 
-    source = "trace"
-    label = "Source-of-funds trace"
+    source = "exposure"
+    label = "USDT history (exposure)"
     required = True
     timeout: float | None = None
 
+    def __init__(self, percent: str, *rules: str) -> None:
+        self.percent = percent
+        self.rules = rules
+
     async def check(self, address: Address) -> SourceResult:
-        evidence = {"trace_id": "t1", "hazard": "0.095", "coverage": "0.95", "complete": True}
-        return SourceResult(self.source, self.label, True, SourceStatus.OK, NOW, (), "ok", evidence)
+        e = Exposure("in", 1, "TS", "sanctioned", "x", Decimal(100), Decimal(self.percent), ("T",))
+        found = tuple(finding(r, self.source, r, NOW) for r in self.rules)
+        evidence = {"exposures": [e.to_json()]}
+        return SourceResult(
+            self.source, self.label, True, SourceStatus.OK, NOW, found, "ok", evidence
+        )
 
     async def health(self) -> SourceHealth:
         return SourceHealth(self.source, self.label, SourceStatus.OK, None, "test")
 
 
-# T-7.03, D-051: R-SCR-01 is off by default; when on, a score at the threshold → REVIEW, not BLOCK.
+# AT-63: v2 verdict defaults. Behaviour and trace rules are INFO; a score from 31 is REVIEW through
+# R-SCR-01; R-EXP-01 is REVIEW on its own; an override brings a v1 REVIEW back.
+async def test_at63_verdict_defaults(conn: sqlite3.Connection) -> None:
+    low = await screen(
+        detect(T),
+        [Exposed("0.01", "R-HEU-02", "R-TRC-04")],
+        conn=conn,
+        settings=Settings(),
+        now=fixed(NOW),
+    )
+    assert low.score is not None
+    assert (low.score.score, low.verdict) == (17, Verdict.NO_HITS)  # X 7.7 + B 10 → 17, low
+    assert {f.severity for f in low.findings} == {Severity.INFO}
+    moderate = await screen(
+        detect(T), [Exposed("0.0454")], conn=conn, settings=Settings(), now=fixed(NOW)
+    )
+    assert moderate.score is not None
+    assert (moderate.score.score, moderate.verdict) == (31, Verdict.REVIEW)
+    (scr,) = moderate.findings
+    assert scr.rule_id == "R-SCR-01"
+    assert scr.evidence == {"score": 31, "review_at": 31, "level": "moderate"}
+    direct = await screen(
+        detect(T), [Exposed("0.001", "R-EXP-01")], conn=conn, settings=Settings(), now=fixed(NOW)
+    )
+    assert direct.verdict is Verdict.REVIEW
+    v1_like = Settings(rules=Rules(severity={"R-HEU-02": "REVIEW"}))
+    again = await screen(
+        detect(T), [Exposed("0.01", "R-HEU-02")], conn=conn, settings=v1_like, now=fixed(NOW)
+    )
+    assert again.verdict is Verdict.REVIEW
+    assert verify(conn).ok
+
+
 @pytest.mark.parametrize(
     ("review_at", "verdict", "scr"),
-    [(0, Verdict.NO_HITS, False), (52, Verdict.REVIEW, True), (53, Verdict.NO_HITS, False)],
+    [(0, Verdict.NO_HITS, False), (55, Verdict.REVIEW, True), (56, Verdict.NO_HITS, False)],
 )
-async def test_r_scr_01(
+async def test_r_scr_01_threshold(
     conn: sqlite3.Connection, review_at: int, verdict: Verdict, scr: bool
 ) -> None:
     settings = Settings(score=Score(review_at=review_at))
-    result = await screen(detect(T), [TraceLike()], conn=conn, settings=settings, now=fixed(NOW))
+    result = await screen(detect(T), [Exposed("0.1")], conn=conn, settings=settings, now=fixed(NOW))
     assert result.score is not None
-    assert result.score.shown == "52 · high"  # E 51.9 + U 0.5, no rule fired
+    assert result.score.shown == "55 · moderate"  # 10% sanctioned, direct
     assert result.verdict is verdict
     assert ("R-SCR-01" in {f.rule_id for f in result.findings}) is scr
-    if scr:
-        (f,) = result.findings
-        assert f.severity is Severity.REVIEW
-        assert f.evidence == {"score": 52, "review_at": 52, "band": "high"}
-        assert verify(conn).ok
 
 
 async def test_r_scr_01_not_added_to_block(conn: sqlite3.Connection) -> None:

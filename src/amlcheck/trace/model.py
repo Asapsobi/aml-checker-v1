@@ -60,6 +60,8 @@ class Node:
     first_seen: datetime | None = None
     sent_on: Decimal | None = None  # USDT it sent to `via` (its edge amount)
     fresh: bool | None = None  # first seen no earlier than 30 days before its edge (§6.1, D-048)
+    # Terminal nodes: the smallest edge on its path, an absolute amount every hop moved (§7.3).
+    bottleneck: Decimal | None = None
 
 
 @dataclass(frozen=True)
@@ -140,6 +142,7 @@ class Trace:
                     "first_seen": to_iso(n.first_seen) if n.first_seen else None,
                     "sent_on_usdt": dec(n.sent_on) if n.sent_on is not None else None,
                     "fresh": n.fresh,
+                    "bottleneck_usdt": dec(n.bottleneck) if n.bottleneck is not None else None,
                 }
                 for n in self.nodes
             ],
@@ -207,6 +210,7 @@ class Trace:
                     from_iso(n["first_seen"]) if n.get("first_seen") else None,
                     Decimal(n["sent_on_usdt"]) if n.get("sent_on_usdt") is not None else None,
                     n.get("fresh"),
+                    Decimal(n["bottleneck_usdt"]) if n.get("bottleneck_usdt") is not None else None,
                 )
                 for n in d["nodes"]
             ),

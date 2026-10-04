@@ -1,6 +1,6 @@
 # amlcheck — Roadmap
 
-> Twelve phases from an empty repo to v1.0. Each phase is **one branch, one PR, one release**. Do them in
+> Twelve phases from an empty repo to v1.0, then four to v2.0 (D-070). Each phase is **one branch, one PR, one release**. Do them in
 > order: a phase starts only when the previous one's exit criteria pass. Ticket-level work is in
 > [08-backlog.md](08-backlog.md).
 
@@ -20,6 +20,10 @@
 | **P9** Cases & decisions | Human decisions, feedback into labels | v0.9.0 | 1 week | Management-ready trail |
 | **P10** Monitoring & API | Auto-screen senders to own wallets; local API | v0.10.0 | 1 week | Corridor integration |
 | **P11** Calibration & 1.0 | Golden set, thresholds tuned, budgets measured | v1.0.0 | 1 week | Signed-off v1.0 |
+| **P12** Risk policy v2 | MistTrack-style exposures, levels, decay; v2 contract | v2.0.0a1 | 1–1.5 weeks | Results read like a pro platform's |
+| **P13** Two-way deep exposure | In + out, 5 hops best-first, all history | v2.0.0a2 | 1–1.5 weeks | Far and outgoing risk found |
+| **P14** Intelligence v2 | UK/EU/NBCTF lists, official addresses, derived suspects, explorer tags | v2.0.0b1 | 1.5 weeks | More risk entities named |
+| **P15** Benchmark & 2.0 | Agreement with MistTrack measured on the owner's wallets; tuning | v2.0.0 | 1 week | Signed-off v2.0 |
 
 \*Claude Code doing the work, owner reviewing each PR. A sizing guide, not a commitment.
 
@@ -153,10 +157,44 @@ P11                                                          ████
 
 ---
 
+## P12 · Risk policy v2
+
+| | |
+|---|---|
+| **Goal** | Results that read like MistTrack's: levels, risk types, direct/indirect exposures with hops, volume and percent (D-070, D-071) |
+| **Deliverables** | Exposure model; direct exposures both ways from the whole history read; indirect exposures from the trace with 40% hop decay; score v2 and levels; `INFO` severity and v2 verdict defaults (D-072); the checked address's own label; v2 JSON contract and `/v2` API (D-073); CLI, web, PDF and exports in v2; amounts shown to 2 decimals; counterparty table shows risk |
+| **Exit criteria** | AT-60…AT-66; v1 records still render and verify |
+
+## P13 · Two-way deep exposure
+
+| | |
+|---|---|
+| **Goal** | Find risk that is far away or on the outgoing side (D-075, D-076) |
+| **Deliverables** | Traced checks run both directions; best-first expansion to 5 hops with decay-aware pruning; all history up to a cap with the 180-day required window; budget re-measured |
+| **Exit criteria** | AT-67, AT-68; live budget run within limits |
+
+## P14 · Intelligence v2
+
+| | |
+|---|---|
+| **Goal** | Name more of the risk entities MistTrack names, from sources we may use (D-077) |
+| **Deliverables** | Each verified and licence-recorded first: UK and EU sanctions lists, Israel NBCTF seizure orders, official bridge/mixer/exchange addresses, explorer name tags if terms allow; derived "suspected malicious" addresses (inferred, never BLOCK) |
+| **Exit criteria** | AT-69; every source in the verification log with its licence |
+
+## P15 · Benchmark & 2.0
+
+| | |
+|---|---|
+| **Goal** | Know how far results can be trusted next to MistTrack's |
+| **Deliverables** | Benchmark set from the owner's wallets (the owner's MistTrack level per wallet, nothing else of theirs stored); level agreement and a reason for every mismatch; `k`, `decay` and weights tuned with decisions; operator guide v2 |
+| **Exit criteria** | AT-70; owner sign-off |
+
+---
+
 ## Dependencies
 
 ```
-P0 ─► P1 ─► P2 ─► P3 ─► P4 ─► P5 ─► P6 ─► P7 ─► P8 ─► P9 ─► P10 ─► P11
+P0 ─► P1 ─► P2 ─► P3 ─► P4 ─► P5 ─► P6 ─► P7 ─► P8 ─► P9 ─► P10 ─► P11 ─► P12 ─► P13 ─► P14 ─► P15
                          └──────────────────────► P8 (web pages grow with each phase from P8 on)
 ```
 P8 can start in parallel with P6/P7 if the owner wants the web UI earlier; it only needs P2–P4.

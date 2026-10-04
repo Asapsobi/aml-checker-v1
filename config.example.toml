@@ -94,9 +94,16 @@ high_risk_share = 0.05
 min_coverage = 0.5
 inferred_share = 0.10
 
-# Methodology §9. `review_at` = 0 keeps R-SCR-01 off (Q-10).
+# Methodology §11.3 (score version 2, D-071, D-072). R-SCR-01 makes a REVIEW from `review_at`
+# (31 = the Moderate floor; 0 turns it off). Each extra hop counts `decay` less (0 = no decay);
+# `k` sets how fast exposure turns into points.
 [score]
-review_at = 0
+review_at = 31
+decay = 0.4
+k = 8
+# An indirect exposure's volume: "path" = the smallest amount on its path, which every hop moved
+# (D-078); "proportional" = the trace's proportional estimate (less sensitive).
+indirect = "path"
 
 # PRD F13.
 [monitor]

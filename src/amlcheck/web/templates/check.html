@@ -7,12 +7,14 @@
 <h1 class="mono">{{ addr(d.address.chain.value, d.address.norm) }}</h1>
 <div class="card verdictbox {{ verdict_class(r.verdict) }}">
   <div>{{ verdict(r.verdict) }} <span class="action">{{ action(r.verdict) }}</span></div>
+  {% if who %}<div class="who">Who: <b>{{ who }}</b></div>{% endif %}
   {% if score %}
   <div class="score">Score <b>{{ score.shown }}</b> <span class="muted">({{ score.breakdown }}{% if score.lower_bound %}; lower bound: a required source is missing{% endif %})</span></div>
+  {% for line in details %}<div class="small">{{ line }}</div>{% endfor %}
   {% else %}
   <div class="muted">No score: recorded before scores existed.</div>
   {% endif %}
-  <div class="muted small">Check {{ r.check_id }} · recorded {{ r.created_at[:19] }}Z{% if r.amount %} · {{ r.amount }} USDT{% endif %}{% if r.client %} · client {{ r.client }}{% endif %}{% if r.operator_note %} · note: {{ r.operator_note }}{% endif %} · amlcheck {{ r.tool_version }}</div>
+  <div class="muted small">Check {{ r.check_id }} · recorded {{ r.created_at[:19] }}Z{% if r.amount %} · {{ usdt(r.amount) }} USDT{% endif %}{% if r.client %} · client {{ r.client }}{% endif %}{% if r.operator_note %} · note: {{ r.operator_note }}{% endif %} · amlcheck {{ r.tool_version }}</div>
   <div class="links"><a href="/checks/{{ r.check_id }}/report.pdf">Case report (PDF)</a>
     {% if r.trace_id %} · <a href="/traces/{{ r.trace_id }}">Source of funds</a>{% endif %}
     · <a href="/counterparties/{{ d.address.chain.value }}/{{ d.address.norm }}">Counterparty</a></div>
@@ -31,6 +33,20 @@
   <thead><tr><th>When (UTC)</th><th>Decision</th><th>By</th><th>Note</th></tr></thead>
   <tbody>
   {% for s in d.decisions %}<tr><td>{{ s.decision.created_at[:16] | replace("T", " ") }}</td><td><b>{{ s.decision.decision }}</b></td><td>{{ s.decision.operator }}</td><td>{{ s.decision.note }}</td></tr>{% endfor %}
+  </tbody>
+</table>
+{% endif %}
+
+{% if exposures %}
+<h2>Exposures</h2>
+<p class="muted small">Heaviest first. Direct amounts are exact; an indirect amount is its path volume, the smallest amount on the path, which every hop moved.</p>
+<table>
+  <thead><tr><th>Dir</th><th class="num">Hop</th><th>Risk type</th><th class="num">Share</th><th class="num">USDT</th><th>Entity</th><th>Address</th></tr></thead>
+  <tbody>
+  {% for e in exposures[:50] %}
+    <tr><td>{{ e.direction }}</td><td class="num">{{ e.hop }}</td><td>{{ e.risk_type }}</td><td class="num">{{ pct(e.percent) }}</td><td class="num">{{ usdt(e.volume) }}</td>
+      <td>{{ e.entity }}{% if e.confidence is not none %} <span class="muted">(inferred, {{ e.confidence }})</span>{% endif %}</td><td>{{ addr(d.address.chain.value, e.address) }}</td></tr>
+  {% endfor %}
   </tbody>
 </table>
 {% endif %}
@@ -60,14 +76,14 @@
 
 {% if exposure %}
 <h2>USDT history</h2>
-<p>{{ exposure.transfers }} transfer(s) since {{ exposure.since[:10] }} · received {{ exposure.received_usdt }} · sent {{ exposure.sent_usdt }} USDT · first activity {{ exposure.first_activity or "none found" }}
+<p>{{ exposure.transfers }} transfer(s) since {{ exposure.since[:10] }} · received {{ usdt(exposure.received_usdt) }} · sent {{ usdt(exposure.sent_usdt) }} USDT · first activity {{ exposure.first_activity or "none found" }}
 {% if exposure.zero_value_dropped %}<br><span class="muted">{{ exposure.zero_value_dropped }} 0-value transfer(s) dropped (address poisoning)</span>{% endif %}</p>
 {% if exposure.counterparties %}
 <table>
-  <thead><tr><th>Counterparty (largest {{ exposure.counterparties | length }} of {{ exposure.counterparty_count }})</th><th class="num">Received</th><th class="num">Sent</th><th class="num">Txs</th><th>Flags</th></tr></thead>
+  <thead><tr><th>Counterparty (largest {{ exposure.counterparties | length }} of {{ exposure.counterparty_count }})</th><th class="num">Received</th><th class="num">Sent</th><th class="num">Txs</th><th>Known as</th></tr></thead>
   <tbody>
   {% for c in exposure.counterparties %}
-    <tr><td>{{ addr(d.address.chain.value, c.address) }}</td><td class="num">{{ c.received_usdt }}</td><td class="num">{{ c.sent_usdt }}</td><td class="num">{{ c.transfers }}</td><td>{{ c.flags | join(", ") or "-" }}</td></tr>
+    <tr><td>{{ addr(d.address.chain.value, c.address) }}</td><td class="num">{{ usdt(c.received_usdt) }}</td><td class="num">{{ usdt(c.sent_usdt) }}</td><td class="num">{{ c.transfers }}</td><td>{{ counterparty_text(c) }}</td></tr>
   {% endfor %}
   </tbody>
 </table>

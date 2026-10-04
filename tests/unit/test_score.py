@@ -1,154 +1,188 @@
-import sqlite3
+"""Score version 2 (methodology §11.3–§11.4, D-071), and v1 scores read back as stored."""
+
+import json
 from datetime import UTC, datetime
 from decimal import Decimal
-from pathlib import Path
 
 import pytest
 
-from amlcheck.core.address import detect
+from amlcheck.config import Score as ScoreSettings
 from amlcheck.core.models import Finding, Severity, Verdict
-from amlcheck.core.score import band, compute, from_json, hazard
-from amlcheck.storage.db import open_db
-from amlcheck.trace.adapter import summary
-from amlcheck.trace.model import Budget, Node, NodeClass, Trace
-from tests.unit.trace_world import Fake, T, engine, example, setup_example
+from amlcheck.core.risk import Exposure
+from amlcheck.core.score import Score, ScoreV1, compute, from_json, hazards, level, shown
 
 D0 = Decimal
 NOW = datetime(2026, 10, 3, tzinfo=UTC)
+S = ScoreSettings()
 
 
 def f(rule: str, n: int = 0) -> Finding:
-    return Finding(rule, Severity.REVIEW, "x", f"{rule} #{n}", NOW)
+    return Finding(rule, Severity.INFO, "x", f"{rule} #{n}", NOW)
 
 
-@pytest.fixture
-def conn(tmp_path: Path) -> sqlite3.Connection:
-    return open_db(tmp_path / "a.db")
+def e(
+    percent: str,
+    category: str = "sanctioned",
+    *,
+    hop: int = 1,
+    direction: str = "in",
+    confidence: str | None = None,
+) -> Exposure:
+    return Exposure(
+        direction,
+        hop,
+        f"T{category}{hop}{direction}",
+        category,
+        "x",
+        D0(1),
+        D0(percent),
+        (),
+        D0(confidence) if confidence else None,
+    )
 
 
-# AT-42: the §7.11 example with R-HEU-01 → 66, high; E 59.5, D 0, B 5, U 1.
-async def test_at42_worked_example(conn: sqlite3.Connection) -> None:
-    eng, store = engine(conn, Fake(example()))
-    setup_example(conn, store)
-    trace = await eng.run(detect(T))
-    assert hazard(trace) == D0("0.24")  # 1.0 × 0.20 + 0.5 × 0.10 × 0.8
-    ev = {**summary(trace), "complete": True}
-    s = compute(Verdict.REVIEW, [f("R-HEU-01"), f("R-TRC-01")], ev)
-    assert (s.score, s.band, s.lower_bound) == (66, "high", False)
-    assert (s.exposure, s.direct, s.behaviour, s.uncertainty) == (D0("59.5"), D0(0), D0(5), D0(1))
-    assert s.shown == "66 · high"
-    assert s.breakdown == "E 59.5 · D 0 · B 5 · U 1"
+def score(*exposures: Exposure, findings: tuple[str, ...] = ()) -> Score:
+    return compute(Verdict.REVIEW, [f(r) for r in findings], exposures, S)
 
 
-# AT-43: BLOCK → 100; INCOMPLETE with E = 34 → "≥ 34", band "medium+".
-def test_at43_block_and_incomplete() -> None:
-    block = compute(Verdict.BLOCK, [f("R-SAN-01")])
-    assert (block.score, block.band, block.shown) == (100, "severe", "100 · severe")
-    partial = {"hazard": "0.0418", "coverage": None, "complete": False}
-    s = compute(Verdict.INCOMPLETE, [f("R-SYS-01")], partial)
-    assert s.exposure == D0("34.0")
-    assert s.uncertainty == 0  # a partial trace adds no U (D-052)
-    assert (s.score, s.lower_bound, s.shown) == (34, True, "≥ 34 · medium+")
+# AT-62: X just below and above 30.5, 70.5 and 90.5 → the four levels' edges.
+@pytest.mark.parametrize(
+    ("percent", "x", "points", "expected"),
+    [
+        ("0.0453", "30.4", 30, "low"),
+        ("0.0454", "30.5", 31, "moderate"),
+        ("0.152", "70.4", 70, "moderate"),
+        ("0.1525", "70.5", 71, "high"),
+        ("0.2935", "90.4", 90, "high"),
+        ("0.294", "90.5", 91, "severe"),
+    ],
+)
+def test_at62_level_edges(percent: str, x: str, points: int, expected: str) -> None:
+    s = score(e(percent))
+    assert (s.exposure, s.score, s.level) == (D0(x), points, expected)
+
+
+def test_at62_block_and_incomplete() -> None:
+    block = compute(Verdict.BLOCK, [f("R-SAN-01")], [], S)
+    assert (block.score, block.level, block.shown) == (100, "severe", "100 · severe")
+    gap = compute(Verdict.INCOMPLETE, [f("R-SYS-01")], [e("0.05")], S)
+    assert (gap.score, gap.lower_bound, gap.shown) == (33, True, "≥ 33 · moderate+")
 
 
 @pytest.mark.parametrize(
-    ("score", "expected"),
+    ("points", "expected"),
     [
         (0, "low"),
-        (19, "low"),
-        (20, "medium"),
-        (49, "medium"),
-        (50, "high"),
-        (79, "high"),
-        (80, "severe"),
+        (30, "low"),
+        (31, "moderate"),
+        (70, "moderate"),
+        (71, "high"),
+        (90, "high"),
+        (91, "severe"),
         (100, "severe"),
     ],
 )
-def test_bands(score: int, expected: str) -> None:
-    assert band(score) == expected
+def test_levels(points: int, expected: str) -> None:
+    assert level(points) == expected
 
 
-def test_caps_and_99() -> None:
-    every = [f(r) for r in ("R-EXP-01", "R-EXP-02", "R-HEU-02", "R-HEU-05", "R-HEU-06")]
-    s = compute(Verdict.REVIEW, every, {"hazard": "1", "coverage": "0", "complete": True})
-    assert (s.direct, s.behaviour, s.exposure, s.uncertainty) == (D0(30), D0(30), D0(60), D0(10))
-    assert s.score == 99  # only BLOCK reaches 100
+# Methodology §11.3 "feel" table, one exposure each.
+@pytest.mark.parametrize(
+    ("exposure", "x", "expected"),
+    [
+        (e("0.01", "scam"), "5.4", "low"),
+        (e("0.02"), "14.8", "low"),
+        (e("0.05", "mixer"), "27.4", "low"),
+        (e("0.05"), "33.0", "moderate"),
+        (e("0.1"), "55.1", "moderate"),
+        (e("0.1", hop=2), "38.1", "moderate"),
+        (e("0.1", hop=3), "25.0", "low"),
+        (e("0.2"), "79.8", "high"),
+        (e("0.3"), "90.9", "severe"),
+    ],
+)
+def test_feel_table(exposure: Exposure, x: str, expected: str) -> None:
+    s = score(exposure)
+    assert (s.exposure, s.level) == (D0(x), expected)
+
+
+def test_directions_combine_and_clamp() -> None:
+    h = hazards(
+        [e("0.1"), e("0.2", "frozen", direction="out"), e("0.05", direction="out")], S.decay
+    )
+    assert h == {"in": D0("0.1"), "out": D0("0.23")}
+    s = score(e("0.1"), e("0.2", "frozen", direction="out"), e("0.05", direction="out"))
+    # H = 1 − 0.9 × 0.77 = 0.307 → X = 100 × (1 − e^(−2.456)) = 91.4
+    assert (s.exposure, s.score) == (D0("91.4"), 91)
+    assert hazards([e("0.8"), e("0.9", direction="in", hop=1, category="frozen")], S.decay) == {
+        "in": D0(1),
+        "out": D0(0),
+    }  # each direction at most 1
+
+
+def test_decay_off_and_inferred_confidence() -> None:
+    far = e("0.1", hop=3)
+    assert compute(Verdict.REVIEW, [], [far], ScoreSettings(decay=D0(0))).exposure == D0("55.1")
+    inferred = e("0.2", "suspicious_collector", confidence="0.5")
+    assert hazards([inferred], S.decay)["in"] == D0("0.05")  # 0.5 × 0.2 × 0.5
+
+
+def test_behaviour_on_the_headroom_and_capped() -> None:
+    s = score(e("0.05"), findings=("R-HEU-02", "R-HEU-01"))  # X 33.0, B 15
+    assert (s.exposure, s.behaviour) == (D0("33.0"), D0(15))
+    assert s.score == 43  # ⌊33 + 67 × 0.15 + 0.5⌋ = ⌊43.55⌋
+    alone = score(findings=("R-HEU-02", "R-HEU-03", "R-HEU-06", "R-FRZ-02"))
+    assert (alone.behaviour, alone.score, alone.level) == (D0(30), 30, "low")  # behaviour alone
+    assert score(findings=("R-HEU-05",)).behaviour == 0  # its counterparties are exposures now
+
+
+def test_only_block_reaches_100() -> None:
+    s = score(e("1"), e("1", direction="out"), findings=("R-HEU-06", "R-FRZ-02"))
+    assert s.score == 99
 
 
 def test_a_rule_counts_once() -> None:
-    s = compute(Verdict.REVIEW, [f("R-EXP-01", i) for i in range(10)] + [f("R-HEU-01")])
-    assert (s.direct, s.behaviour) == (D0(25), D0(5))
-    assert s.score == 30
+    s = compute(Verdict.REVIEW, [f("R-HEU-01", i) for i in range(5)], [], S)
+    assert (s.behaviour, s.score) == (D0(5), 5)
 
 
-def test_no_trace_no_exposure_or_uncertainty() -> None:
-    s = compute(Verdict.NO_HITS, [])
-    assert (s.score, s.band, s.hazard) == (0, "low", None)
-    assert s.exposure == s.uncertainty == 0
-    no_inflow = compute(Verdict.NO_HITS, [], {"hazard": "0", "coverage": None, "complete": True})
-    assert no_inflow.uncertainty == 0  # nothing to trace (D-052)
-    assert no_inflow.score == 0
+def test_unknown_services_add_nothing() -> None:
+    s = score()
+    assert (s.score, s.level, s.exposure) == (0, "low", D0(0))
 
 
-# D-052: components to 0.1 half up; the score from the stored components, half up.
-@pytest.mark.parametrize(
-    ("coverage", "u", "score"),
-    [("0.95", "0.5", 1), ("0.955", "0.5", 1), ("0.965", "0.4", 0), ("0.85", "1.5", 2)],
-)
-def test_rounding_half_up(coverage: str, u: str, score: int) -> None:
-    s = compute(Verdict.NO_HITS, [], {"hazard": "0", "coverage": coverage, "complete": True})
-    assert s.uncertainty == D0(u)
-    assert s.score == score
-    # The stored breakdown reproduces the score.
-    total = s.exposure + s.direct + s.behaviour + s.uncertainty
-    assert s.score == int((total + D0("0.5")) // 1)
-
-
-def _trace(*nodes: Node, layering: str = "0") -> Trace:
-    return Trace(
-        chain=detect(T).chain,
-        target=T,
-        direction="in",
-        as_of=NOW,
-        target_inflow=D0(100),
-        nodes=nodes,
-        edges=(),
-        partition={},
-        annotations={"layering": D0(layering)},
-        coverage=None,
-        paths=(),
-        budget=Budget(0, 0, 0, 0.0),
-    )
-
-
-# D-052: an inferred terminal counts at its own confidence (share-weighted); others at 1.
-def test_hazard_inferred_confidence_share_weighted() -> None:
-    t = _trace(
-        Node(
-            "a", 1, D0("0.3"), "suspicious_collector", True, T, 9, NodeClass("COLLECTOR", D0("0.6"))
-        ),
-        Node(
-            "b", 1, D0("0.1"), "suspicious_collector", True, T, 9, NodeClass("COLLECTOR", D0("1"))
-        ),
-        Node("c", 1, D0("0.2"), "service_unattributed", True, T, 8, NodeClass("HUB", D0("0.95"))),
-        Node("d", 1, D0("0.1"), "scam", False, T, 4),
-        Node("e", 1, D0("0.3"), "untraced:pruned", False, T, None),
-    )
-    # 0.5 × (0.3 × 0.6 + 0.1 × 1) + 0.1 × 0.2 × 0.95 + 0.7 × 0.1
-    assert hazard(t) == D0("0.5") * (D0("0.18") + D0("0.1")) + D0("0.019") + D0("0.07")
-
-
-def test_hazard_layering_and_clamp() -> None:
-    t = _trace(Node("a", 1, D0("1"), "sanctioned", False, T, 2), layering="0.6")
-    assert hazard(t) == 1  # 1.0 + 0.5 × 0.6, clamped to the range 0–1
-
-
-def test_json_round_trip() -> None:
-    s = compute(Verdict.INCOMPLETE, [f("R-HEU-06")], {"hazard": "0.1", "complete": False})
+def test_json_round_trip_and_stored_breakdown() -> None:
+    # H = 1 − 0.9 × 0.98 = 0.118 → X = 61.1; ⌊61.1 + 38.9 × 0.2 + 0.5⌋ = 69
+    s = compute(Verdict.INCOMPLETE, [f("R-HEU-06")], [e("0.1"), e("0.02", direction="out")], S)
     assert from_json(s.dumps()) == s
-    assert s.exposure == D0("51.9")  # 10% sanctioned ≈ 52 (methodology §9 table)
     assert s.dumps() == (
-        '{"band":"high","components":{"B":"20","D":"0","E":"51.9","U":"0"},"hazard":"0.1",'
-        '"lower_bound":true,"score":72,"score_version":1}'
+        '{"components":{"B":"20","X":"61.1"},"decay":"0.4","hazard":{"in":"0.1","out":"0.02"},'
+        '"k":"8","level":"moderate","lower_bound":true,"score":69,"score_version":2}'
     )
-    assert '"score_version":1' in s.dumps()
+    # The stored X and B reproduce the score.
+    total = s.exposure + (100 - s.exposure) * s.behaviour / 100 + D0("0.5")
+    assert s.score == int(total // 1)
+    assert s.breakdown == "exposure 61.1 · behaviour 20"
+
+
+V1 = (
+    '{"band":"high","components":{"B":"5","D":"0","E":"59.5","U":"1"},"hazard":"0.24",'
+    '"lower_bound":false,"score":66,"score_version":1}'
+)
+
+
+def test_v1_scores_read_back_as_stored() -> None:
+    s = from_json(V1)
+    assert isinstance(s, ScoreV1)
+    assert (s.score, s.band, s.level, s.version) == (66, "high", "high", 1)
+    assert s.shown == "66 · high"
+    assert s.breakdown == "E 59.5 · D 0 · B 5 · U 1"
+    assert s.to_json() == json.loads(V1)
+
+
+def test_shown_by_version() -> None:
+    assert shown(25, "REVIEW") == "25 · low"  # v2
+    assert shown(25, "REVIEW", 1) == "25 · medium"  # a v1 score keeps its v1 band
+    assert shown(25, "REVIEW", None) == "25 · medium"  # version not recorded: before P12
+    assert shown(None, "NO_HITS") == "-"
+    assert shown(40, "INCOMPLETE") == "≥ 40 · moderate+"

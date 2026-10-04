@@ -47,7 +47,8 @@ aml-checker-v1/
 │   │   ├── engine.py            screen(): run sources concurrently → rules → verdict → score
 │   │   │                        → audit append → registry upsert
 │   │   ├── audit.py             hash chain: append, verify, canonical JSON
-│   │   └── score.py             methodology §9
+│   │   ├── risk.py              exposures, risk types and weights, detail lines (methodology §11)
+│   │   └── score.py             score v2 and levels (methodology §11.3); v1 scores read back (§9)
 │   ├── net/
 │   │   ├── http.py              shared AsyncClient, timeouts, Retry-After policy
 │   │   └── limits.py            token bucket, budget pacer (reads provider budget headers)
@@ -61,7 +62,7 @@ aml-checker-v1/
 │   │   ├── sanctions.py         OFAC download, parse, snapshots, adapter (F3)
 │   │   ├── tron_freeze.py       Tether event index + isBlackListed adapter (F4)
 │   │   ├── bsc_freeze.py        always-skipped adapter with reason (F4.4)
-│   │   ├── exposure.py          1-hop walk adapter: R-EXP-01/02, R-HEU-01..05 (F5)
+│   │   ├── exposure.py          1-hop walk adapter: R-EXP-01/02, R-HEU-01..05, direct exposures (F5)
 │   │   └── heuristics.py        pure pattern functions (pass-through, busiest window)
 │   ├── intel/
 │   │   ├── categories.py        methodology §8 as code
@@ -69,6 +70,7 @@ aml-checker-v1/
 │   │   ├── labels_csv.py        labels.csv import (F5.3)
 │   │   ├── packs.py             licensed label packs (F7.4)
 │   │   ├── registry.py          counterparties upsert, query, rebuild (F7.3)
+│   │   ├── names.py             who an address is: exposure entities, address label (§11.6)
 │   │   └── lookalike.py         key + R-HEU-06 adapter (F7.5)
 │   ├── profile/
 │   │   ├── features.py          Profile + profile() pure (methodology §5)

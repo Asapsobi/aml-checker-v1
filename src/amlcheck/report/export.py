@@ -32,7 +32,8 @@ from reportlab.platypus import Paragraph, SimpleDocTemplate, Spacer, Table, Tabl
 
 from amlcheck.cases import decisions
 from amlcheck.core.audit import canonical_json, load
-from amlcheck.core.score import from_json, shown
+from amlcheck.core.score import from_json, shown_stored
+from amlcheck.intel.names import label_text
 from amlcheck.report.case_report import text as _pdf_text
 
 _FORMULA_START = ("=", "+", "-", "@", "\t", "\r")
@@ -44,7 +45,8 @@ CSV_COLUMNS = (
     "address",
     "verdict",
     "score",
-    "band",
+    "level",  # methodology §11.4 (D-071); a v1 record keeps its v1 band here
+    "who",  # the address's own label at check time (§11.6)
     "amount_usdt",
     "client",
     "note",
@@ -90,20 +92,29 @@ class Row:
     record_hash: str
     rules: tuple[str, ...]
     decisions: tuple[str, ...] = ()  # "approved by sobhan 2026-10-04", in chain order (F12.4)
+    label_json: str | None = None  # P12, §11.6
+
+    @property
+    def who(self) -> str:
+        return label_text(json.loads(self.label_json) if self.label_json else None) or ""
 
     @property
     def score(self) -> tuple[int | None, str]:
         if not self.score_json:
             return None, ""
         s = from_json(self.score_json)
-        return s.score, s.band + ("+" if s.lower_bound else "")
+        return s.score, s.level + ("+" if s.lower_bound else "")
+
+    @property
+    def score_shown(self) -> str:
+        return shown_stored(self.score_json)
 
 
 def rows(conn: sqlite3.Connection, f: Filter) -> list[Row]:
     """Matching checks, oldest first (the chain's order)."""
     found = conn.execute(
         "SELECT seq, check_id, created_at, chain, address_norm, verdict, score_json, amount, "
-        "client, operator_note, trace_id, record_hash FROM checks "
+        "client, operator_note, trace_id, record_hash, label_json FROM checks "
         "WHERE (?1 IS NULL OR (chain = ?1 AND address_norm = ?2)) "
         "AND (?3 IS NULL OR verdict = ?3) "
         "AND (?4 IS NULL OR client = ?4 COLLATE NOCASE) "
@@ -140,6 +151,7 @@ def rows(conn: sqlite3.Connection, f: Filter) -> list[Row]:
             record_hash=r[11],
             rules=tuple(sorted(rules.get(r[1], ()))),
             decisions=tuple(decided.get(r[1], ())),
+            label_json=r[12],
         )
         for r in found
     ]
@@ -162,6 +174,7 @@ def to_csv(found: Sequence[Row]) -> str:
                 r.verdict,
                 score,
                 band,
+                r.who,
                 r.amount,
                 r.client,
                 r.note,
@@ -236,13 +249,12 @@ def to_pdf(found: Sequence[Row], what: Filter) -> bytes:
     ]
     table: list[list[Any]] = [head]
     for r in found:
-        score, _ = r.score
         table.append(
             [
                 r.seq,
                 r.created_at[:19],
                 r.verdict,
-                shown(score, r.verdict) if score is not None else "-",
+                r.score_shown,
                 r.chain,
                 Paragraph(_pdf_text(r.address), _MONO),
                 Paragraph(_pdf_text(r.client or ""), _CELL),

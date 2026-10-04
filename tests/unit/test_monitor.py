@@ -77,7 +77,7 @@ async def test_at52_new_sender_screened(conn: sqlite3.Connection) -> None:
             tr(hours(30), S3, W, 70),  # older than the first look-back (24 h)
         ],
     )
-    w.rules[S2] = ("R-HEU-02",)
+    w.rules[S2] = ("R-HEU-06",)
     r = await w.run()
     assert [s.address for s in r.senders] == [S1, S2, W2]  # by first transfer
     assert [x[0] for x in w.calls] == [S1, S2]

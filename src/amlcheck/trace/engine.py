@@ -177,6 +177,11 @@ class TraceEngine:
         self._monotonic = monotonic
         self._queries = queries
 
+    @property
+    def conn(self) -> sqlite3.Connection:
+        """The database it reads local facts from; the trace source names exposures with it."""
+        return self._conn
+
     async def run(
         self,
         target: Address,
@@ -437,6 +442,7 @@ class TraceEngine:
                 test,
                 cls,
                 path=item.path,
+                bottleneck=item.bottleneck,
             )
         )
         if category not in UNTRACED:

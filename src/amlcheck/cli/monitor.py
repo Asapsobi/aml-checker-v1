@@ -16,7 +16,7 @@ from typing import Annotated, Any
 import httpx
 import typer
 
-from amlcheck.chain.base import canonical_amount
+from amlcheck.chain.base import canonical_amount, usdt
 from amlcheck.chain.cache import TransferCache
 from amlcheck.cli import check as check_cli
 from amlcheck.cli import runtime
@@ -139,7 +139,7 @@ def _print(runs: list[inbound.WalletRun]) -> None:
             score = f" · {c.score.shown}" if c.score else ""
             echo(
                 f"  {mark} {c.verdict.value}{score}  {s.address}  "
-                f"(largest {canonical_amount(s.largest)} USDT, {s.count} transfer(s))"
+                f"(largest {usdt(s.largest)} USDT, {s.count} transfer(s))"
             )
         if r.capped:
             echo("  capped at [monitor] max_senders_per_run; the next run continues from here")

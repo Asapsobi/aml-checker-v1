@@ -6,7 +6,7 @@
 <h1 class="mono">{{ addr(a.chain.value, a.norm) }}</h1>
 <div class="card">
   {% if cp %}
-  <p>Last verdict {{ verdict(cp.last_verdict) }} · score {{ shown(cp.last_score, cp.last_verdict) }} · checked {{ cp.check_count }} time(s), first {{ cp.first_screened_at[:10] }}, last {{ cp.last_screened_at[:10] }} · clients {{ cp.clients | join(", ") or "-" }}</p>
+  <p>Last verdict {{ verdict(cp.last_verdict) }} · score {{ shown(cp.last_score, cp.last_verdict, cp.last_score_version) }} · checked {{ cp.check_count }} time(s), first {{ cp.first_screened_at[:10] }}, last {{ cp.last_screened_at[:10] }} · clients {{ cp.clients | join(", ") or "-" }}</p>
   {% else %}
   <p class="muted">Never checked.</p>
   {% endif %}

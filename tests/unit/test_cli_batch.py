@@ -85,7 +85,7 @@ def test_at45_one_bad_row_screens_nothing(home: Path, monkeypatch: pytest.Monkey
 # AT-45, fixed file: every row screened in order, one at a time, results streamed as CSV.
 def test_at45_fixed_file_all_screened(home: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     calls = Calls()
-    use(monkeypatch, calls, {bsc(3): ("R-HEU-01",), bsc(7): ("R-SAN-01",)})
+    use(monkeypatch, calls, {bsc(3): ("R-HEU-06",), bsc(7): ("R-SAN-01",)})
     rows = [f"{bsc(i)},bsc,,acme," for i in range(100)]
     f = write(home.parent / "in.csv", rows)
     out = home.parent / "out.csv"
@@ -100,16 +100,16 @@ def test_at45_fixed_file_all_screened(home: Path, monkeypatch: pytest.MonkeyPatc
         "chain",
         "verdict",
         "score",
-        "band",
+        "level",
         "rules",
         "check_id",
         "record_hash",
     ]
     assert [g["row"] for g in got[:3]] == ["2", "3", "4"]
-    assert (got[3]["verdict"], got[3]["rules"], got[3]["score"], got[3]["band"]) == (
+    assert (got[3]["verdict"], got[3]["rules"], got[3]["score"], got[3]["level"]) == (
         "REVIEW",
-        "R-HEU-01",
-        "5",
+        "R-HEU-06",
+        "20",
         "low",
     )
     assert (got[7]["verdict"], got[7]["score"]) == ("BLOCK", "100")

@@ -13,10 +13,10 @@
 from __future__ import annotations
 
 import io
+import json
 import sqlite3
 from collections.abc import Sequence
 from dataclasses import dataclass
-from decimal import Decimal
 from importlib.metadata import version
 from typing import Any
 from xml.sax.saxutils import escape
@@ -38,6 +38,8 @@ from reportlab.platypus import (
 )
 
 from amlcheck.cases import decisions as decisions_chain
+from amlcheck.chain.base import usdt
+from amlcheck.core import risk
 from amlcheck.core import score as scoring
 from amlcheck.core.audit import AuditRecord, load, record_hash
 from amlcheck.core.models import Address, Verdict
@@ -45,6 +47,7 @@ from amlcheck.core.verdict import ACTION
 from amlcheck.intel import registry
 from amlcheck.intel.lookalike import LABEL as LOOKALIKE_LABEL
 from amlcheck.intel.lookalike import SOURCE as LOOKALIKE
+from amlcheck.intel.names import counterparty_text, label_text
 from amlcheck.intel.store import IntelStore
 from amlcheck.profile.adapter import LABEL as CLASSIFIER_LABEL
 from amlcheck.profile.adapter import SOURCE as CLASSIFIER
@@ -59,7 +62,7 @@ from amlcheck.trace import graph
 from amlcheck.trace.adapter import LABEL as TRACE_LABEL
 from amlcheck.trace.adapter import SOURCE as TRACE
 from amlcheck.trace.jobs import read_job
-from amlcheck.trace.model import Trace, dec, pct
+from amlcheck.trace.model import Trace, pct
 
 LABELS = {
     SANCTIONS: SANCTIONS_LABEL,
@@ -264,11 +267,15 @@ def _header(d: CaseData) -> list[Flowable]:
             ParagraphStyle("verdict", parent=BODY, fontSize=11, leading=18),
         ),
     ]
+    who = label_text(json.loads(r.label_json) if r.label_json else None)
+    if who:
+        out.append(_p(f"Who: <b>{text(who)}</b>", BODY))
     if r.score_json:
         s = scoring.from_json(r.score_json)
         bound = " (lower bound: a required source is missing)" if s.lower_bound else ""
-        h = s.hazard
-        hazard = f" · hazard H {dec(h.quantize(Decimal('0.0001')))}" if h is not None else ""
+        hazard = ""
+        if isinstance(s, scoring.Score):
+            hazard = f" · H in {pct(s.hazard_in)}, out {pct(s.hazard_out)}"
         out.append(
             _p(
                 f"<b>Score {text(s.shown)}</b>{text(bound)} · {text(s.breakdown)}{hazard} "
@@ -278,7 +285,43 @@ def _header(d: CaseData) -> list[Flowable]:
         )
     else:
         out.append(_p("No score: this check was recorded before scores existed (P7).", SMALL))
+    out += [_p(text(line), SMALL) for line in risk.detail_list(_exposures(d))]
     return out
+
+
+def _exposures(d: CaseData) -> list[risk.Exposure]:
+    return risk.from_evidence(s.evidence for s in d.record.sources)
+
+
+def _risk(d: CaseData) -> list[Flowable]:
+    """The exposures behind the score (methodology §11.1), heaviest first."""
+    found = _exposures(d)
+    if not found:
+        return []
+    s = scoring.from_json(d.record.score_json) if d.record.score_json else None
+    decay = scoring.decay_of(s)
+    rows: list[list[Any]] = [["Dir", "Hop", "Risk type", "Share", "USDT", "Entity · address"]]
+    for e in risk.ranked(found, decay)[:30]:
+        inferred = f" (inferred, {e.confidence})" if e.confidence is not None else ""
+        rows.append(
+            [
+                e.direction,
+                e.hop,
+                _p(text(e.risk_type), CELL),
+                pct(e.percent),
+                usdt(e.volume),
+                _p(text(f"{e.entity}{inferred} · {e.address}"), CELL_MONO),
+            ]
+        )
+    return [
+        _p("Exposures", H2),
+        _p(
+            "Direct amounts are exact; an indirect amount is its path volume, the smallest amount "
+            "on the path, which every hop moved (D-078).",
+            SMALL,
+        ),
+        _table(rows, [10 * mm, 10 * mm, 28 * mm, 16 * mm, 24 * mm, TEXT_W - 88 * mm]),
+    ]
 
 
 def _findings(d: CaseData) -> list[Flowable]:
@@ -317,7 +360,7 @@ def _exposure(d: CaseData) -> list[Flowable]:
         _p(
             text(
                 f"{ev['transfers']} transfer(s) since {str(ev['since'])[:10]} · received "
-                f"{ev['received_usdt']} · sent {ev['sent_usdt']} USDT · first activity "
+                f"{usdt(ev['received_usdt'])} · sent {usdt(ev['sent_usdt'])} USDT · first activity "
                 f"{ev.get('first_activity') or 'none found'}"
             )
         ),
@@ -328,15 +371,15 @@ def _exposure(d: CaseData) -> list[Flowable]:
         )
     shown = ev.get("counterparties") or []
     if shown:
-        rows: list[list[Any]] = [["Counterparty", "Received", "Sent", "Txs", "Flags"]]
+        rows: list[list[Any]] = [["Counterparty", "Received", "Sent", "Txs", "Known as"]]
         for c in shown:
             rows.append(
                 [
                     _p(text(c["address"]), CELL_MONO),
-                    c["received_usdt"],
-                    c["sent_usdt"],
+                    usdt(c["received_usdt"]),
+                    usdt(c["sent_usdt"]),
                     c["transfers"],
-                    _p(text(", ".join(c["flags"]) or "-"), CELL),
+                    _p(text(counterparty_text(c)), CELL),
                 ]
             )
         out += [
@@ -362,7 +405,7 @@ def _trace(d: CaseData) -> list[Flowable]:
         _p("Source of funds", H2),
         _p(
             text(
-                f"{dec(t.target_inflow)} USDT received in the window · coverage {coverage} · "
+                f"{usdt(t.target_inflow)} USDT received in the window · coverage {coverage} · "
                 f"{t.budget.nodes_read} address(es) read · trace {d.record.trace_id}{state}"
             )
         ),
@@ -370,8 +413,7 @@ def _trace(d: CaseData) -> list[Flowable]:
     ]
     rows: list[list[Any]] = [["Category", "Share", "~ USDT"]]
     for category, share in sorted(t.partition.items(), key=lambda kv: (-kv[1], kv[0])):
-        usdt = (share * t.target_inflow).quantize(Decimal("0.01"))
-        rows.append([category, pct(share), dec(usdt)])
+        rows.append([category, pct(share), usdt(share * t.target_inflow)])
     layering = t.annotations.get("layering")
     if layering:
         rows.append(["layering (annotation)", pct(layering), ""])
@@ -382,8 +424,8 @@ def _trace(d: CaseData) -> list[Flowable]:
             prows.append(
                 [
                     _p(text(p.to_category), CELL),
-                    dec(p.bottleneck.quantize(Decimal("0.01"))),
-                    dec(p.estimated.quantize(Decimal("0.01"))),
+                    usdt(p.bottleneck),
+                    usdt(p.estimated),
                     _p(text(" <- ".join(graph.short(a) for a in p.addresses)), CELL_MONO),
                 ]
             )
@@ -576,6 +618,7 @@ def render(d: CaseData) -> bytes:
     )
     story = (
         _header(d)
+        + _risk(d)
         + _findings(d)
         + _sources(d)
         + _exposure(d)

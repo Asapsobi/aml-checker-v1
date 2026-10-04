@@ -16,6 +16,7 @@
 | `0007_ops.sql` | P8 | `watchlist` |
 | `0008_cases.sql` | P9 | `cases`, `decisions`, `inference_feedback` |
 | `0009_monitor_api.sql` | P10 | `own_wallets`, `monitor_state`, `api_requests` |
+| `0010_risk_v2.sql` | P12 | `counterparties.last_score_version`, `checks.label_json` |
 
 `storage/db.py` keeps the applied version in `PRAGMA user_version` and applies missing files in order,
 each in one transaction.
@@ -393,6 +394,23 @@ CREATE TABLE api_requests (
     created_at       TEXT NOT NULL
 );
 ```
+
+---
+
+## 0010_risk_v2.sql (P12)
+
+```sql
+-- Which score version `last_score` is (methodology §11, D-071): lists show a v1 score with its v1
+-- band and a v2 score with its level. NULL = before this migration, a v1 score; `cp rebuild` fills it.
+ALTER TABLE counterparties ADD COLUMN last_score_version INTEGER;
+
+-- The checked address's own label at check time (methodology §11.6), JSON. Hashed in the audit
+-- record only when set, so records from before P12 keep verifying.
+ALTER TABLE checks ADD COLUMN label_json TEXT;
+```
+
+Exposures need no column: they are in the sources' evidence. The v2 score is in `score_json` with
+`"score_version": 2`.
 
 ---
 

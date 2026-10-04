@@ -122,7 +122,7 @@ def test_security_headers_and_no_scripts(web: TestClient) -> None:
 
 
 def test_check_flow(web: TestClient, world: World, home: Path) -> None:
-    world.rules[TRON] = ("R-HEU-02",)
+    world.rules[TRON] = ("R-HEU-06",)
     r = web.post(
         "/check", data={"address": TRON, "client": "acme", "note": "first", "token": TOKEN}
     )
@@ -131,8 +131,8 @@ def test_check_flow(web: TestClient, world: World, home: Path) -> None:
     assert detail.status_code == 200
     page = detail.text
     assert "REVIEW" in page
-    assert "Score <b>10 · low</b>" in page
-    assert "R-HEU-02" in page
+    assert "Score <b>20 · low</b>" in page
+    assert "R-HEU-06" in page
     assert f"https://tronscan.org/#/address/{TRON}" in page
     assert 'rel="noopener noreferrer"' in page
     assert "matches its contents" in page
@@ -164,7 +164,7 @@ def test_amount_turns_the_trace_on(web: TestClient, world: World) -> None:
 
 
 def test_history_and_counterparties(web: TestClient, world: World) -> None:
-    world.rules[TRON] = ("R-HEU-02",)
+    world.rules[TRON] = ("R-HEU-06",)
     web.post("/check", data={"address": TRON, "client": "<script>x</script>", "token": TOKEN})
     world.rules[TRON] = ()
     web.post("/check", data={"address": T, "token": TOKEN})
@@ -214,3 +214,36 @@ def test_running_trace_page_refreshes(web: TestClient, home: Path) -> None:
     assert '<meta http-equiv="refresh" content="2">' in page.text
     assert "Queued" in page.text
     assert web.get("/traces/nope").status_code == 404
+
+
+# P12: the check page says who the address is, the risk lines and the exposures behind the score.
+async def test_check_page_shows_exposures(web: TestClient, home: Path) -> None:
+    from amlcheck.core.address import detect
+    from amlcheck.core.clock import fixed, to_db
+    from amlcheck.core.engine import screen
+    from tests.unit.test_exposure import ME, source, tr
+    from tests.unit.test_exposure import NOW as E_NOW
+
+    rt = runtime.load()
+    conn = runtime.open_database(rt)
+    conn.execute(
+        "INSERT INTO list_snapshots (id, source, fetched_at, published_at, sha256, entry_count, "
+        "address_count) VALUES (1, 'ofac_sdn', ?, '2026-09-30', 'h', 1, 1)",
+        (to_db(E_NOW),),
+    )
+    conn.execute(
+        "INSERT INTO sanctioned_addresses VALUES (1, 'TSANCTIONED', 'USDT', '42', 'Bad Co', 'X', 1)"
+    )
+    result = await screen(
+        detect(ME),
+        [source(conn, [tr(5, "TSANCTIONED", "600"), tr(4, "TOK", "9400")])],
+        conn=conn,
+        settings=rt.settings,
+        now=fixed(E_NOW),
+    )
+    conn.close()
+    page = web.get(f"/checks/{result.check_id}").text
+    assert "Sanctioned entity: direct received 6.0%" in page
+    assert "<h2>Exposures</h2>" in page
+    assert "OFAC SDN: Bad Co" in page
+    assert "sanctioned_entity" in page

@@ -38,7 +38,9 @@ def test_defaults_match_methodology() -> None:
     assert s.trace.max_hops == 3
     assert s.trace.max_nodes == 40
     assert s.trace.coverage_share == Decimal("0.8")
-    assert s.score.review_at == 0
+    assert s.score.review_at == 31  # D-072
+    assert s.score.decay == Decimal("0.4")
+    assert s.score.k == 8
     assert s.freshness.tron_index_max_lag_minutes == 60
 
 

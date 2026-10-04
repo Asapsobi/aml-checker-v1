@@ -49,7 +49,7 @@ def opened(conn: sqlite3.Connection, address: str) -> cases.Case:
 
 
 async def test_open_rules(conn: sqlite3.Connection) -> None:
-    review = await checked(conn, X, "R-HEU-02")
+    review = await checked(conn, X, "R-EXP-01")
     await checked(conn, Y)  # NO_HITS
     with pytest.raises(CaseError, match="set \\[operator\\] name"):
         cases.open_case(conn, detect(X), by="", now=NOW)
@@ -75,7 +75,7 @@ async def test_open_rules(conn: sqlite3.Connection) -> None:
 
 
 async def test_decide_lifecycle(conn: sqlite3.Connection) -> None:
-    await checked(conn, X, "R-HEU-02")
+    await checked(conn, X, "R-EXP-01")
     case = opened(conn, X)
 
     def decide(kind: str, note: str = "looked at the counterparties", by: str = "sobhan") -> None:
@@ -108,7 +108,7 @@ async def test_decide_lifecycle(conn: sqlite3.Connection) -> None:
 
 # AT-49: tamper one decisions row → the decision chain reports the break; the check chain is intact.
 async def test_at49_tampered_decision(conn: sqlite3.Connection) -> None:
-    await checked(conn, X, "R-HEU-02")
+    await checked(conn, X, "R-EXP-01")
     case = opened(conn, X)
     for kind in ("escalated", "approved"):
         cases.decide(conn, case, kind, f"{kind} note", by="sobhan", now=NOW, tool_version="0.9.0")
@@ -121,7 +121,7 @@ async def test_at49_tampered_decision(conn: sqlite3.Connection) -> None:
 
 
 async def test_decision_tied_to_its_check_record(conn: sqlite3.Connection) -> None:
-    await checked(conn, X, "R-HEU-02")
+    await checked(conn, X, "R-EXP-01")
     case = opened(conn, X)
     cases.decide(conn, case, "approved", "ok", by="sobhan", now=NOW, tool_version="0.9.0")
     conn.execute(
@@ -144,7 +144,7 @@ async def test_at50_rejected_type_suppressed_until_version_changes(
 ) -> None:
     classify_x_as_collector(conn)
     assert "COLLECTOR" in cases.latest_types(conn, Chain.BSC, X)
-    await checked(conn, X, "R-HEU-07")
+    await checked(conn, X, "R-HEU-07", "R-EXP-01")
     case = opened(conn, X)
     store = IntelStore(conn, clock=fixed(NOW))
     with pytest.raises(CaseError, match="not classified DEPOSIT"):
@@ -162,7 +162,7 @@ async def test_at50_rejected_type_suppressed_until_version_changes(
 
 async def test_confirm_collector_labels_with_a_chosen_category(conn: sqlite3.Connection) -> None:
     classify_x_as_collector(conn)
-    await checked(conn, X, "R-HEU-07")
+    await checked(conn, X, "R-HEU-07", "R-EXP-01")
     case = opened(conn, X)
     store = IntelStore(conn, clock=fixed(NOW))
     with pytest.raises(CaseError, match="give --category"):
@@ -201,7 +201,7 @@ async def test_at51_confirmed_deposit_resolves_locally(conn: sqlite3.Connection)
     node = next(n for n in before.nodes if n.address == dep)
     assert (node.terminal, node.test) == ("service_unattributed", 5)  # a guess from its type
 
-    await checked(conn, dep, "R-HEU-02")
+    await checked(conn, dep, "R-EXP-01")
     case = opened(conn, dep)
     cases.confirm(
         conn,
@@ -238,7 +238,7 @@ async def test_reject_deposit_unlinks_the_inferred_membership(conn: sqlite3.Conn
     )
     entity = store.create_entity(Chain.BSC, "hub-x")
     store.link(Chain.BSC, dep, entity, "deposit", {})
-    await checked(conn, dep, "R-HEU-02")
+    await checked(conn, dep, "R-EXP-01")
     case = opened(conn, dep)
     cases.reject(conn, store, case, "DEPOSIT", by="sobhan", now=NOW)
     assert store.membership(Chain.BSC, dep) is None
@@ -250,7 +250,7 @@ async def test_confirm_hub_names_its_entity(conn: sqlite3.Connection) -> None:
     p = collector(address=X, distinct_senders=600, distinct_recipients=10)
     clf.save(conn, Chain.BSC, p, clf.classify(p, ClassifyContext(), S, NOW), S, NOW)
     assert "HUB" in cases.latest_types(conn, Chain.BSC, X)
-    await checked(conn, X, "R-HEU-02")
+    await checked(conn, X, "R-EXP-01")
     case = opened(conn, X)
     with pytest.raises(CaseError, match="give --name and --kind"):
         cases.confirm(conn, store, case, "HUB", by="sobhan", now=NOW)

@@ -162,3 +162,43 @@
 | T-11.03 | Live golden run; tune config defaults; decisions recorded | M | T-11.02 | AT-58 |
 | T-11.04 | Budget report (checks, traces, cache hit rate) | S | T-11.03 | AT-59 |
 | T-11.05 | Operator guide; JSON contract declared stable; README complete | M | T-11.04 | Owner sign-off |
+
+## P12 · Risk policy v2
+
+| ID | Ticket | Size | Needs | Done when |
+|---|---|---|---|---|
+| T-12.01 | Methodology §11, decisions D-070…D-077, roadmap, AT-60…AT-70, Q-37 | S | P11 | Reviewed |
+| T-12.02 | `core/risk.py`: exposure model, risk types and weights; direct exposures both ways in the exposure source's evidence | M | T-12.01 | AT-60 |
+| T-12.03 | Indirect exposures from the trace, with hop decay | M | T-12.02 | AT-61 |
+| T-12.04 | Score v2 and levels; `INFO` severity; v2 verdict defaults (R-SCR-01 at 31) | L | T-12.03 | AT-62, AT-63 |
+| T-12.05 | The checked address's own label | S | T-12.02 | AT-65 |
+| T-12.06 | v2 JSON contract and `/v2` API (`/v1` → 410); CLI, web, PDF and exports | L | T-12.04 | AT-64 |
+| T-12.07 | Amounts shown to 2 decimals; the counterparty table shows risk types | S | T-12.06 | AT-66 |
+| T-12.08 | Golden set and e2e on v2; live runs; `2.0.0a1` | M | T-12.07 | Acceptance results |
+
+## P13 · Two-way deep exposure
+
+| ID | Ticket | Size | Needs | Done when |
+|---|---|---|---|---|
+| T-13.01 | Best-first trace to 5 hops with decay-aware pruning | L | P12 | AT-67 |
+| T-13.02 | Traced checks run both directions | M | T-13.01 | AT-67 |
+| T-13.03 | All history up to a cap; the 180-day required window | M | P12 | AT-68 |
+| T-13.04 | Live budget run; methodology and docs | S | T-13.03 | Budget report |
+
+## P14 · Intelligence v2
+
+| ID | Ticket | Size | Needs | Done when |
+|---|---|---|---|---|
+| T-14.01 | Verify UK, EU and NBCTF lists (format, licence); add as list sources | L | P13 | AT-69 |
+| T-14.02 | Official bridge, mixer and exchange addresses, each with its source | M | P13 | Verification log |
+| T-14.03 | Explorer name tags, only if the terms allow (else recorded and dropped) | M | P13 | Decision recorded |
+| T-14.04 | Derived "suspected malicious" addresses from our traces | M | P13 | AT-69 |
+
+## P15 · Benchmark & 2.0
+
+| ID | Ticket | Size | Needs | Done when |
+|---|---|---|---|---|
+| T-15.01 | Benchmark set from the owner's wallets (Q-37); agreement report | M | P14 | AT-70 |
+| T-15.02 | Tune `k`, `decay` and weights; decisions recorded | M | T-15.01 | AT-70 |
+| T-15.03 | Operator guide v2; README; release `2.0.0` | S | T-15.02 | Owner sign-off |
+

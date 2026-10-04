@@ -348,3 +348,31 @@ note: a very busy collector, like a very busy deposit (P5), is primary HUB with 
 
 Sign-off: the owner chose to release v1.0.0 with the golden set partly measured (D-069); the remaining
 measurements follow in a v1.0.x (Q-36).
+
+## P12 · Risk policy v2
+
+| ID | Test | Result |
+|---|---|---|
+| AT-60 | `test_risk.py::test_at60_direct_exposures_both_ways` | Passed |
+| AT-61 | `test_risk.py::test_at61_indirect_exposures_with_decay`, `::test_path_volume_capped_per_first_hop` (D-078) | Passed |
+| AT-62 | `test_score.py::test_at62_level_edges`, `::test_at62_block_and_incomplete` | Passed |
+| AT-63 | `test_score_check.py::test_at63_verdict_defaults` | Passed |
+| AT-64 | `test_contract.py::test_check_json_fields`, `::test_api_routes_and_shapes` (410), `::test_v1_record_still_renders` | Passed |
+| AT-65 | `test_label.py::test_at65_labels_in_order` | Passed |
+| AT-66 | `test_amounts.py::test_at66_two_decimals_for_people_exact_in_json` | Passed |
+
+**Live, v1.0.0 against v2** (2026-10-04, the wallets the owner checked; scratch data folder):
+
+| Wallet | v1.0.0 | v2 (P12) | Why it changed |
+|---|---|---|---|
+| TRON `TA3941uF…X86mz` (OFAC) | BLOCK · 100 · severe; "PERSONAL (0.5)" | BLOCK · 100 · severe; **Who: OFAC SDN: CHEIL CREDIT BANK** | The address's own label (§11.6) |
+| BSC `0x0c1e52…ee1576` (new, pass-through) | REVIEW · 15 · low | NO_HITS · 15 · low; Who: PASS_THROUGH (inferred, 1.0) | Behaviour alone is INFO and stays low (D-072) |
+| TRON `TVvWhZyL…LeSsWP`, 20,000 USDT | REVIEW · 38 · medium, mostly from unknown services (E 30.8) | REVIEW · **50 · moderate**: *Sanctioned entity: indirect received 16.9%*, XINBI GUARANTEE (OFAC SDN) at hops 2 and 3, 34,733 and 20,439 USDT | Unknown services are no risk; indirect exposure is the path volume (D-071, D-078) |
+
+The first v2 run of the last wallet used the proportional estimate and gave 4 · low (0.7%): that is
+what D-078 changed. Amounts now read `78,951.06`, not `78951.063947843887500723`.
+
+Live end-to-end (`scripts/e2e.py`, 2.0.0a1, fresh data folder): **16 / 16 passed in 151 s**: the
+OFAC check BLOCKs with its label, the traced check is REVIEW · 50 · moderate with 2 indirect
+exposures, the API (now `/v2`) and the web UI pass their security checks, and both hash chains
+verify.
