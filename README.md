@@ -83,6 +83,7 @@ Development checks: `uv run pytest -q`, `uv run ruff check .`, `uv run ruff form
 | 08 | [Backlog](docs/08-backlog.md) | Builder | Ticket-sized work per phase |
 | 09 | [Decisions](docs/09-decisions.md) | Owner | ADR log, seeded with the design's decisions |
 | 10 | [Open questions](docs/10-open-questions.md) | Owner | What the owner needs to answer, with proposed answers |
+| — | [Operator guide](docs/operator-guide.md) | Operator | The daily rhythm, reading a result, findings, cases, intelligence, troubleshooting |
 | — | [Scheduling](docs/scheduling.md) | Operator | Daily `sync` and `watch run`, `monitor run` every 10 minutes, with launchd, cron or a systemd timer |
 | — | [API](docs/api.md) | Integrator | The local API: auth, idempotency, endpoints, errors, the corridor mock |
 | — | [Server](docs/server.md) | Operator | Running the API and the timers under systemd on the corridor server |

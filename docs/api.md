@@ -3,6 +3,13 @@
 > For the corridor and scripts on the same machine. P10 (T-10.03–T-10.06); requirements PRD F14;
 > decisions D-065. Internal use only (D-023).
 
+## The v1 contract (D-068)
+
+From 1.0, for all of v1: the check JSON (`check --json`, `investigate --json`, `POST /v1/check`,
+`GET /v1/checks/{id}`) and the five endpoints below keep their fields and meanings. Fields may be
+**added**; none is removed, renamed or given a new meaning. A breaking change would be a `/v2`. A test
+pins the field names (`tests/unit/test_contract.py`).
+
 ## Start it
 
 ```bash
