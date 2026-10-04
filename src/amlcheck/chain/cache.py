@@ -16,10 +16,15 @@ A read of `[S, U]` with a limit:
 3. answers from the database: the newest `limit` non-zero transfers in `[S, U]`, `complete` only if
    nothing was left out (never a silently partial history, PRD F2.4).
 With `until=None` a cached tail younger than `[cache] target_ttl_seconds` counts as current (D-028).
+
+Two reads of one address on one connection run one after the other (P13): a check's exposure source
+and its trace both read the target at once, and the second then finds the first's answer stored
+instead of asking the provider again.
 """
 
 from __future__ import annotations
 
+import asyncio
 import sqlite3
 from collections.abc import Callable, Mapping
 from dataclasses import dataclass
@@ -81,6 +86,11 @@ class _Gap:
     after_cache: bool  # the coverage right before this gap ends at `start`
 
 
+#: One lock per (event loop, connection, chain, address) with how many readers hold or wait for
+#: it; dropped when the last one leaves, so a long-running server doesn't keep them.
+_LOCKS: dict[tuple[int, int, str, str], tuple[asyncio.Lock, list[int]]] = {}
+
+
 class TransferCache:
     def __init__(
         self,
@@ -106,6 +116,26 @@ class TransferCache:
     ) -> History:
         if limit <= 0:
             raise ValueError("limit must be positive")
+        addr = detect(address)
+        key = (id(asyncio.get_running_loop()), id(self._conn), addr.chain.value, addr.norm)
+        lock, users = _LOCKS.setdefault(key, (asyncio.Lock(), [0]))
+        users[0] += 1
+        try:
+            async with lock:
+                return await self._history(address, since, until, limit, first_activity)
+        finally:
+            users[0] -= 1
+            if users[0] == 0:
+                del _LOCKS[key]
+
+    async def _history(
+        self,
+        address: str,
+        since: datetime,
+        until: datetime | None,
+        limit: int,
+        first_activity: bool,
+    ) -> History:
         addr = detect(address)
         chain, norm = addr.chain, addr.norm
         source = self._sources[chain]

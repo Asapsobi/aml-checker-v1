@@ -22,8 +22,11 @@ max_pacer_wait_seconds = 65.0
 
 # Methodology §3.1, §3.4.
 [exposure]
+# `lookback_days` is the required window; older history is read too (methodology §12.1, D-079):
+# up to `max_transfers` in all, the older part within `history_extension_seconds`.
 lookback_days = 180
-max_transfers = 5000
+max_transfers = 20000
+history_extension_seconds = 45.0
 flagged_inflow_share = 0.05
 max_findings = 10
 

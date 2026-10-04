@@ -86,10 +86,12 @@ class Rules(_Section):
 
 
 class Exposure(_Section):
-    """Methodology §3.1, §3.4."""
+    """Methodology §3.1, §3.4, §12.1: `lookback_days` is the required window; history before it is
+    read too, within `max_transfers` and `history_extension_seconds` (D-079)."""
 
     lookback_days: PosInt = 180
-    max_transfers: PosInt = 5000
+    max_transfers: PosInt = 20000
+    history_extension_seconds: PosFloat = 45.0
     flagged_inflow_share: Share = Decimal("0.05")
     max_findings: PosInt = 10
 

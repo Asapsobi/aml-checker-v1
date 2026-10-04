@@ -2,6 +2,7 @@ import sqlite3
 from datetime import UTC, datetime, timedelta
 from decimal import Decimal
 from pathlib import Path
+from typing import Any
 
 import pytest
 
@@ -56,14 +57,20 @@ def conn(tmp_path: Path) -> sqlite3.Connection:
     return c
 
 
-def source(conn: sqlite3.Connection, transfers: list[Transfer], **heu: object) -> ExposureSource:
+def source(
+    conn: sqlite3.Connection,
+    transfers: list[Transfer],
+    *,
+    exposure: Exposure | None = None,
+    **heu: object,
+) -> ExposureSource:
     src = FakeSource(Clock(NOW), transfers, first=NOW - timedelta(days=400), chain=Chain.TRON)
     cache = TransferCache(conn, {Chain.TRON: src}, Cache(), clock=fixed(NOW))
-    return ExposureSource(cache, conn, Exposure(), Heuristics(**heu), clock=fixed(NOW))  # type: ignore[arg-type]
+    return ExposureSource(cache, conn, exposure or Exposure(), Heuristics(**heu), clock=fixed(NOW))  # type: ignore[arg-type]
 
 
 async def rules(
-    conn: sqlite3.Connection, transfers: list[Transfer], **heu: object
+    conn: sqlite3.Connection, transfers: list[Transfer], **heu: Any
 ) -> dict[str, list[dict[str, object]]]:
     conn.execute("DELETE FROM transfers")  # each call sees only its own history
     conn.execute("DELETE FROM history_windows")
@@ -157,7 +164,7 @@ async def test_fan_out(conn: sqlite3.Connection) -> None:
 # AT-26: more than max_transfers in the window → exposure stale → INCOMPLETE.
 async def test_at26_too_many_transfers_is_stale(conn: sqlite3.Connection) -> None:
     xs = [tr(i / 100, f"TC{i % 7}", "1", n=i) for i in range(5_001)]
-    r = await source(conn, xs).check(detect(ME))
+    r = await source(conn, xs, exposure=Exposure(max_transfers=5000)).check(detect(ME))
     assert r.status is SourceStatus.STALE
     assert "more than 5000 transfers" in (r.detail or "")
 

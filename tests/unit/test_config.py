@@ -30,7 +30,8 @@ def test_defaults_match_methodology() -> None:
     assert s.network.max_retry_after_seconds == 10
     assert s.network.max_pacer_wait_seconds == 65
     assert s.exposure.lookback_days == 180
-    assert s.exposure.max_transfers == 5000
+    assert s.exposure.max_transfers == 20000  # D-079
+    assert s.exposure.history_extension_seconds == 45
     assert s.exposure.flagged_inflow_share == Decimal("0.05")
     assert s.heuristics.risky_tags == ("mixer", "bridge", "high_risk")
     assert s.classifier.window_days == 90
