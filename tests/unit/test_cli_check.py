@@ -116,7 +116,8 @@ def test_bsc_check_with_real_sources(home: Path) -> None:
     assert by["ofac_sdn"]["status"] == "stale"
     assert by["exposure"]["status"] == "error"  # no HyperSync token in this test
     assert "AMLCHECK_HYPERSYNC_TOKEN" in by["exposure"]["detail"]
-    assert [f["rule_id"] for f in out["findings"]] == ["R-SYS-01", "R-SYS-01"]
+    assert by["trace"]["status"] == "stale"  # every check traces (D-079); it can't read either
+    assert [f["rule_id"] for f in out["findings"]] == ["R-SYS-01"] * 3
 
 
 def test_audit_list_and_verify(home: Path, monkeypatch: pytest.MonkeyPatch) -> None:
@@ -186,12 +187,12 @@ def test_sync_end_to_end_with_fixtures(home: Path) -> None:
     assert statuses["ofac_sdn"] == "ok"
 
 
-# PRD F9.4: the trace runs on --trace, or when the amount reaches [trace] auto_amount_usdt.
+# D-079: every check traces unless --no-trace says otherwise.
 @pytest.mark.parametrize(
     ("args", "traced"),
     [
-        ([], False),
-        (["--amount", "9999.99"], False),
+        ([], True),
+        (["--amount", "9999.99"], True),
         (["--amount", "10000"], True),
         (["--amount", "50000", "--no-trace"], False),
         (["--trace"], True),

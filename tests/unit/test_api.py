@@ -140,7 +140,7 @@ def test_in_progress_is_409(api: TestClient, home: Path) -> None:
                 "amount": None,
                 "client": None,
                 "note": None,
-                "trace": False,
+                "trace": True,  # every check traces (D-079)
             },
         ),
         rt.clock(),

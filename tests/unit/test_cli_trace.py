@@ -130,14 +130,16 @@ def test_investigate(home: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     assert r.output.startswith("REVIEW")
     assert "R-TRC-01" in r.output
     assert "Source of funds  ·  BSC " + T in r.output
+    assert "Destination of funds  ·  BSC " + T in r.output  # both ways (D-079)
     assert svg.exists()
     conn = db(home)
     checks = conn.execute("SELECT trace_id, client FROM checks").fetchall()
-    traces = conn.execute("SELECT trace_id, requested_by FROM traces").fetchall()
+    traces = dict(
+        conn.execute("SELECT direction, trace_id FROM traces WHERE requested_by = 'check'")
+    )
     assert len(checks) == 1
-    assert len(traces) == 1
-    assert checks[0] == (traces[0][0], "acme")
-    assert traces[0][1] == "check"
+    assert set(traces) == {"in", "out"}  # both ways (D-079)
+    assert checks[0] == (traces["in"], "acme")  # the check carries the inbound trace's id
 
 
 def test_investigate_json(home: Path, monkeypatch: pytest.MonkeyPatch) -> None:
@@ -184,4 +186,4 @@ async def test_check_wiring(home: Path, monkeypatch: pytest.MonkeyPatch, chain: 
     assert not any(isinstance(s, TraceSource) for s in plain)
     assert isinstance(traced[-1], TraceSource)
     assert [s.source for s in traced[:-1]] == [s.source for s in plain]
-    assert modes == [Mode.BACKGROUND]
+    assert modes == [Mode.BACKGROUND] * 2  # one engine per direction, each its own client

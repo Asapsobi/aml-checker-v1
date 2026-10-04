@@ -135,8 +135,11 @@ class TraceJobs:
         trace_id: str,
         engine: TraceEngine,
         on_progress: Callable[[TraceProgress], None] | None = None,
+        *,
+        deadline: float | None = None,
     ) -> Trace:
-        """Run a claimed or claimable job to the end; `TraceFailed` carries the partial result."""
+        """Run a claimed or claimable job to the end; `TraceFailed` carries the partial result.
+        `deadline` is shared by the two directions of a check's trace (methodology §12.2)."""
         job = self.get(trace_id)
         if job is None:
             raise KeyError(trace_id)
@@ -146,7 +149,10 @@ class TraceJobs:
             raise RuntimeError(f"trace {trace_id} is {job.status} elsewhere")
         try:
             trace = await engine.run(
-                detect(job.address), job.direction, self._progress_writer(trace_id, on_progress)
+                detect(job.address),
+                job.direction,
+                self._progress_writer(trace_id, on_progress),
+                deadline=deadline,
             )
         except TraceFailed as e:
             with transaction(self._conn):

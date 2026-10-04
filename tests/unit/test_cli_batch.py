@@ -131,13 +131,13 @@ def test_stdout_and_exit_codes(home: Path, monkeypatch: pytest.MonkeyPatch) -> N
     assert runner.invoke(app, ["batch", str(clean)]).exit_code == 0
 
 
-# The trace runs as in `check`: at [trace] auto_amount_usdt or more.
-def test_amount_turns_the_trace_on(home: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+# The trace runs as in `check`: on every check (D-079).
+def test_every_row_is_traced(home: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     calls = Calls()
     use(monkeypatch, calls, {})
     f = write(home.parent / "in.csv", [f"{bsc(0)},,9999,,", f"{bsc(1)},,10000,,", f"{bsc(2)},,,,"])
     assert runner.invoke(app, ["batch", str(f)]).exit_code == 0
-    assert calls.traced == [False, True, False]
+    assert calls.traced == [True, True, True]
 
 
 @pytest.mark.parametrize(

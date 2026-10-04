@@ -141,7 +141,7 @@ def test_check_flow(web: TestClient, world: World, home: Path) -> None:
     assert pdf.status_code == 200
     assert pdf.headers["content-type"] == "application/pdf"
     assert pdf.content.startswith(b"%PDF-")
-    assert world.traced == [False]
+    assert world.traced == [True]  # every check traces (D-079)
     row = db(home).execute("SELECT client, operator_note, verdict FROM checks").fetchone()
     assert row == ("acme", "first", "REVIEW")
 
@@ -156,11 +156,11 @@ def test_bad_input_records_nothing(web: TestClient, world: World, home: Path) ->
     assert db(home).execute("SELECT count(*) FROM checks").fetchone()[0] == 0
 
 
-def test_amount_turns_the_trace_on(web: TestClient, world: World) -> None:
+def test_every_check_is_traced(web: TestClient, world: World) -> None:
     web.post("/check", data={"address": TRON, "amount": "10000", "token": TOKEN})
     web.post("/check", data={"address": TRON, "amount": "50", "trace": "1", "token": TOKEN})
     web.post("/check", data={"address": TRON, "amount": "50", "token": TOKEN})
-    assert world.traced == [True, True, False]
+    assert world.traced == [True, True, True]  # D-079
 
 
 def test_history_and_counterparties(web: TestClient, world: World) -> None:

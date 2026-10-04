@@ -159,7 +159,8 @@ class Classifier(_Section):
 class Trace(_Section):
     """Methodology §7.1."""
 
-    auto_amount_usdt: PosDec = Decimal("10000")
+    auto_amount_usdt: PosDec = Decimal("10000")  # only when `every_check` is off
+    every_check: bool = True  # D-079: every check traces both ways; --no-trace skips it
     max_hops: PosInt = 5  # §12.2 (D-075)
     branch: PosInt = 5
     coverage_share: Share = Decimal("0.8")
@@ -193,7 +194,7 @@ class Monitor(_Section):
     rescreen_days: PosInt = 7
     trace_amount_usdt: PosDec = Decimal("10000")
     webhook_url: str | None = None
-    max_senders_per_run: PosInt = 50  # D-063
+    max_senders_per_run: PosInt = 10  # D-063; 10 since D-079: each screen traces, up to 3 min
     first_lookback_hours: PosInt = 24  # D-062
 
     @field_validator("webhook_url")

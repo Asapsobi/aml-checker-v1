@@ -185,7 +185,7 @@ def investigate(
     svg: Annotated[Path | None, typer.Option(help="Also write the graph to this SVG file.")] = None,
     as_json: Annotated[bool, typer.Option("--json", help="Machine-readable output.")] = False,
 ) -> None:
-    """Check an address with its source-of-funds trace: verdict, breakdown and graph."""
+    """Check an address with its trace both ways: verdict, exposures, breakdown and graph."""
     rt = runtime.load()
     try:
         addr = detect(address, chain)
@@ -196,23 +196,32 @@ def investigate(
     try:
         result = asyncio.run(check_cli.run_screen(rt, conn, addr, value, client, note, True))
         source = next((s for s in result.sources if s.source == "trace"), None)
-        trace_id = str(source.evidence.get("trace_id")) if source and source.evidence else None
-        job = TraceJobs(conn, rt.settings, clock=rt.clock).get(trace_id) if trace_id else None
+        ev = source.evidence if source and source.evidence else {}
+        trace_id = str(ev["trace_id"]) if ev.get("trace_id") else None
+        out_id = str(ev["out"]["trace_id"]) if ev.get("out", {}).get("trace_id") else None
+        jobs = TraceJobs(conn, rt.settings, clock=rt.clock)
+        job = jobs.get(trace_id) if trace_id else None
+        out_job = jobs.get(out_id) if out_id else None
         data = check_json(conn, result.check_id) if as_json else None
     finally:
         conn.close()
     t = (job.result or job.partial) if job else None
+    t_out = (out_job.result or out_job.partial) if out_job else None
     if svg is not None and t is not None:
         _write_svg(svg, t)
     if as_json:
         out = dict(data or {})
         out["trace"] = {"trace_id": trace_id, **t.to_json()} if t is not None else None
+        out["trace_out"] = {"trace_id": out_id, **t_out.to_json()} if t_out is not None else None
         typer.echo(json.dumps(out, indent=2))
     else:
         check_cli.print_result(result)
         if t is not None and trace_id is not None:
             typer.echo("")
             print_trace(t, trace_id)
+        if t_out is not None and out_id is not None:
+            typer.echo("")
+            print_trace(t_out, out_id)
     if svg is not None and t is not None:
         typer.echo(f"Graph written to {svg}", err=True)
     raise typer.Exit(check_cli.EXIT[result.verdict])

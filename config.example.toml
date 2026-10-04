@@ -83,6 +83,8 @@ round_unit_usdt = 100
 
 # Methodology §7.1, with the v2 values of §12.2 (D-079 to D-081).
 [trace]
+# Every check traces both ways (D-079); with every_check = false, only from auto_amount_usdt.
+every_check = true
 auto_amount_usdt = 10000
 max_hops = 5
 branch = 5
@@ -113,7 +115,7 @@ indirect = "path"
 rescreen_days = 7
 trace_amount_usdt = 10000
 # webhook_url = ""   # unset by default
-max_senders_per_run = 50
+max_senders_per_run = 10
 first_lookback_hours = 24
 
 # The local web UI (PRD F11.4): always on 127.0.0.1.

@@ -208,9 +208,7 @@ def create_app(rt: runtime.Runtime, token: str) -> FastAPI:
                 form=form,
                 error="Amount must be a positive number.",
             )
-        run_trace = bool(trace) or (
-            value is not None and value >= rt.settings.trace.auto_amount_usdt
-        )
+        run_trace = runtime.should_trace(rt, True if trace else None, value)
         async with check_lock:
             conn = db()
             try:
@@ -282,6 +280,7 @@ def create_app(rt: runtime.Runtime, token: str) -> FastAPI:
             who=label_text(json.loads(data.record.label_json) if data.record.label_json else None),
             details=risk.detail_list(exposures),
             exposures=risk.ranked(exposures, decay),
+            trace_out_id=data.trace_out_id,
             labels=case_report.LABELS,
             open_case=open_case,
         )

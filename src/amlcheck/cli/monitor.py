@@ -81,7 +81,14 @@ async def _run(
         runs = []
         for w in wallets:
             r = await inbound.run_wallet(
-                conn, cache, w, rt.settings.monitor, now=rt.clock(), screen=screen, budget=budget
+                conn,
+                cache,
+                w,
+                rt.settings.monitor,
+                now=rt.clock(),
+                screen=screen,
+                budget=budget,
+                every_check=rt.settings.trace.every_check,
             )
             budget -= len(r.screened)
             runs.append(r)

@@ -45,7 +45,8 @@ def check(
         bool | None,
         typer.Option(
             "--trace/--no-trace",
-            help="Trace the source of funds. Default: on when --amount ≥ [trace] auto_amount_usdt.",
+            help="Trace where the money came from and went (5 hops). Default: on for every "
+            "check ([trace] every_check); --no-trace skips it.",
         ),
     ] = None,
     as_json: Annotated[bool, typer.Option("--json", help="Machine-readable output.")] = False,
@@ -59,11 +60,7 @@ def check(
     value = parse_amount(amount)
     conn = runtime.open_database(rt)
     try:
-        run_trace = (
-            trace
-            if trace is not None
-            else (value is not None and value >= rt.settings.trace.auto_amount_usdt)
-        )
+        run_trace = runtime.should_trace(rt, trace, value)
         result = asyncio.run(run_screen(rt, conn, addr, value, client, note, run_trace))
         data = check_json(conn, result.check_id) if as_json else None
     finally:
