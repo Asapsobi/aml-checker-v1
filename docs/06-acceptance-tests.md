@@ -65,7 +65,7 @@
 | AT-57 | P10 | API request without token / short token configured | 401 / server refuses to start |
 | AT-58 | P11 | **live** Golden set | Targets in [roadmap P11](07-roadmap.md) met |
 | AT-59 | P11 | **live** 3 TRON + 3 BSC traces, cold then warm | Within budgets; warm ≥ 50% fewer queries |
-| AT-60 | P12 | History with a sanctioned sender (5% of inflow) and a frozen recipient (2% of outflow) beyond the 20 shown | Two direct exposures, `in` 0.05 and `out` 0.02, with exact volumes |
+| AT-60 | P12 | History with a sanctioned sender (5% of inflow) and a frozen recipient (2% of outflow), both smaller than the 20 counterparties shown | Two direct exposures, `in` 0.05 and `out` 0.02, with exact volumes |
 | AT-61 | P12 | Trace with a sanctioned terminal at hop 2 (weight 0.1) and a scam terminal at hop 3; decay 0.4, then 0 | Indirect exposures; contributions × 0.6 and × 0.36; with decay 0, × 1 |
 | AT-62 | P12 | Exposures giving X just below and above 30.5, 70.5 and 90.5; BLOCK; INCOMPLETE | Levels low/moderate, moderate/high, high/severe; 100 · severe; `≥ N · level+` |
 | AT-63 | P12 | Only R-HEU-02 and R-TRC-04 fire, score 12; then score 31; then R-EXP-01 alone; then an override of R-HEU-02 to REVIEW | NO_HITS (findings INFO); REVIEW (R-SCR-01); REVIEW; REVIEW |

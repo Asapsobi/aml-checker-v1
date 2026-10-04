@@ -14,6 +14,10 @@ labels.csv; no API quota spent on neighbours, D-015), and raises:
 - R-HEU-04: fan-out, > 50 distinct recipients within any 24 h;
 - R-HEU-05: a counterparty carries a risky tag (mixer, bridge, high_risk), at most 10.
 
+Its evidence also carries the **direct exposures** (methodology §11.1): every counterparty with a
+risk category, in each direction it dealt in, with the exact amount and its share of that
+direction's flow.
+
 `allowlist` counterparties are left out of R-HEU-02…04 and never cancel R-EXP-01 (F5.4).
 More than `[exposure] max_transfers` in the window → `stale` → INCOMPLETE (D-013, AT-26); findings
 from the part that was read are still reported (they are true), but the check can't end clean.
@@ -22,7 +26,7 @@ from the part that was read are still reported (they are true), but the check ca
 from __future__ import annotations
 
 import sqlite3
-from collections.abc import Iterable, Mapping
+from collections.abc import Callable, Iterable, Mapping
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 from decimal import Decimal
@@ -31,10 +35,12 @@ from typing import Any
 from amlcheck.chain.base import History, Transfer, canonical_amount
 from amlcheck.chain.cache import TransferCache
 from amlcheck.config import Exposure, Heuristics
+from amlcheck.core import risk
 from amlcheck.core.clock import Clock, to_iso, utcnow
 from amlcheck.core.models import Address, Chain, Finding, SourceResult, SourceStatus
 from amlcheck.core.rules import finding
 from amlcheck.intel.labels_csv import tags_for
+from amlcheck.intel.names import entity_name
 from amlcheck.screening.base import SourceHealth
 from amlcheck.screening.heuristics import busiest_window, pass_through, recipients, senders
 
@@ -333,6 +339,13 @@ class ExposureSource:
             )
 
         sent = sum((c.sent for c in cps.values()), Decimal(0))
+        exposures = direct_exposures(
+            a,
+            cps.values(),
+            received,
+            sent,
+            lambda cp, category: entity_name(self._conn, address.chain, cp, category),
+        )
         evidence: dict[str, Any] = {
             "since": to_iso(history.since),
             "until": to_iso(history.until),
@@ -344,11 +357,44 @@ class ExposureSource:
             "sent_usdt": canonical_amount(sent),
             "counterparty_count": len(cps),
             "counterparties": [c.summary(a) for c in _by_size(cps.values())[:SHOWN_COUNTERPARTIES]],
+            "exposures": [e.to_json() for e in exposures],
         }
         return findings, evidence
 
     async def health(self) -> SourceHealth:
         return SourceHealth(SOURCE, LABEL, SourceStatus.OK, None, "read per check")
+
+
+def direct_exposures(
+    address: str,
+    cps: Iterable[Counterparty],
+    received: Decimal,
+    sent: Decimal,
+    name: Callable[[str, str], str],
+) -> list[risk.Exposure]:
+    """Hop-1 exposures (methodology §11.1): one per flagged counterparty and direction, its most
+    severe risk category, the exact amount, and its share of everything received or sent."""
+    out: list[risk.Exposure] = []
+    for c in cps:
+        category = risk.risk_category(c.flags)
+        if category is None:
+            continue
+        entity = name(c.address, category)
+        for direction, amount, total in (("in", c.received, received), ("out", c.sent, sent)):
+            if amount > 0 and total > 0:
+                out.append(
+                    risk.Exposure(
+                        direction,
+                        1,
+                        c.address,
+                        category,
+                        entity,
+                        amount,
+                        amount / total,
+                        (address, c.address),
+                    )
+                )
+    return risk.ordered(out)
 
 
 def _share(x: Decimal) -> str:
