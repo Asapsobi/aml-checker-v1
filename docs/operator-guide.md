@@ -38,12 +38,33 @@ amlcheck check TXyz… --amount 25000 --client acme --note "invoice 1042"
 | **REVIEW** | Something needs a human look (see the findings) | Read the findings, the counterparties and the trace. Decide in a case |
 | **NO_HITS** | Nothing was found in the sources checked, as of the times shown | Proceed per policy. **This is not a clearance** |
 
-The **score** (0–100, bands low / medium / high / severe) ranks how worrying the money's history looks:
-`E` exposure from the trace, `D` direct dealings with flagged addresses, `B` behaviour, `U` the part
-of the money the trace couldn't follow. BLOCK is always 100. `≥ 34 · medium+` means a lower bound:
-a source was missing. The score never changes the verdict (unless you turned on R-SCR-01).
+**Who** is the address itself: its sanctions entry, Tether's freeze, your own wallet, a named entity
+or label, or the classifier's guess marked *inferred* with its confidence.
+
+The **score** (0–100) ranks how worrying the money's history looks, on MistTrack's scale
+(methodology §11):
+
+| Level | Score | What to do |
+|---|---|---|
+| low | 0–30 | Minimal supervision. Proceed per policy; not a clearance |
+| moderate | 31–70 | Review by hand before transacting (REVIEW from 31) |
+| high | 71–90 | Investigate before transacting; keep under close watch |
+| severe | 91–100 | Do not transact; escalate (BLOCK is always 100) |
+
+It is built from the **exposures**: money the address received from or sent to risk categories
+(sanctioned, Tether-frozen, illicit activity, mixer, gambling, high-risk exchange, bridge), directly
+(a counterparty, exact amounts) or through others (2–3 hops, the smallest amount on the path). Each
+extra hop counts 40% less. Behaviour (new, pass-through, fan-in, fan-out, look-alike) adds at most
+30 points, so behaviour alone stays low. Unknown services add nothing. `≥ 34 · moderate+` means a
+lower bound: a source was missing.
+
+The lines under the score say it in one line per risk type, e.g. `Sanctioned entity: indirect
+received 16.9%`. Findings marked **INFO** explain the score; they don't change the verdict.
 
 ### Findings
+
+REVIEW comes from R-EXP-01, R-FRZ-02, R-HEU-06 and R-SCR-01; BLOCK from R-SAN-01 and R-FRZ-01. The
+others are INFO: they explain the score (D-072; `[rules] severity` can change that).
 
 | Rule | Means | Look at |
 |---|---|---|
@@ -62,6 +83,7 @@ a source was missing. The score never changes the verdict (unless you turned on 
 | R-TRC-04 | Under 50% of the money could be traced (low priority) | How much is untraced and why |
 | R-TRC-05 | 10% or more passed through inferred suspicious patterns (low priority) | Collectors, layering |
 | R-SYS-01 | A required source failed or is stale | Makes the check INCOMPLETE |
+| R-SCR-01 | The score is 31 or more (moderate or worse) | The exposures and the lines under the score |
 
 **Inferences are not facts.** Types like COLLECTOR or DEPOSIT, and everything marked "inferred", come
 from the address's own transfers and are never a reason to BLOCK on their own.
