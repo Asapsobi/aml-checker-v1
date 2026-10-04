@@ -376,3 +376,33 @@ Live end-to-end (`scripts/e2e.py`, 2.0.0a1, fresh data folder): **16 / 16 passed
 OFAC check BLOCKs with its label, the traced check is REVIEW · 50 · moderate with 2 indirect
 exposures, the API (now `/v2`) and the web UI pass their security checks, and both hash chains
 verify.
+
+## P13 · Two-way deep exposure
+
+| ID | Test | Result |
+|---|---|---|
+| AT-67 | `test_trace_v2.py::test_at67_both_directions_deep`, `::test_best_first_spends_the_budget_on_the_heaviest`; `test_trace_engine.py::test_time_budget_bounds_a_slow_read`, `::test_out_of_time_queue_still_gets_the_local_tests`, `::test_prune_on_path_volume_not_the_estimate` | Passed |
+| AT-68 | `test_history_v2.py::test_at68_cap_reached_in_older_history`, `::test_at68_cap_inside_required_window`, and the extension tests | Passed |
+
+**Live budget run** (2026-10-04, 2.0.0a2 code): a full check per address (history, both traces, 5
+hops, 180 s), cold on a copy of a synced database emptied of cached chain data, then warm. Calls are
+the two traces' provider calls.
+
+| Wallet | Verdict · score | Coverage in / out | Addresses read | Calls | Cold | Warm calls | Warm |
+|---|---|---|---|---|---|---|---|
+| TRON `TVvWhZyL…LeSsWP` | REVIEW · 60 · moderate (*Sanctioned entity: indirect received 37.8%*) | 30.0% / 6.3% | 100 | 326 TronGrid | 82 s | 8 | 5 s |
+| TRON `TA3941uF…X86mz` (OFAC) | BLOCK · 100 (*Tether-frozen address: direct received 59.6%*) | 95.1% / – | 3 | 6 | 6 s | 0 | 2 s |
+| TRON `TSArbmMU…VF2Rku` | REVIEW · 46 · moderate (*Sanctioned entity: direct 6.3%, indirect 6.5%*) | 37.9% / 16.9% | 100 | 381 | 92 s | 12 | 6 s |
+| BSC `0x0c1e52…ee1576` | NO_HITS · 15 · low | 17.3% / 100% | 33 | 107 HyperSync | 172 s | 0 | 1 s |
+| BSC `0x75f5c1…21c1f6ba` | NO_HITS · 0 · low | **0% / 22%**, stopped at 180 s | 5 | 44 | 180 s | 46 | 180 s |
+| BSC `0x033007…e9e54a` (OFAC) | BLOCK · 100 | **0% / 0%**, stopped at 180 s | 5 | 49 | 180 s | 55 | 180 s |
+
+**TRON:** within budget (about 160–190 TronGrid calls per direction, under PRD G8's 200 per trace),
+1.5 minutes cold, seconds warm. The full history and the deeper, path-volume trace find much more
+of the Xinbi Guarantee exposure (P12: 16.9% indirect; now 37.8%).
+
+**BSC:** HyperSync answers one query in about 4–15 s, so a check gets about 45–50 queries in 180 s:
+enough for a quiet wallet, not for 5 hops both ways through busy counterparties. The check stays
+decidable (D-080: `untraced:budget`, coverage shown) and every finished read is cached, so repeated
+checks reach further; but a busy BSC wallet's trace covers little in one check. Options are in the
+P13 PR (a paid HyperSync plan, batched multi-address queries, or fewer hops on BSC).

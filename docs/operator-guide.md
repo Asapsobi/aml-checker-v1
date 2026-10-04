@@ -8,7 +8,7 @@
 | When | What | How |
 |---|---|---|
 | Automatically, twice a day | Refresh the OFAC list and the Tether TRON freeze index | `amlcheck sync` on a timer ([scheduling](scheduling.md)) |
-| Automatically, every 10 minutes | Screen new senders to your own wallets | `amlcheck monitor run` (exit 6 = look at it) |
+| Automatically, every 10 minutes | Screen new senders to your own wallets, up to 10 a run, each traced (a run still going makes the next one wait its turn) | `amlcheck monitor run` (exit 6 = look at it) |
 | Automatically, once a day | Re-screen the watchlist | `amlcheck watch run` (exit 6 = a verdict changed) |
 | Before every payout | Screen the counterparty | `amlcheck check <address> --amount N --client NAME` (or the web UI, or the API) |
 | When a result is REVIEW, BLOCK or INCOMPLETE | Decide, and record why | A case: `amlcheck case open <address>`, then `case decide` |
@@ -25,8 +25,10 @@ amlcheck check TXyz… --amount 25000 --client acme --note "invoice 1042"
 
 - Paste addresses; never type them. A wrong character makes a valid but different address.
 - TRON addresses start with `T`; `0x…` addresses are BNB Smart Chain (BEP20) in this version.
-- `--amount` matters: from 10,000 USDT the source-of-funds trace runs too (a few minutes).
-- `amlcheck investigate` is the same check with the trace always on and the full breakdown.
+- Every check traces where the money came from **and** where it went, up to 5 hops, within 3 minutes
+  (TRON usually 1–2 minutes cold, seconds when repeated; BSC often the full 3 minutes on HyperSync's
+  free plan). `--no-trace` gives a quick check without it.
+- `amlcheck investigate` is the same check with the full breakdown of both traces.
 - Every check is recorded in the audit log **before** it is shown.
 
 ## Reading the result
