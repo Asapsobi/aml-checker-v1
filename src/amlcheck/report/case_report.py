@@ -315,7 +315,11 @@ def _risk(d: CaseData) -> list[Flowable]:
         )
     return [
         _p("Exposures", H2),
-        _p("Direct amounts are exact; indirect ones are the trace's estimates (D-016).", SMALL),
+        _p(
+            "Direct amounts are exact; an indirect amount is its path volume, the smallest amount "
+            "on the path, which every hop moved (D-078).",
+            SMALL,
+        ),
         _table(rows, [10 * mm, 10 * mm, 28 * mm, 16 * mm, 24 * mm, TEXT_W - 88 * mm]),
     ]
 

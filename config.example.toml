@@ -101,6 +101,9 @@ inferred_share = 0.10
 review_at = 31
 decay = 0.4
 k = 8
+# An indirect exposure's volume: "path" = the smallest amount on its path, which every hop moved
+# (D-078); "proportional" = the trace's proportional estimate (less sensitive).
+indirect = "path"
 
 # PRD F13.
 [monitor]

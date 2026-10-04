@@ -702,3 +702,23 @@
   and its licence recorded before code relies on it (non-negotiables 3 and 7).
 - **Alternatives:** A licensed commercial label pack (not chosen; `intel import-pack` remains for it).
 - **Consequences:** A source whose terms don't allow it is dropped and recorded, not worked around.
+
+### D-078 · An indirect exposure's volume is its path volume
+- **Status:** Accepted
+- **Date:** 2026-10-04 · **Phase:** P12
+- **Context:** The first live v2 run scored a wallet 4 · low. That wallet had received 34,733 USDT
+  from an address which itself received at least that much from XINBI GUARANTEE (OFAC SDN). The
+  trace's proportional estimate gave only 0.7%, because the middle address also had much other
+  inflow. MistTrack's published example lists indirect exposures at up to 7 hops with volumes in the
+  millions; those can only be path volumes, not proportional estimates.
+- **Decision:** An indirect exposure's `volume_usdt` is its path's bottleneck: the smallest edge on
+  the path, which every hop moved (an absolute amount, §7.3). `percent` = that volume over the
+  checked address's flow in that direction. Paths through one first-hop counterparty are capped
+  together at what that counterparty itself sent (or received), so its money is never counted twice.
+  The proportional estimate is kept beside it as `estimated_usdt`. `[score] indirect =
+  "proportional"` restores the estimate (less sensitive). Hop decay (§11.3) still discounts far
+  paths.
+- **Alternatives:** The proportional estimate (D-016), which missed the case above. The full edge
+  amount at hop 1, which ignores what the middle address passed on.
+- **Consequences:** More checks reach Moderate through indirect exposure, as they would on MistTrack.
+  P15 checks the balance against the owner's wallets.

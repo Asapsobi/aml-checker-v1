@@ -166,7 +166,9 @@ async def test_v2_risk_lines(tmp_path, capsys) -> None:  # type: ignore[no-untyp
         "       Illicit activity: indirect received 10.0% (inferred)",
     ]
     table = lines[
-        lines.index("Exposures  (heaviest 2 of 2; direct amounts exact, indirect ones estimated)") :
+        lines.index(
+            "Exposures  (heaviest 2 of 2; direct: exact; indirect: the smallest amount on the path)"
+        ) :
     ]
     assert table[2] == (
         "  in    2  sanctioned_entity    20.0%        4,000.00  OFAC SDN: Bad · 0x440000…000000"

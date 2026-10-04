@@ -442,6 +442,7 @@ class TraceEngine:
                 test,
                 cls,
                 path=item.path,
+                bottleneck=item.bottleneck,
             )
         )
         if category not in UNTRACED:

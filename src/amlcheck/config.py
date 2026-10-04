@@ -178,6 +178,9 @@ class Score(_Section):
     review_at: Annotated[int, Field(ge=0, le=100)] = 31
     decay: Annotated[Decimal, Field(ge=0, lt=1)] = Decimal("0.4")
     k: PosDec = Decimal("8")
+    # D-078: an indirect exposure's volume is its path's bottleneck ("path"), or the trace's
+    # proportional estimate ("proportional", less sensitive).
+    indirect: Literal["path", "proportional"] = "path"
 
 
 class Monitor(_Section):

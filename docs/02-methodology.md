@@ -508,8 +508,9 @@ others. Every exposure is shown and stored with the check.
 | `entity` | Who it is: the list entry (`OFAC SDN: …`), `Tether-frozen`, the label or entity name, or the inferred type |
 | `category` | Its §8 category |
 | `risk_type` | §11.2 |
-| `volume_usdt` | Direct: the USDT exchanged with it in that direction (exact). Indirect: the trace's proportional estimate, `weight × flow` (D-016) |
-| `percent` | Share of the address's whole flow in that direction (0–1) |
+| `volume_usdt` | Direct: the USDT exchanged with it in that direction (exact). Indirect: the **path volume**, the smallest edge on the path, which every hop moved; paths through one first-hop counterparty are capped together at what it sent (D-078) |
+| `estimated_usdt` | Indirect only: the trace's proportional estimate, `weight × flow` (D-016) |
+| `percent` | `volume_usdt` over the address's whole flow in that direction (0–1) |
 | `inferred`, `confidence` | Inferred categories only: the classification's confidence |
 | `address`, `path` | The risk end; the path from the checked address to it |
 
@@ -557,6 +558,7 @@ score   = 100 if BLOCK, else min(99, ⌊X + (100 − X) × B / 100 + 0.5⌋)
 | `[score] decay` | 0.4 | Each extra hop counts 40% less (MistTrack's documented risk decay); 0 turns decay off |
 | `[score] k` | 8 | How fast exposure turns into points |
 | `[score] review_at` | 31 | R-SCR-01: REVIEW from this score (the Moderate floor) |
+| `[score] indirect` | `path` | An indirect exposure's volume: the path volume, or `proportional` (the estimate; less sensitive) (D-078) |
 
 Behaviour points: R-HEU-01 +5, R-HEU-02 +10, R-HEU-03 +10, R-HEU-04 +5, R-HEU-06 +20, R-HEU-07 +15,
 R-FRZ-02 +15. R-HEU-05 is no longer counted: its counterparties are direct exposures now. Behaviour

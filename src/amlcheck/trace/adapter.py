@@ -26,9 +26,12 @@ SOURCE = "trace"
 LABEL = "Source-of-funds trace"
 
 
-def summary(trace: Trace, name: Callable[[str, str], str] | None = None) -> dict[str, Any]:
-    """The trace's part of the check record. With `name`, also its indirect exposures (§11.1)."""
-    exposures = risk.from_trace(trace, name) if name is not None else []
+def summary(
+    trace: Trace, name: Callable[[str, str], str] | None = None, indirect: str = "path"
+) -> dict[str, Any]:
+    """The trace's part of the check record. With `name`, also its indirect exposures (§11.1),
+    their volume by the `indirect` method (D-078)."""
+    exposures = risk.from_trace(trace, name, indirect) if name is not None else []
     return {
         "partition": {k: dec(v) for k, v in sorted(trace.partition.items(), key=lambda kv: -kv[1])},
         "coverage": dec(trace.coverage) if trace.coverage is not None else None,
@@ -51,6 +54,7 @@ def summary(trace: Trace, name: Callable[[str, str], str] | None = None) -> dict
         },
         "estimated": True,  # shares are proportional estimates (D-016)
         "exposures": [e.to_json() for e in exposures],
+        "indirect_volume": indirect if name is not None else None,
     }
 
 
@@ -86,7 +90,7 @@ class TraceSource:
                 f"trace incomplete: {e.reason}",
                 {
                     "trace_id": trace_id,
-                    **summary(e.partial, self._namer(address)),
+                    **summary(e.partial, self._namer(address), self._s.score.indirect),
                     "complete": False,
                 },
             )
@@ -106,7 +110,11 @@ class TraceSource:
             now,
             findings,
             detail,
-            {"trace_id": trace_id, **summary(trace, self._namer(address)), "complete": True},
+            {
+                "trace_id": trace_id,
+                **summary(trace, self._namer(address), self._s.score.indirect),
+                "complete": True,
+            },
         )
 
     async def health(self) -> SourceHealth:

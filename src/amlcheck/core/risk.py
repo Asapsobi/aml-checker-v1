@@ -8,7 +8,7 @@ estimate, D-016). The score (§11.3) is built from these and nothing else but be
 from __future__ import annotations
 
 from collections.abc import Callable, Iterable, Mapping
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from decimal import Decimal
 from typing import Any
 
@@ -57,6 +57,7 @@ class Exposure:
     percent: Decimal  # share of the address's flow in that direction, 0–1
     path: tuple[str, ...] = ()  # the checked address first, the risk end last
     confidence: Decimal | None = None  # inferred categories only
+    estimate: Decimal | None = None  # indirect only: the proportional estimate (D-016, D-078)
 
     @property
     def exposure_type(self) -> str:
@@ -89,6 +90,7 @@ class Exposure:
             "inferred": self.inferred,
             "confidence": dec(self.confidence) if self.confidence is not None else None,
             "path": list(self.path),
+            "estimated_usdt": dec(self.estimate) if self.estimate is not None else None,
         }
 
     @classmethod
@@ -103,6 +105,7 @@ class Exposure:
             percent=Decimal(d["percent"]),
             path=tuple(d["path"]),
             confidence=Decimal(d["confidence"]) if d.get("confidence") is not None else None,
+            estimate=Decimal(d["estimated_usdt"]) if d.get("estimated_usdt") is not None else None,
         )
 
 
@@ -127,31 +130,76 @@ def ordered(exposures: Iterable[Exposure]) -> list[Exposure]:
 _LOCAL_TESTS = (2, 3, 4)
 
 
-def from_trace(trace: Trace, name: Callable[[str, str], str]) -> list[Exposure]:
-    """Indirect exposures (§11.1): the trace's risk terminals at hop ≥ 2, plus hop-1 terminals a
-    classification decided (tests 5, 8, 9), which local flags can't see. Volume is the
-    proportional estimate `weight × flow` (D-016); an inferred category carries the confidence of
-    the classification behind it. `name(address, category)` names the risk end."""
-    out: list[Exposure] = []
+def from_trace(
+    trace: Trace, name: Callable[[str, str], str], method: str = "path"
+) -> list[Exposure]:
+    """Indirect exposures (§11.1, D-078): the trace's risk terminals at hop ≥ 2, plus hop-1
+    terminals a classification decided (tests 5, 8, 9), which local flags can't see.
+
+    `method` "path": the volume is the path's bottleneck, the smallest edge on it, which every hop
+    moved (what MistTrack-style exposure reports); the exposures reached through one first-hop
+    counterparty are capped together at what that counterparty itself sent or received, so two
+    paths through it never count its money twice. `method` "proportional": the volume is the
+    trace's proportional estimate `weight × flow` (D-016). Either way the estimate is kept too. An
+    inferred category carries the confidence of the classification behind it."""
+    total = trace.target_inflow
+    if not total:
+        return []
+    found: list[tuple[str, Exposure]] = []
     for n in trace.nodes:
         if n.terminal not in RISK or (n.hop == 1 and n.test in _LOCAL_TESTS):
             continue
         inferred = BY_NAME[n.terminal].provenances == frozenset({"inferred"})
         cls = n.classification
-        out.append(
-            Exposure(
-                trace.direction,
-                n.hop,
-                n.address,
-                n.terminal,
-                cls.type if inferred and cls else name(n.address, n.terminal),
-                n.weight * trace.target_inflow,
-                n.weight,
-                (*n.path, n.address),
-                (cls.confidence if cls else Decimal(1)) if inferred else None,
+        estimate = n.weight * total
+        volume = n.bottleneck if method == "path" and n.bottleneck is not None else estimate
+        path = (*n.path, n.address)
+        found.append(
+            (
+                path[1],
+                Exposure(
+                    trace.direction,
+                    n.hop,
+                    n.address,
+                    n.terminal,
+                    cls.type if inferred and cls else name(n.address, n.terminal),
+                    volume,
+                    volume / total,
+                    path,
+                    (cls.confidence if cls else Decimal(1)) if inferred else None,
+                    estimate,
+                ),
             )
         )
-    return ordered(out)
+    return ordered(_capped(trace, found) if method == "path" else [e for _, e in found])
+
+
+def _capped(trace: Trace, found: list[tuple[str, Exposure]]) -> list[Exposure]:
+    """Scale the exposures reached through each first-hop counterparty down to its own edge."""
+    edge: dict[str, Decimal] = {}
+    for ed in trace.edges:
+        other = ed.sender if ed.recipient == trace.target else ed.recipient
+        if trace.target in (ed.sender, ed.recipient):
+            edge[other] = edge.get(other, Decimal(0)) + ed.amount
+    by_first: dict[str, list[Exposure]] = {}
+    for first, e in found:
+        by_first.setdefault(first, []).append(e)
+    out: list[Exposure] = []
+    for first, group in by_first.items():
+        cap = edge.get(first)
+        volume = sum((e.volume for e in group), Decimal(0))
+        if cap is None or volume <= cap:
+            out += group
+            continue
+        out += [
+            replace(
+                e,
+                volume=e.volume * cap / volume,
+                percent=e.volume * cap / volume / trace.target_inflow,
+            )
+            for e in group
+        ]
+    return out
 
 
 def flag_category(flag: str) -> str | None:

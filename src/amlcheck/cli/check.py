@@ -155,13 +155,13 @@ SHOWN_EXPOSURES = 10
 
 
 def _print_exposures(exposures: list[risk.Exposure]) -> None:
-    """The heaviest exposures (methodology §11.1): direct amounts are exact, indirect ones are the
-    trace's estimates (D-016)."""
+    """The heaviest exposures (methodology §11.1): direct amounts are exact; an indirect one is its
+    path volume, the smallest amount on the path, which every hop moved (D-078)."""
     echo = typer.echo
     echo("")
     echo(
         f"Exposures  (heaviest {min(len(exposures), SHOWN_EXPOSURES)} of {len(exposures)}; "
-        "direct amounts exact, indirect ones estimated)"
+        "direct: exact; indirect: the smallest amount on the path)"
     )
     echo(f"  {'dir':<4}{'hop':>3}  {'risk type':<18} {'share':>7}  {'USDT':>14}  entity · address")
     for e in exposures[:SHOWN_EXPOSURES]:

@@ -1,13 +1,14 @@
 """Risk policy v2: exposures (methodology §11, D-071)."""
 
 import sqlite3
+from dataclasses import replace
 from datetime import UTC, datetime
 from decimal import Decimal
 
 from amlcheck.core.address import detect
 from amlcheck.core.models import Chain
 from amlcheck.core.risk import RISK, Exposure, flag_category, from_trace, ordered, risk_category
-from amlcheck.trace.model import Budget, Node, NodeClass, Trace
+from amlcheck.trace.model import Budget, Edge, Node, NodeClass, Trace
 from tests.unit.test_exposure import ME, conn, source, tr
 
 __all__ = ["conn"]  # the fixture, shared with test_exposure
@@ -148,3 +149,74 @@ def test_hop1_flagged_is_direct_not_indirect() -> None:
     assert e.entity == "COLLECTOR"  # shown with "(inferred, 0.8)"
     assert e.confidence == Decimal("0.8")
     assert e.contribution(Decimal("0.4")) == Decimal("0.5") * Decimal("0.4") * Decimal("0.8")
+
+
+def _edge(sender: str, recipient: str, amount: str) -> Edge:
+    t = datetime(2026, 9, 1, tzinfo=UTC)
+    return Edge(sender, recipient, Decimal(amount), t, t, ())
+
+
+# D-078: an indirect exposure's volume is its path's bottleneck; paths through one first-hop
+# counterparty are capped together at what it sent; the proportional estimate is kept.
+def test_path_volume_capped_per_first_hop() -> None:
+    trace = replace(
+        _trace(
+            [
+                Node("TA", 1, Decimal("0.3"), None, True, "T0", 11, path=("T0",)),
+                Node(
+                    "TS1",
+                    2,
+                    Decimal("0.15"),
+                    "sanctioned",
+                    False,
+                    "TA",
+                    2,
+                    path=("T0", "TA"),
+                    bottleneck=Decimal(2500),
+                ),
+                Node(
+                    "TS2",
+                    2,
+                    Decimal("0.1"),
+                    "sanctioned",
+                    False,
+                    "TA",
+                    2,
+                    path=("T0", "TA"),
+                    bottleneck=Decimal(2000),
+                ),
+                Node("TB", 1, Decimal("0.2"), None, True, "T0", 11, path=("T0",)),
+                Node(
+                    "TM",
+                    2,
+                    Decimal("0.02"),
+                    "mixer",
+                    False,
+                    "TB",
+                    4,
+                    path=("T0", "TB"),
+                    bottleneck=Decimal(500),
+                ),
+            ]
+        ),
+        target_inflow=Decimal(10_000),
+        edges=(_edge("TA", "T0", "3000"), _edge("TB", "T0", "2000"), _edge("TS1", "TA", "2500")),
+    )
+    by = {e.address: e for e in from_trace(trace, lambda a, c: a)}
+    # 2,500 + 2,000 through TA, which sent only 3,000: scaled by 3,000 / 4,500.
+    assert by["TS1"].volume == Decimal(2500) * 3000 / 4500
+    assert by["TS2"].volume == Decimal(2000) * 3000 / 4500
+    assert by["TS1"].volume + by["TS2"].volume == Decimal(3000)
+    assert by["TS1"].percent == by["TS1"].volume / 10_000
+    assert by["TM"].volume == Decimal(500)  # under TB's 2,000: kept
+    assert by["TM"].percent == Decimal("0.05")
+    assert (by["TS1"].estimate, by["TM"].estimate) == (Decimal(1500), Decimal(200))
+    prop = {e.address: e for e in from_trace(trace, lambda a, c: a, "proportional")}
+    assert (prop["TS1"].percent, prop["TM"].percent) == (Decimal("0.15"), Decimal("0.02"))
+    assert Exposure.from_json(by["TS1"].to_json()).estimate == Decimal(1500)
+
+
+def test_old_traces_without_bottlenecks_fall_back_to_the_estimate() -> None:
+    trace = _trace([Node("TS", 2, Decimal("0.1"), "sanctioned", False, "TA", 2, path=("T0", "TA"))])
+    (e,) = from_trace(trace, lambda a, c: a)
+    assert e.volume == e.estimate == Decimal(2000)
