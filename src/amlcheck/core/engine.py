@@ -14,6 +14,7 @@ then raise a REVIEW, never a BLOCK (D-072).
 from __future__ import annotations
 
 import asyncio
+import json
 import sqlite3
 import uuid
 from collections.abc import Sequence
@@ -43,6 +44,7 @@ from amlcheck.core.rules import (
 from amlcheck.core.score import compute
 from amlcheck.core.verdict import decide
 from amlcheck.intel import registry
+from amlcheck.intel.names import address_label
 from amlcheck.net.http import SourceError
 from amlcheck.screening.base import SourceAdapter, failed
 
@@ -100,6 +102,8 @@ async def screen(
         )
         findings.sort(key=lambda f: (f.rule_id, f.source, f.summary))
         verdict = decide(findings)
+    types = next((r.evidence.get("types", ()) for r in ordered if r.source == "classifier"), ())
+    label = address_label(conn, address.chain, address.norm, types)  # §11.6, at check time
     check_id = str(uuid.uuid4())
     tool_version = version("amlcheck")
     config_hash = settings.hash()
@@ -138,6 +142,7 @@ async def screen(
         client=client,
         operator_note=note,
         score_json=score.dumps(),
+        label_json=json.dumps(label, sort_keys=True, separators=(",", ":")) if label else None,
         trace_id=next(
             (
                 str(r.evidence["trace_id"])
@@ -176,6 +181,7 @@ async def screen(
         client=client,
         note=note,
         score=score,
+        label=label,
     )
 
 

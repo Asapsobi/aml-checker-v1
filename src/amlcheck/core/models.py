@@ -97,3 +97,4 @@ class CheckResult:
     client: str | None = None
     note: str | None = None
     score: Score | None = None
+    label: dict[str, Any] | None = None  # who the address is (methodology §11.6)
