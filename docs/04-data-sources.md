@@ -147,4 +147,5 @@ as a fixture) in `docs/verification-log.md`, and raises a question for any chang
 | VS-12 | A free BSC JSON-RPC endpoint for `eth_getCode` without a key, and its limits | P5 |
 | VS-13 | TRON contract detection via `getcontract` (answer for a wallet vs a contract) | P5 |
 | VS-14 | Licence of any label pack before import | P4 |
+| VS-15 | Cost of a full-history read (TronGrid pages; HyperSync queries from block 0) for quiet, ordinary and busy wallets, up to 20,000 transfers | P13 |
 | VS-15 | Issuer freezes on TRC20 and BEP20: TRON event history and sync time; BEP20 USDT emits no freeze events (narrowed by D-039) | P2 |

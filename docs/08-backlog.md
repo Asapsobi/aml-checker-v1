@@ -180,10 +180,12 @@
 
 | ID | Ticket | Size | Needs | Done when |
 |---|---|---|---|---|
-| T-13.01 | Best-first trace to 5 hops with decay-aware pruning | L | P12 | AT-67 |
-| T-13.02 | Traced checks run both directions | M | T-13.01 | AT-67 |
-| T-13.03 | All history up to a cap; the 180-day required window | M | P12 | AT-68 |
-| T-13.04 | Live budget run; methodology and docs | S | T-13.03 | Budget report |
+| T-13.01 | Methodology §12, D-079…D-081, VS-15 entry | S | P12 | Reviewed |
+| T-13.02 | VS-15: the cost of a full-history read, live (TronGrid pages, HyperSync queries) | S | T-13.01 | Verification log |
+| T-13.03 | History from before USDT, up to 20,000, with the 180-day required window | M | T-13.02 | AT-68 |
+| T-13.04 | Trace v2: best-first, 5 hops, path-volume pruning, time limit → `untraced:budget` | L | T-13.01 | AT-67 |
+| T-13.05 | Every check traces both directions at once; evidence, CLI, web, PDF show both | L | T-13.04 | AT-67 |
+| T-13.06 | Monitor cap 10; live budget run; docs; `2.0.0a2` | M | T-13.05 | Budget report |
 
 ## P14 · Intelligence v2
 

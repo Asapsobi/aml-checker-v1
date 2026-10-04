@@ -8,7 +8,7 @@
 |---|---|---|
 | Screening + behaviour rules | `rules_version = 1` | each check |
 | Profiler + classifier | `classifier_version = 1` | each classification |
-| Source-of-funds trace | `trace_version = 1` | each trace |
+| Source-of-funds trace | `trace_version = 2` from P13 (§12); `1` before | each trace |
 | Category list + weights | `category_version = 1` | each label, score components |
 | Score | `score_version = 2` from v2 (§11); `1` for checks made by v1 (§9) | each check |
 | Risk policy (exposures, levels, verdict defaults) | `risk_version = 2` (§11) | each check |
@@ -614,3 +614,58 @@ The first that applies: the sanctions entry (`OFAC SDN: <name>`); `Tether-frozen
 name; the intelligence store's entity name and kind, or label category; otherwise the classifier's
 primary type with its confidence, marked inferred. None of these is a source of new findings: they
 say who the address is.
+
+---
+
+## 12. History and trace, version 2 (from P13)
+
+> The owner's choices (D-079): every check traces both directions to 5 hops within 3 minutes, and
+> reads the wallet's whole history up to 20,000 transfers. Changes §3.1 and §7; what isn't said
+> here stays as there.
+
+### 12.1 History
+
+| Rule | Value |
+|---|---|
+| Read | Newest first, from before USDT existed on the chain (TRON 2018-01-01, BSC 2020-08-01), up to `[exposure] max_transfers` = **20,000** |
+| Required window | The last `[exposure] lookback_days` = 180 days. Every transfer in it must be read |
+| Cap reached, oldest transfer read older than the required window | `ok`. The check says "history before <date> not read" (`history_from` in evidence) |
+| Cap reached inside the required window | `stale` → INCOMPLETE (non-negotiable 1, as §3.1) |
+
+Counterparties, direct exposures and behaviour rules use everything read. The classifier keeps its
+own 90-day window (§5).
+
+### 12.2 Trace
+
+| Key (`[trace]`) | v1 | v2 | Why |
+|---|---|---|---|
+| `every_check` | — | `true` | Every check traces, whatever the amount (D-079); `--no-trace` still skips it |
+| directions | in | **in and out**, at the same time, one shared deadline | Outgoing risk counts (D-075) |
+| `max_hops` | 3 | **5** | D-075 |
+| `max_nodes` | 40 | **50 per direction** | Bounds requests; reaching it is `untraced:budget` (§7.7) |
+| `time_budget_seconds` | 300, a failure | **180 for both directions**, not a failure | D-079, D-080 |
+| `min_attributed_usdt` | 100, on the proportional estimate | 100, on the **path volume** | D-081 |
+
+**Order: best first** (D-081). Items wait in one queue per direction and the one with the largest
+*discounted path volume* is expanded next:
+
+```
+priority(item) = bottleneck(item) × (1 − [score] decay)^(hop − 1)        ties: address, then path
+```
+
+The money closest to the target and largest comes first, so the node and time budgets are spent where
+an exposure can matter most. The partition still sums to 1: every unit of flow ends in exactly one
+bucket (§7.8).
+
+**Pruning (§7.4) criterion (c)** becomes: the sender's path bottleneck `min(parent bottleneck, a_j)`
+≥ `min_attributed_usdt`. A large payment through a busy middle address is followed even when its
+proportional share is tiny: that is the case D-078 found.
+
+**When time runs out** (D-080): the items not yet finished (in the queue or being read) end in
+`untraced:budget` and the trace is complete with `"stopped": "time"`. Coverage says how much was
+followed, R-TRC-04 says when it is low, and the check stays decidable. A read that **fails** (error,
+429 beyond the pacer) still makes the trace `stale` → INCOMPLETE (§7.7).
+
+R-TRC-01 to R-TRC-05 keep reading the inbound trace. Outbound risk is in the exposures (§11.1), with
+`direction` `out`.
+
