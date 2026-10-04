@@ -23,6 +23,7 @@ from amlcheck.core.engine import screen
 from amlcheck.core.models import Address, Chain, CheckResult, Verdict
 from amlcheck.core.verdict import ACTION, DISCLAIMER
 from amlcheck.net.http import Mode
+from amlcheck.report.check_json import check_json
 
 EXIT = {Verdict.NO_HITS: 0, Verdict.REVIEW: 3, Verdict.INCOMPLETE: 4, Verdict.BLOCK: 5}
 
@@ -59,10 +60,11 @@ def check(
             else (value is not None and value >= rt.settings.trace.auto_amount_usdt)
         )
         result = asyncio.run(run_screen(rt, conn, addr, value, client, note, run_trace))
+        data = check_json(conn, result.check_id) if as_json else None
     finally:
         conn.close()
     if as_json:
-        typer.echo(json.dumps(as_dict(result), indent=2))
+        typer.echo(json.dumps(data, indent=2))  # the stored record, as the API gives it (F14.1)
     else:
         print_result(result)
     raise typer.Exit(EXIT[result.verdict])
@@ -103,48 +105,6 @@ async def run_screen(
             note=note,
             now=rt.clock,
         )
-
-
-def as_dict(r: CheckResult) -> dict[str, Any]:
-    return {
-        "check_id": r.check_id,
-        "verdict": r.verdict.value,
-        "action": ACTION[r.verdict],
-        "chain": r.address.chain.value,
-        "address": r.address.norm,
-        "checked_at": to_iso(r.checked_at),
-        "amount_usdt": canonical_amount(r.amount) if r.amount is not None else None,
-        "client": r.client,
-        "note": r.note,
-        "score": {**r.score.to_json(), "shown": r.score.shown} if r.score else None,
-        "findings": [
-            {
-                "rule_id": f.rule_id,
-                "severity": f.severity.value,
-                "source": f.source,
-                "summary": f.summary,
-                "observed_at": to_iso(f.observed_at),
-                "evidence": f.evidence,
-            }
-            for f in r.findings
-        ],
-        "sources": [
-            {
-                "source": s.source,
-                "label": s.label,
-                "required": s.required,
-                "status": s.status.value,
-                "detail": s.detail,
-                "observed_at": to_iso(s.observed_at),
-                "evidence": s.evidence,
-            }
-            for s in r.sources
-        ],
-        "audit": {"record_hash": r.record_hash},
-        "tool_version": r.tool_version,
-        "config_hash": r.config_hash,
-        "disclaimer": DISCLAIMER,
-    }
 
 
 def print_result(r: CheckResult) -> None:

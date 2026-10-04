@@ -285,3 +285,33 @@ OK (22 records), decision log OK (2 decisions). `case export --jsonl`: 2 lines w
 verdict, rules, score and feedback. `audit export`: both decisions on check #22. `cp report`: the
 Decision section lists both with the decision chain head.
 
+## P10 · Monitoring & local API
+
+| AT | Tests | Status |
+|---|---|---|
+| AT-52 | `test_monitor.py::test_at52_new_sender_screened` (never-screened senders screened in order, own wallet skipped, largest transfer as the amount, ≥ 10,000 traced, position saved); `test_cli_monitor.py::test_at52_monitor_run_exit_6` (REVIEW → exit 6, alerted) | Green locally (2026-10-04) |
+| AT-53 | `test_monitor.py::test_at53_recently_screened_sender_skipped` (screened 2 days ago → skipped); `test_rescreen_after_rescreen_days` (8 days → screened) | Green locally |
+| AT-54 | `test_cli_monitor.py::test_at54_one_run_at_a_time` (lock held → "already running", exit 1, nothing screened) | Green locally |
+| AT-55 | `test_api.py::test_at55_idempotent_check` (replay: same check, byte for byte, `Idempotent-Replayed`, one record; same key and another amount → 422); `test_in_progress_is_409` | Green locally |
+| AT-56 | `test_api.py::test_at56_trace` (202 + id → `done`; repeat with the key → the same id) | Green locally |
+| AT-57 | `test_api.py::test_at57_token` (no / wrong token → 401 problem+json with `WWW-Authenticate`; a token under 32 characters → `amlcheck api` refuses to start) | Green locally |
+
+Also: the cap of `max_senders_per_run` resuming at the first sender not screened (D-063), own wallets
+labelled and unlabelled, the look-alike guard naming an imitated own wallet, `wallets` commands, the
+host allow-list, every verdict HTTP 200 (INCOMPLETE included), problem+json for every error (invalid
+body and address, malformed key, 404s), the counterparty endpoint with the latest decision, and one
+JSON for a check everywhere (`check --json`, `investigate --json`, the API, from the stored record).
+
+**Live (2026-10-04, the VS-07 TRON scratch copy, operator `live-test`):**
+
+| What | Result |
+|---|---|
+| `wallets add TRwJi21T…i6vSwo` (a test address standing in for an own wallet), `monitor run` | 1 inbound transfer in the last 24 h; its sender screened with the trace (10,000 USDT): NO_HITS, 48 · medium; exit 0 |
+| `monitor run` again | Position kept (`monitored up to …`), no new senders, exit 0 |
+| `amlcheck api --port 8798` with a throwaway token | No token → 401; `Host: evil.com` → 400 |
+| `scripts/corridor_mock.py TA3941uF…X86mz --order live-p10-1` | **BLOCK 100 · severe** (OFAC and Tether-frozen), exit 5; the same order again → replayed, no second record; the same order with another amount → 422 |
+| `POST /v1/traces` then poll | 202 → `done` (requested by `api`, 1 provider call from the warm cache); the repeat with the key → 202, the same trace |
+
+Notes for P11 calibration: the monitor's live sender was NO_HITS with a medium score (48) from its
+trace's unattributed-service exposure: the same weighting note as P7.
+

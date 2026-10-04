@@ -1,6 +1,6 @@
 [project]
 name = "amlcheck"
-version = "0.9.0"
+version = "0.10.0"
 description = "Counterparty intelligence for USDT on TRON and BNB Smart Chain"
 readme = "README.md"
 requires-python = ">=3.12"
@@ -70,7 +70,7 @@ ignore = ["RUF001", "RUF002", "RUF003"]
 [tool.mypy]
 strict = true
 python_version = "3.12"
-files = ["src", "tests"]
+files = ["src", "tests", "scripts"]
 mypy_path = "src"
 
 [tool.pytest.ini_options]

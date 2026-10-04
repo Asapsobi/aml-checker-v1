@@ -4,7 +4,7 @@
 address classification, risk scoring and a recorded decision trail. Local-first, built on RPC
 providers and indexers, no own nodes.
 
-> **Status:** P9 (cases & decisions) ready for review, release v0.9.0. Released: v0.1.0 – v0.8.0. The product is built from these docs with Claude Code,
+> **Status:** P10 (monitoring & local API) ready for review, release v0.10.0. Released: v0.1.0 – v0.9.0. The product is built from these docs with Claude Code,
 > phase by phase.
 
 ## Setup
@@ -40,6 +40,9 @@ uv run amlcheck status       # creates ~/.amlcheck/ and the database
 | `amlcheck watch add <addr> [--client] [--note]` / `watch remove` / `watch list` / `watch run` | A watchlist: `watch run` re-screens every watched address (no trace); a changed verdict is listed, shown as a macOS notification (and POSTed to `[monitor] webhook_url` if set) and the run exits **6**. See [scheduling](docs/scheduling.md) to run it daily |
 | `amlcheck case open <addr>` / `case decide <id> approved\|rejected\|escalated --note …` / `case list` / `case show <id>` | Cases on REVIEW, BLOCK or INCOMPLETE checks; decisions with a note and your name (`[operator] name` or `--by`) go into their own hash chain, tied to the check record. `approved`/`rejected` close the case, `escalated` keeps it open. `audit verify` checks both chains |
 | `amlcheck case confirm <id> TYPE [--category C] [--name N --kind K]` / `case reject <id> TYPE` / `case export --jsonl` | Confirm an inferred type (DEPOSIT joins its hub's entity, HUB names it, COLLECTOR/DISTRIBUTOR/PASS_THROUGH become a label in a category you pick) or reject it (not assigned again until the classifier changes); export every decision with its evidence as JSON lines |
+| `amlcheck wallets add <addr> --name N` / `wallets remove` / `wallets list` | Your own wallets: labelled trusted, never screened as senders, and protected by the look-alike guard |
+| `amlcheck monitor run` | Screens new senders to your own wallets (since the last run; 24 h on the first): senders screened in the last 7 days are skipped, a transfer of 10,000 USDT or more is traced, at most 50 per run. Exit **6** when a sender is REVIEW, BLOCK or INCOMPLETE. Run it every 10 minutes ([scheduling](docs/scheduling.md)) |
+| `amlcheck api [--port 8766]` | The local API for the corridor ([docs/api.md](docs/api.md)): `POST /v1/check`, `GET /v1/checks/{id}`, `POST /v1/traces`, `GET /v1/traces/{id}`, `GET /v1/counterparties/{chain}/{address}`; Bearer token `AMLCHECK_API_TOKEN` (≥ 32 characters, in `.env`), `Idempotency-Key`, problem+json errors. Server install: [docs/server.md](docs/server.md) |
 | `amlcheck web [--port 8765]` | Local web UI on 127.0.0.1: check form, history, check detail with explorer links and the case report, counterparties, traces with progress and graph. Open the sign-in address it prints; no scripts, no CDN |
 | `amlcheck labels import labels.csv` / `labels list` | Your own address tags (`address,chain,tag,note,source`): `mixer`, `bridge`, `high_risk` raise R-HEU-05 and count as flagged; `allowlist` leaves a counterparty out of the behaviour rules. One bad row and nothing is imported |
 | `amlcheck cp list [--chain] [--verdict] [--client]` / `cp show <addr>` / `cp rebuild` | The counterparty registry: every address checked, with its last verdict, score and clients; `rebuild` recreates it from the audit log |
@@ -80,7 +83,9 @@ Development checks: `uv run pytest -q`, `uv run ruff check .`, `uv run ruff form
 | 08 | [Backlog](docs/08-backlog.md) | Builder | Ticket-sized work per phase |
 | 09 | [Decisions](docs/09-decisions.md) | Owner | ADR log, seeded with the design's decisions |
 | 10 | [Open questions](docs/10-open-questions.md) | Owner | What the owner needs to answer, with proposed answers |
-| — | [Scheduling](docs/scheduling.md) | Operator | Daily `sync` and `watch run` with launchd, cron or a systemd timer |
+| — | [Scheduling](docs/scheduling.md) | Operator | Daily `sync` and `watch run`, `monitor run` every 10 minutes, with launchd, cron or a systemd timer |
+| — | [API](docs/api.md) | Integrator | The local API: auth, idempotency, endpoints, errors, the corridor mock |
+| — | [Server](docs/server.md) | Operator | Running the API and the timers under systemd on the corridor server |
 
 ## Claude Code kit
 

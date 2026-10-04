@@ -11,6 +11,7 @@ from typing import Annotated
 import typer
 
 from amlcheck.cli import (
+    api,
     audit,
     batch,
     cache,
@@ -21,9 +22,11 @@ from amlcheck.cli import (
     history,
     intel,
     labels,
+    monitor,
     status,
     sync,
     trace,
+    wallets,
     watch,
     web,
 )
@@ -44,6 +47,7 @@ app.command("trace")(trace.trace)
 app.command("investigate")(trace.investigate)
 app.command("sync")(sync.sync)
 app.command("web")(web.web)
+app.command("api")(api.api)
 app.add_typer(audit.app, name="audit")
 app.add_typer(labels.app, name="labels")
 app.add_typer(cp.app, name="cp")
@@ -51,6 +55,8 @@ app.add_typer(intel.app, name="intel")
 app.add_typer(cache.app, name="cache")
 app.add_typer(watch.app, name="watch")
 app.add_typer(case.app, name="case")
+app.add_typer(wallets.app, name="wallets")
+app.add_typer(monitor.app, name="monitor")
 
 
 def _version(value: bool) -> None:

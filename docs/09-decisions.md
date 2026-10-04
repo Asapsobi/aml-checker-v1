@@ -496,3 +496,48 @@
 - **Alternatives:** Raw transfers (large, and re-derivable from the cache).
 - **Consequences:** A later model can be trained on what operators actually decided.
 
+### D-062 · Monitoring scope and pace (Q-13)
+- **Status:** Accepted
+- **Date:** 2026-10-04 · **Phase:** P10
+- **Context:** PRD F13: own wallets are registered and their new senders screened.
+- **Decision:** `monitor run` covers every active registered wallet. It is meant to run every 10
+  minutes (docs/scheduling.md). Each wallet's run reads inbound USDT since the last transfer it has
+  seen; the first run looks back 24 hours. An own wallet is labelled `own_or_trusted` (F13.1), so the
+  look-alike guard also protects it.
+- **Alternatives:** Monitor only chosen wallets (one more list to keep); a full history on the first
+  run (budget).
+- **Consequences:** A new counterparty is screened within about 10 minutes of paying in.
+
+### D-063 · At most 50 new senders per monitor run (Q-31)
+- **Status:** Accepted
+- **Date:** 2026-10-04 · **Phase:** P10
+- **Context:** Each new sender costs a full check; a busy wallet can bring hundreds at once.
+- **Decision:** `[monitor] max_senders_per_run` = 50, taken oldest first. When the cap is reached, the
+  wallet's position is set to the last transfer screened, so the next run starts exactly there; the run
+  says it was capped.
+- **Alternatives:** No cap (one run could take hours and exhaust the free budgets).
+- **Consequences:** A burst is worked off over a few runs instead of one long one.
+
+### D-064 · `monitor run` exits 6 when a sender needs attention (Q-32)
+- **Status:** Accepted
+- **Date:** 2026-10-04 · **Phase:** P10
+- **Context:** PRD F13.3: reports like `watch run`; D-019 reserves 6 for "needs attention".
+- **Decision:** Exit 6 when any sender screened in the run is REVIEW, BLOCK or INCOMPLETE; 0 otherwise.
+  The same alerts as `watch run` (D-054). Each sender is checked like `check`, client = the wallet's
+  name, note `monitor run`, amount = its largest transfer in the window, so a transfer of
+  `[monitor] trace_amount_usdt` or more is traced (F13.2).
+- **Alternatives:** Exit 6 only for BLOCK (a REVIEW would go unnoticed).
+- **Consequences:** A scheduler or script can react to one exit code.
+
+### D-065 · The local API's token and port (Q-33)
+- **Status:** Accepted
+- **Date:** 2026-10-04 · **Phase:** P10
+- **Context:** PRD F14.2: Bearer token of at least 32 characters from `.env`, 127.0.0.1, host
+  allow-list.
+- **Decision:** `amlcheck api [--port 8766]` reads `AMLCHECK_API_TOKEN` (environment or `.env`, never
+  config) and refuses to start without one of at least 32 characters. Every request, reads included,
+  needs `Authorization: Bearer <token>` (401 otherwise); the token is compared in constant time. The web
+  UI keeps its own per-start token and port.
+- **Alternatives:** Reads without a token (the API exposes counterparty data).
+- **Consequences:** The corridor keeps one secret; rotating it is a restart.
+
