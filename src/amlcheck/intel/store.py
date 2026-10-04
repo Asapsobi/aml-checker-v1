@@ -266,6 +266,25 @@ class IntelStore:
                 ),
             )
 
+    def membership(self, chain: Chain, address: str) -> tuple[int, str, str, dict[str, Any]] | None:
+        """(entity id, role, provenance, evidence) of the address's membership, if any."""
+        r = self._conn.execute(
+            "SELECT entity_id, role, provenance, evidence_json FROM entity_members "
+            "WHERE chain = ? AND address_norm = ?",
+            (chain.value, address),
+        ).fetchone()
+        return (r[0], r[1], r[2], json.loads(r[3])) if r else None
+
+    def unlink_inferred(self, chain: Chain, address: str) -> bool:
+        """Drop an inferred membership (a rejected DEPOSIT, D-059); an operator's one stays."""
+        with transaction(self._conn):
+            cur = self._conn.execute(
+                "DELETE FROM entity_members WHERE chain = ? AND address_norm = ? "
+                "AND provenance = 'inferred'",
+                (chain.value, address),
+            )
+        return cur.rowcount == 1
+
     def entity(self, entity_id: int) -> Entity | None:
         r = self._conn.execute(
             "SELECT id, chain, name, kind, named_by FROM entities WHERE id = ?", (entity_id,)

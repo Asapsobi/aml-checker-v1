@@ -89,7 +89,7 @@ class Profiler:
         now = self._clock()
         p = await self.profile_of(chain, address, now)
         ctx = await self._context(chain, p, now)
-        cs = tuple(clf.classify(p, ctx, self._s, now))
+        cs = tuple(clf.classify(p, ctx, self._s, now, clf.suppressed(self._conn, chain, address)))
         clf.save(self._conn, chain, p, cs, self._s, now)
         entity_id = self._link(chain, p, cs) if link else None
         return Result(p, cs, ctx, entity_id)
@@ -101,7 +101,9 @@ class Profiler:
         top_types = clf.cached(self._conn, chain, top, now)
         if top_types is None:
             top_profile = await self.profile_of(chain, top, now)
-            top_types = clf.classify(top_profile, ClassifyContext(), self._s, now)
+            top_types = clf.classify(
+                top_profile, ClassifyContext(), self._s, now, clf.suppressed(self._conn, chain, top)
+            )
             clf.save(self._conn, chain, top_profile, top_types, self._s, now)
         kinds = {c.type for c in top_types}
         terminal = self._store.best_terminal(chain, top)

@@ -78,14 +78,20 @@ def _check(
 
 
 def classify(
-    p: Profile, ctx: ClassifyContext, s: Classifier, now: datetime
+    p: Profile,
+    ctx: ClassifyContext,
+    s: Classifier,
+    now: datetime,
+    suppressed: frozenset[str] = frozenset(),
 ) -> list[Classification]:
+    """`suppressed`: types an operator rejected for this address (D-059). They are never assigned,
+    so the tests that exclude them (COLLECTOR is "not DEPOSIT") see them as absent."""
     found: dict[str, tuple[Decimal, tuple[str, ...], tuple[str, ...]]] = {}
 
     def assign(
         name: str, result: tuple[Decimal, tuple[str, ...], tuple[str, ...]] | None, floor: Decimal
     ) -> None:
-        if result is not None and result[0] >= floor:
+        if name not in suppressed and result is not None and result[0] >= floor:
             found[name] = result
 
     m = s.min_confidence
@@ -271,7 +277,8 @@ def classify(
         for t in TYPES
         if t in found
     ]
-    if p.first_seen is not None and now - p.first_seen < timedelta(days=s.fresh_days):
+    fresh = p.first_seen is not None and now - p.first_seen < timedelta(days=s.fresh_days)
+    if fresh and FRESH not in suppressed:
         out.append(
             Classification(FRESH, Decimal(1), False, (f"first seen < {s.fresh_days} days ago",))
         )
@@ -333,10 +340,25 @@ def save(
         )
 
 
+def suppressed(conn: sqlite3.Connection, chain: Chain, address: str) -> frozenset[str]:
+    """Types whose latest operator feedback for this classifier version is a rejection (D-059).
+    A new classifier version starts clean (AT-50)."""
+    rows = conn.execute(
+        "SELECT type, verdict FROM inference_feedback WHERE chain = ? AND address_norm = ? "
+        "AND classifier_version = ? ORDER BY id",
+        (chain.value, address, CLASSIFIER_VERSION),
+    ).fetchall()
+    latest: dict[str, str] = {}
+    for t, verdict in rows:
+        latest[t] = verdict
+    return frozenset(t for t, v in latest.items() if v == "rejected")
+
+
 def cached(
     conn: sqlite3.Connection, chain: Chain, address: str, now: datetime
 ) -> list[Classification] | None:
-    """The latest unexpired classification of this version, or None (F8.2: 14-day expiry)."""
+    """The latest unexpired classification of this version, or None (F8.2: 14-day expiry).
+    One that holds a type the operator has since rejected is stale: None, so it is recomputed."""
     row = conn.execute(
         "SELECT max(computed_at) FROM classifications WHERE chain = ? AND address_norm = ? "
         "AND classifier_version = ? AND expires_at > ?",
@@ -349,6 +371,8 @@ def cached(
         "WHERE chain = ? AND address_norm = ? AND computed_at = ? ORDER BY id",
         (chain.value, address, row[0]),
     ).fetchall()
+    if {r[0] for r in rows} & suppressed(conn, chain, address):
+        return None
     out = []
     for t, conf, is_primary, fj in rows:
         data = json.loads(fj)

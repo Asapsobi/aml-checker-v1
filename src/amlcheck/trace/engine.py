@@ -497,7 +497,11 @@ class TraceEngine:
             round_unit_usdt=self._s.classifier.round_unit_usdt,
         )
         cs = clf.classify(
-            p, self._stored_context(chain, p.top_recipient, now), self._s.classifier, now
+            p,
+            self._stored_context(chain, p.top_recipient, now),
+            self._s.classifier,
+            now,
+            clf.suppressed(self._conn, chain, item.address),
         )
         clf.save(self._conn, chain, p, cs, self._s.classifier, now)
         return self._class_terminal(
