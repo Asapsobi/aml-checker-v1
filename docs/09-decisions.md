@@ -578,3 +578,21 @@
 - **Alternatives:** No promise (integrations break silently).
 - **Consequences:** Additions are safe; anything else waits for v2.
 
+### D-069 · v1.0.0 ships with the golden set partly measured
+- **Status:** Accepted
+- **Date:** 2026-10-04 · **Phase:** P11
+- **Context:** The P11 exit criteria include HUB and DEPOSIT precision ≥ 0.9, COLLECTOR ≥ 0.8 and no
+  clean golden address scored high or severe. Their ground truth needs addresses only the owner knows
+  (D-066): the exchanges' proof-of-reserves pages are blocked from this machine, and collector
+  candidates from public data turned out to be busy services. The owner chose to release now.
+- **Decision:** Release v1.0.0 with what is measured: 20 BLOCK golden entries (20/20 verdicts as
+  expected) and the AT-59 budget run (passed). The clean band and HUB, DEPOSIT and COLLECTOR precision
+  are stated as **not measured**, in the calibration report and the release notes. No threshold was
+  changed without evidence. The owner signs off knowing this; the measurements follow in a v1.0.x
+  when the owner's addresses arrive (Q-36).
+- **Alternatives:** Wait for the owner's addresses (open-ended); label addresses ourselves (circular,
+  and third-party labels are excluded).
+- **Consequences:** The classifier and score keep their designed defaults (classifier version 1,
+  score version 1). The known calibration notes (unattributed services push E; very busy deposits and
+  collectors are primary HUB; coverage often low) are listed for the v1.0.x calibration.
+

@@ -315,11 +315,11 @@ JSON for a check everywhere (`check --json`, `investigate --json`, the API, from
 Notes for P11 calibration: the monitor's live sender was NO_HITS with a medium score (48) from its
 trace's unattributed-service exposure: the same weighting note as P7.
 
-## P11 · Calibration & 1.0 (in progress)
+## P11 · Calibration & 1.0
 
 | AT | Tests | Status |
 |---|---|---|
-| AT-58 | **live** golden set; offline part `test_calibration.py::test_at58_golden_set_offline` | 20 of ≥ 80 entries recorded (BLOCK only): 20/20 verdicts as expected. HUB, DEPOSIT, COLLECTOR precision and the clean band not measured yet (owner's addresses pending, D-066) |
+| AT-58 | **live** golden set; offline part `test_calibration.py::test_at58_golden_set_offline` | **Partly measured** (D-069): 20 BLOCK entries recorded, 20/20 verdicts as expected. HUB, DEPOSIT, COLLECTOR precision and the clean band **not measured**: owner's addresses pending (Q-36). Report: [calibration.md](calibration.md) |
 | AT-59 | **live** 3 TRON + 3 BSC traces, cold then warm (2026-10-04, code of `p11-calibration`) | **Passed** |
 
 AT-59, the VS-07 targets on fresh copies of the database emptied of all cached chain data:
@@ -346,3 +346,5 @@ also COLLECTOR 1.0 but primary HUB. No collector ground truth can be drawn from 
 labelling, so COLLECTOR precision needs owner-known collectors or decided cases (D-066). Calibration
 note: a very busy collector, like a very busy deposit (P5), is primary HUB with the type as a tag.
 
+Sign-off: the owner chose to release v1.0.0 with the golden set partly measured (D-069); the remaining
+measurements follow in a v1.0.x (Q-36).
