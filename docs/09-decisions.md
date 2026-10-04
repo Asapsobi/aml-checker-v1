@@ -596,3 +596,109 @@
   score version 1). The known calibration notes (unattributed services push E; very busy deposits and
   collectors are primary HUB; coverage often low) are listed for the v1.0.x calibration.
 
+
+### D-070 · v2: results comparable to MistTrack, from our own data
+- **Status:** Accepted
+- **Date:** 2026-10-04 · **Phase:** P12
+- **Context:** Using v1.0.0, the owner found that for some wallets the results were not the same as or
+  close to MistTrack's, and asked for a platform "we could count on like MistTrack". MistTrack's
+  public documentation gives its levels (Low 0–30, Moderate 31–70, High 71–90, Severe 91–100), its
+  risk types (sanctioned_entity, illicit_activity, mixer, gambling, risk_exchange, bridge), its
+  exposure records (direct or indirect, hop count, volume, percent), and a 40%-per-hop risk decay
+  that can be switched off. Its labels come from its own database (500M+ addresses), which public data
+  cannot match.
+- **Decision:** v2 matches MistTrack's **policy and output**: levels, risk types, exposure records,
+  hop decay, both directions, all history. Its data sources stay ours: chain data, public lists,
+  derived intelligence, and explorer name tags if their terms allow (D-077). We never call MistTrack
+  or any other AML API (D-033); TRC20 and BEP20 only (D-039). P15 measures how often we agree with
+  MistTrack, using wallets the owner checked there, and explains every mismatch.
+- **Alternatives:** Keep the v1 policy (results keep diverging); use MistTrack's API (excluded by
+  D-033).
+- **Consequences:** Wallets whose risk comes from sanctions, Tether freezes and public lists should
+  agree. Wallets that only MistTrack's private labels know about will still differ, and the benchmark
+  says so.
+
+### D-071 · Risk policy and score, version 2
+- **Status:** Accepted
+- **Date:** 2026-10-04 · **Phase:** P12
+- **Context:** D-070. The v1 score added exposure, direct, behaviour and uncertainty parts, counted
+  unlabelled services at 0.1, and used its own bands. This made a wallet that only dealt with unknown
+  services score "medium".
+- **Decision:** Methodology §11. Exposures carry direction, direct or indirect, hop, entity, risk type,
+  volume and percent. Score = exposure points `X = 100(1 − e^(−8H))` over the decayed exposures
+  (decay 0.4, the two directions combined), plus behaviour points (at most 30) on the remaining
+  headroom. BLOCK = 100. Levels as MistTrack's. Unknown services count 0. There is no uncertainty
+  part: coverage is shown and has its own finding. `score_version = 2`.
+- **Alternatives:** Keep v1 and add a second number (owner chose replace); copy an undisclosed
+  formula (impossible).
+- **Consequences:** v1 scores stay stored and are shown as v1. `k`, `decay` and the weights are
+  config, calibrated in P15.
+
+### D-072 · Verdict defaults, version 2
+- **Status:** Accepted
+- **Date:** 2026-10-04 · **Phase:** P12
+- **Context:** In v1 every rule but sanctions and freezes was REVIEW, so a wallet scoring "15 · low"
+  still said REVIEW. That disagrees with a level-based policy.
+- **Decision:** A new severity, `INFO`, is shown but never changes the verdict. REVIEW comes from
+  R-SCR-01 at score ≥ 31 (Moderate, on by default; supersedes D-051's "off") and from three
+  fact-based rules: R-EXP-01, R-FRZ-02, R-HEU-06. The other behaviour, exposure-share and trace rules
+  become INFO and feed the score. BLOCK and INCOMPLETE are unchanged.
+- **Alternatives:** Keep every rule at REVIEW (most checks REVIEW, the level carries no weight).
+- **Consequences:** Fewer REVIEWs on low-risk wallets. `[rules] severity` can restore any v1 default.
+  The disclaimer now says NO_HITS means "no rule needs a review and the score is below the review
+  threshold".
+
+### D-073 · The v2 JSON contract
+- **Status:** Accepted
+- **Date:** 2026-10-04 · **Phase:** P12
+- **Context:** D-068 promised that a breaking change means v2 (`/v2`). The score changes meaning.
+- **Decision:** The check JSON says `"contract": 2`. It has `score` in its version-2 shape (`score`,
+  `level`, `lower_bound`, `components` X and B, `decay`, `k`), `exposures` (§11.1), `detail_list`
+  (one plain line per risk type) and `address_label` (§11.6). A test pins it. The API moves to `/v2`;
+  `/v1` paths answer 410 Gone with a problem+json pointing to `/v2`. Checks stored by v1 still render,
+  with their `score_version` 1 score and no exposures.
+- **Alternatives:** Keep `/v1` with a translated shape (a v2 score can't honestly fill v1 fields).
+- **Consequences:** The corridor integration moves to `/v2` with v2.0.0.
+
+### D-074 · v2 release line
+- **Status:** Accepted
+- **Date:** 2026-10-04 · **Phase:** P12
+- **Context:** v2 spans four phases. Its contract changes in the first one.
+- **Decision:** P12 → `2.0.0a1`, P13 → `2.0.0a2`, P14 → `2.0.0b1`, P15 → `2.0.0`. Tags carry the same
+  text (`v2.0.0a1`), and the releases before 2.0.0 are marked pre-release on GitHub.
+- **Alternatives:** `v1.1.0`… (wrong: the contract breaks).
+- **Consequences:** v1.0.0 stays the last stable release until P15.
+
+### D-075 · Two-way exposure to 5 hops (owner's choice)
+- **Status:** Accepted
+- **Date:** 2026-10-04 · **Phase:** P13
+- **Context:** MistTrack scores all of an address's transactions and shows exposures up to 7 hops. v1
+  traced incoming money only, 3 hops, 5 senders per address and 40 addresses.
+- **Decision:** Every traced check traces both directions, up to 5 hops. Items are expanded
+  best-first by decayed weight (not hop by hop), within each trace's node and time budget. The owner
+  chose 5 over 3 (too shallow) and 7 (5+ minutes, rate limits). Details in P13's methodology.
+- **Alternatives:** 3 hops; 7 hops.
+- **Consequences:** A busy wallet's traced check takes about 1–3 minutes; capped, and said out loud.
+
+### D-076 · All of a wallet's history, capped (owner's choice)
+- **Status:** Accepted
+- **Date:** 2026-10-04 · **Phase:** P13
+- **Context:** v1 read the last 180 days. An old OFAC address showed "0 transfers since …".
+- **Decision:** The checked address's whole USDT history is read, up to a cap. The last 180 days stay
+  the **required** window: missing any of it is still INCOMPLETE (non-negotiable 1). Older history is
+  read as far as the cap allows, and the check says where it stopped.
+- **Alternatives:** 365 days; keep 180 days.
+- **Consequences:** More reads on old busy wallets; the cap keeps them bounded.
+
+### D-077 · Intelligence sources for v2 (owner's choice)
+- **Status:** Accepted
+- **Date:** 2026-10-04 · **Phase:** P14
+- **Context:** Labels are the main gap with MistTrack (D-070). The owner chose three of four options;
+  a bought label pack was not chosen.
+- **Decision:** (1) Public lists: UK and EU sanctions lists, Israel's NBCTF seizure orders, and
+  official bridge, mixer and exchange addresses. (2) Derived "suspected malicious" addresses, inferred
+  from our own traces, with confidence shown and never BLOCK. (3) Explorer name tags (Tronscan,
+  BscScan) through their APIs, **only if their terms allow** this use. Each source is verified live
+  and its licence recorded before code relies on it (non-negotiables 3 and 7).
+- **Alternatives:** A licensed commercial label pack (not chosen; `intel import-pack` remains for it).
+- **Consequences:** A source whose terms don't allow it is dropped and recorded, not worked around.

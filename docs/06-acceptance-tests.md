@@ -65,3 +65,14 @@
 | AT-57 | P10 | API request without token / short token configured | 401 / server refuses to start |
 | AT-58 | P11 | **live** Golden set | Targets in [roadmap P11](07-roadmap.md) met |
 | AT-59 | P11 | **live** 3 TRON + 3 BSC traces, cold then warm | Within budgets; warm ≥ 50% fewer queries |
+| AT-60 | P12 | History with a sanctioned sender (5% of inflow) and a frozen recipient (2% of outflow) beyond the 20 shown | Two direct exposures, `in` 0.05 and `out` 0.02, with exact volumes |
+| AT-61 | P12 | Trace with a sanctioned terminal at hop 2 (weight 0.1) and a scam terminal at hop 3; decay 0.4, then 0 | Indirect exposures; contributions × 0.6 and × 0.36; with decay 0, × 1 |
+| AT-62 | P12 | Exposures giving X just below and above 30.5, 70.5 and 90.5; BLOCK; INCOMPLETE | Levels low/moderate, moderate/high, high/severe; 100 · severe; `≥ N · level+` |
+| AT-63 | P12 | Only R-HEU-02 and R-TRC-04 fire, score 12; then score 31; then R-EXP-01 alone; then an override of R-HEU-02 to REVIEW | NO_HITS (findings INFO); REVIEW (R-SCR-01); REVIEW; REVIEW |
+| AT-64 | P12 | `check --json`, `POST /v2/check`, a v1-era stored check, `POST /v1/check` | Contract-2 keys pinned; v1 record renders with score_version 1; 410 problem+json naming `/v2` |
+| AT-65 | P12 | Check an OFAC address; an own wallet; an unknown personal wallet | `OFAC SDN: <name>`; the wallet's name; `PERSONAL (inferred, 0.5)` |
+| AT-66 | P12 | A BSC transfer of 78951.063947843887500723 USDT | Shown `78,951.06` in text, web and PDF; exact in JSON |
+| AT-67 | P13 | Trace fixtures with risk at hop 4 out and hop 5 in | Both found within budget; best-first order; partition sums to 1 per direction |
+| AT-68 | P13 | History of 3 years, cap reached at 2 years; then the cap reached inside 180 days | Check complete with "older history not read before …"; INCOMPLETE |
+| AT-69 | P14 | Address on a new list; an address derived as suspected | Exposure with the list's name; inferred exposure with confidence, never BLOCK |
+| AT-70 | P15 | **live** The owner's benchmark set | Level agreement reported; every mismatch has a reason; targets agreed with the owner met |
