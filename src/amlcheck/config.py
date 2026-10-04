@@ -160,13 +160,15 @@ class Trace(_Section):
     """Methodology §7.1."""
 
     auto_amount_usdt: PosDec = Decimal("10000")
-    max_hops: PosInt = 3
+    max_hops: PosInt = 5  # §12.2 (D-075)
     branch: PosInt = 5
     coverage_share: Share = Decimal("0.8")
     min_attributed_usdt: Annotated[Decimal, Field(ge=0)] = Decimal("100")
     hop_window_days: PosInt = 30
-    max_nodes: PosInt = 40
-    time_budget_seconds: PosInt = 300
+    max_nodes: PosInt = 50  # per direction (§12.2)
+    time_budget_seconds: PosInt = (
+        180  # both directions together; running out isn't a failure (D-080)
+    )
     hub_transfers: PosInt = 1000
     min_flagged_usdt: PosDec = Decimal("1000")
     high_risk_share: Share = Decimal("0.05")

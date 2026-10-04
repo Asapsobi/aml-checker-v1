@@ -81,16 +81,16 @@ pass_through_bonus_max_hold_hours = 2
 personal_max_counterparties = 50
 round_unit_usdt = 100
 
-# Methodology §7.1.
+# Methodology §7.1, with the v2 values of §12.2 (D-079 to D-081).
 [trace]
 auto_amount_usdt = 10000
-max_hops = 3
+max_hops = 5
 branch = 5
 coverage_share = 0.8
 min_attributed_usdt = 100
 hop_window_days = 30
-max_nodes = 40
-time_budget_seconds = 300
+max_nodes = 50
+time_budget_seconds = 180
 hub_transfers = 1000
 min_flagged_usdt = 1000
 high_risk_share = 0.05

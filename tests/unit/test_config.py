@@ -36,8 +36,9 @@ def test_defaults_match_methodology() -> None:
     assert s.heuristics.risky_tags == ("mixer", "bridge", "high_risk")
     assert s.classifier.window_days == 90
     assert s.classifier.ttl_days == 14
-    assert s.trace.max_hops == 3
-    assert s.trace.max_nodes == 40
+    assert s.trace.max_hops == 5  # §12.2
+    assert s.trace.max_nodes == 50
+    assert s.trace.time_budget_seconds == 180
     assert s.trace.coverage_share == Decimal("0.8")
     assert s.score.review_at == 31  # D-072
     assert s.score.decay == Decimal("0.4")

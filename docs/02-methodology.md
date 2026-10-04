@@ -627,10 +627,13 @@ say who the address is.
 
 | Rule | Value |
 |---|---|
-| Read | Newest first, from before USDT existed on the chain (TRON 2018-01-01, BSC 2020-08-01), up to `[exposure] max_transfers` = **20,000** |
-| Required window | The last `[exposure] lookback_days` = 180 days. Every transfer in it must be read |
-| Cap reached, oldest transfer read older than the required window | `ok`. The check says "history before <date> not read" (`history_from` in evidence) |
-| Cap reached inside the required window | `stale` → INCOMPLETE (non-negotiable 1, as §3.1) |
+| Step 1: required window | The last `[exposure] lookback_days` = 180 days, newest first, up to `[exposure] max_transfers` = **20,000**. More than that in it → `stale` → INCOMPLETE (non-negotiable 1, as §3.1) |
+| Step 2: older history | From before USDT existed on the chain (TRON 2018-01-01, BSC 2020-08-01) up to the required window, newest first, with what is left of the 20,000, within `[exposure] history_extension_seconds` = 45 s and the exposure source's own 150 s timeout |
+| Step 2 finished | `all_history: true`; cached, so the next check gets it free |
+| Step 2 capped or out of time | Not a gap: the check says where history starts ("since <date> (older history not read)", `since` in evidence) |
+
+VS-16: TRON costs about one request per 200 transfers; an ordinary BSC wallet 4–5 HyperSync queries
+but 20–40 s; an exchange-sized BSC wallet never finishes a full read in a check's time.
 
 Counterparties, direct exposures and behaviour rules use everything read. The classifier keeps its
 own 90-day window (§5).
