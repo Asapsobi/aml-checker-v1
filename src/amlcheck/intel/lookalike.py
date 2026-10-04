@@ -3,7 +3,7 @@
 Address poisoning: an attacker sends dust from an address that shares the first and last characters
 of a real counterparty, hoping the operator copies it from history. The target is compared, by
 look-alike key, with every registry counterparty and every trusted address (an `own_or_trusted`
-intel label or a labels.csv `allowlist` tag; own wallets join in P10). Same key, different address
+intel label, a labels.csv `allowlist` tag, or an own wallet, D-062). Same key, different address
 → REVIEW, with both full addresses and the differing middle marked.
 """
 
@@ -57,6 +57,16 @@ def lookalikes(conn: sqlite3.Connection, address: Address) -> list[dict[str, Any
                 "last_verdict": cp.last_verdict,
                 "clients": list(cp.clients),
             }
+    own = {
+        r[0]: r[1]
+        for r in conn.execute(
+            "SELECT address_norm, name FROM own_wallets WHERE chain = ? AND active = 1",
+            (address.chain.value,),
+        )
+    }
+    for a, name in sorted(own.items()):
+        if a != address.norm and lookalike_key(address.chain, a) == key:
+            known[a] = {"address": a, "why_known": "own wallet", "wallet": name}
     for a in sorted(_trusted(conn, address.chain)):
         if a != address.norm and lookalike_key(address.chain, a) == key:
             known.setdefault(a, {"address": a, "why_known": "trusted"})

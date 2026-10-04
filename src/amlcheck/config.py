@@ -179,6 +179,8 @@ class Monitor(_Section):
     rescreen_days: PosInt = 7
     trace_amount_usdt: PosDec = Decimal("10000")
     webhook_url: str | None = None
+    max_senders_per_run: PosInt = 50  # D-063
+    first_lookback_hours: PosInt = 24  # D-062
 
     @field_validator("webhook_url")
     @classmethod
