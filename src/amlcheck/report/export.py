@@ -3,6 +3,8 @@
 - CSV: one row per check. A spreadsheet runs a cell that starts with `=`, `+`, `-`, `@`, a tab or a
   carriage return as a formula; addresses, notes and client names come from outside, so every cell
   goes through `csv_cell`, which puts a `'` in front of such a value (OWASP CSV injection).
+- Every check carries the decisions made on it (PRD F12.4): a `decisions` column in CSV and PDF;
+  in JSON the decision records themselves, with their own chain hashes.
 - JSON: every record exactly as hashed, with its `prev_hash` and `record_hash`, so the chain can be
   re-verified from the export alone: sha256 of `prev_hash` + the record as canonical JSON (keys
   sorted, no spaces, UTF-8).
@@ -28,6 +30,7 @@ from reportlab.lib.units import mm
 from reportlab.pdfgen.canvas import Canvas
 from reportlab.platypus import Paragraph, SimpleDocTemplate, Spacer, Table, TableStyle
 
+from amlcheck.cases import decisions
 from amlcheck.core.audit import canonical_json, load
 from amlcheck.core.score import from_json, shown
 from amlcheck.report.case_report import text as _pdf_text
@@ -48,6 +51,7 @@ CSV_COLUMNS = (
     "rules",
     "trace_id",
     "record_hash",
+    "decisions",
 )
 
 
@@ -85,6 +89,7 @@ class Row:
     trace_id: str | None
     record_hash: str
     rules: tuple[str, ...]
+    decisions: tuple[str, ...] = ()  # "approved by sobhan 2026-10-04", in chain order (F12.4)
 
     @property
     def score(self) -> tuple[int | None, str]:
@@ -113,6 +118,12 @@ def rows(conn: sqlite3.Connection, f: Filter) -> list[Row]:
         (f.chain, f.address),
     ):
         rules.setdefault(check_id, set()).add(rule_id)
+    decided: dict[str, list[str]] = {}
+    for s in decisions.stored(conn):
+        d = s.decision
+        decided.setdefault(d.check_id, []).append(
+            f"{d.decision} by {d.operator} {d.created_at[:10]}"
+        )
     return [
         Row(
             seq=r[0],
@@ -128,6 +139,7 @@ def rows(conn: sqlite3.Connection, f: Filter) -> list[Row]:
             trace_id=r[10],
             record_hash=r[11],
             rules=tuple(sorted(rules.get(r[1], ()))),
+            decisions=tuple(decided.get(r[1], ())),
         )
         for r in found
     ]
@@ -156,6 +168,7 @@ def to_csv(found: Sequence[Row]) -> str:
                 " ".join(r.rules),
                 r.trace_id,
                 r.record_hash,
+                "; ".join(r.decisions),
             )
         )
     return buf.getvalue()
@@ -168,8 +181,23 @@ def to_json(conn: sqlite3.Connection, found: Sequence[Row]) -> str:
         if loaded is None:  # pragma: no cover - the row was just read
             continue
         record, prev, digest = loaded
+        made = [
+            {
+                "seq": s.seq,
+                "prev_hash": s.prev_hash,
+                "record_hash": s.record_hash,
+                "decision": s.decision.body(),
+            }
+            for s in decisions.stored(conn, check_id=r.check_id)
+        ]
         out.append(
-            {"seq": r.seq, "prev_hash": prev, "record_hash": digest, "record": record.body()}
+            {
+                "seq": r.seq,
+                "prev_hash": prev,
+                "record_hash": digest,
+                "record": record.body(),
+                "decisions": made,
+            }
         )
     # Canonical form inside each record: the hash can be recomputed from the export as is.
     return json.dumps(json.loads(canonical_json(out)), indent=2, ensure_ascii=False) + "\n"
@@ -195,7 +223,17 @@ def to_pdf(found: Sequence[Row], what: Filter) -> bytes:
         creator="amlcheck",
         invariant=1,
     )
-    head = ["#", "Recorded (UTC)", "Verdict", "Score", "Chain", "Address", "Client", "Rules"]
+    head = [
+        "#",
+        "Recorded (UTC)",
+        "Verdict",
+        "Score",
+        "Chain",
+        "Address",
+        "Client",
+        "Decision",
+        "Rules",
+    ]
     table: list[list[Any]] = [head]
     for r in found:
         score, _ = r.score
@@ -208,10 +246,11 @@ def to_pdf(found: Sequence[Row], what: Filter) -> bytes:
                 r.chain,
                 Paragraph(_pdf_text(r.address), _MONO),
                 Paragraph(_pdf_text(r.client or ""), _CELL),
+                Paragraph(_pdf_text(r.decisions[-1] if r.decisions else ""), _CELL),
                 Paragraph(_pdf_text(" ".join(r.rules)), _CELL),
             ]
         )
-    widths = [12 * mm, 34 * mm, 22 * mm, 28 * mm, 12 * mm, 78 * mm, 30 * mm]
+    widths = [10 * mm, 32 * mm, 22 * mm, 26 * mm, 10 * mm, 70 * mm, 26 * mm, 34 * mm]
     widths.append(page[0] - 24 * mm - sum(widths))
     t = Table(table, colWidths=widths, repeatRows=1, hAlign="LEFT")
     style: list[Any] = [

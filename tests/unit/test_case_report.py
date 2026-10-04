@@ -138,7 +138,7 @@ async def test_contents(conn: sqlite3.Connection) -> None:
         "2 0-value transfer(s) dropped (address poisoning)",
         A,  # full address in the counterparty table
         "PERSONAL",
-        "No decision recorded.",
+        "No decision recorded on this check.",
         "Source of funds",
         "exchange_regulated",
         "60.0%",
@@ -221,3 +221,19 @@ def test_cli(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     missing = runner.invoke(app, ["cp", "report", OTHER])
     assert missing.exit_code == 1
     assert "never been checked" in missing.output
+
+
+# F10.4 / D-060: the decisions made on the check are in its report.
+async def test_decisions_in_the_report(conn: sqlite3.Connection) -> None:
+    from amlcheck.cases import cases
+
+    await checked(conn)
+    case, _ = cases.open_case(conn, detect(T), by="sobhan", now=NOW)
+    gap = pdf_text(render(gather(conn, detect(T))))
+    assert "No decision recorded on this check. A case is open (open)." in gap
+    cases.decide(conn, case, "escalated", "asked the lead", by="sobhan", now=NOW, tool_version="x")
+    cases.decide(conn, case, "rejected", "sanctioned exposure", by="ali", now=NOW, tool_version="x")
+    t = pdf_text(render(gather(conn, detect(T))))
+    for expected in ("ESCALATED", "asked the lead", "REJECTED", "sanctioned exposure", "ali"):
+        assert expected in t, expected
+    assert "Decision chain #2, hash" in t.replace("\n", " ")

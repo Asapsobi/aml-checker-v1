@@ -4,8 +4,8 @@
   linked to it, the registry row, labels and entity. No network, so the report always shows what was
   recorded at the time of the check, and the same records give the same PDF bytes (`invariant`).
 - The record's own hash is recomputed and shown; `amlcheck audit verify` checks the whole chain.
-- Sections: verdict and score, findings, sources, USDT history, classification, decision ("No
-  decision recorded" until P9), the record, then source of funds with the graph (the SVG's layout).
+- Sections: verdict and score, findings, sources, USDT history, classification, the decisions made
+  on this check (D-060), the record, then source of funds with the graph (the SVG's layout).
 - Built-in PDF fonts (no embedding): text the WinAnsi encoding can't hold is shown as `?`; `≥` and
   arrows are spelled out. Marked internal use only on every page (D-023).
 """
@@ -37,6 +37,7 @@ from reportlab.platypus import (
     TableStyle,
 )
 
+from amlcheck.cases import decisions as decisions_chain
 from amlcheck.core import score as scoring
 from amlcheck.core.audit import AuditRecord, load, record_hash
 from amlcheck.core.models import Address, Verdict
@@ -95,6 +96,8 @@ class CaseData:
     category: str | None
     trace: Trace | None
     trace_status: str | None
+    decisions: tuple[decisions_chain.Stored, ...] = ()
+    case_status: str | None = None
 
 
 def gather(conn: sqlite3.Connection, address: Address, check_id: str | None = None) -> CaseData:
@@ -142,6 +145,15 @@ def gather(conn: sqlite3.Connection, address: Address, check_id: str | None = No
         category=terminal.category if terminal else None,
         trace=trace,
         trace_status=status,
+        decisions=tuple(decisions_chain.stored(conn, check_id=record.check_id)),
+        case_status=(
+            "open"
+            if conn.execute(
+                "SELECT 1 FROM cases WHERE opened_from = ? AND status = 'open'",
+                (record.check_id,),
+            ).fetchone()
+            else None
+        ),
     )
 
 
@@ -486,10 +498,31 @@ def _classification(d: CaseData) -> list[Flowable]:
     ]
 
 
-def _decision() -> list[Flowable]:
+def _decision(d: CaseData) -> list[Flowable]:
+    out: list[Flowable] = [_p("Decision", H2)]
+    if not d.decisions:
+        open_case = f" A case is open ({d.case_status})." if d.case_status else ""
+        return [*out, _p(f"No decision recorded on this check.{text(open_case)}")]
+    rows: list[list[Any]] = [["When (UTC)", "Decision", "By", "Note"]]
+    for s in d.decisions:
+        rows.append(
+            [
+                s.decision.created_at[:16].replace("T", " "),
+                s.decision.decision.upper(),
+                _p(text(s.decision.operator), CELL),
+                _p(text(s.decision.note), CELL),
+            ]
+        )
     return [
-        _p("Decision", H2),
-        _p("No decision recorded. (Operator decisions on cases come with amlcheck P9.)"),
+        *out,
+        _table(rows, [28 * mm, 22 * mm, 26 * mm, TEXT_W - 76 * mm]),
+        _p(
+            text(
+                f"Decision chain #{d.decisions[-1].seq}, hash {d.decisions[-1].record_hash}; "
+                "each decision is tied to this check's record hash."
+            ),
+            SMALL,
+        ),
     ]
 
 
@@ -547,7 +580,7 @@ def render(d: CaseData) -> bytes:
         + _sources(d)
         + _exposure(d)
         + _classification(d)
-        + _decision()
+        + _decision(d)
         + _integrity(d)
         + _trace(d)  # last: the graph may take a page of its own
     )
