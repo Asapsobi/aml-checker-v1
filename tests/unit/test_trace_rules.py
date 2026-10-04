@@ -28,7 +28,7 @@ async def test_at37_findings(conn: sqlite3.Connection) -> None:
     found = {f.rule_id: f for f in trace_findings(t, S, NOW)}
     assert set(found) == {"R-TRC-01", "R-TRC-03", "R-TRC-05"}
     assert found["R-TRC-01"].evidence["paths"][0]["bottleneck_usdt"] == "4000"
-    assert found["R-TRC-01"].severity is Severity.REVIEW  # D-044
+    assert found["R-TRC-01"].severity is Severity.INFO  # v2: the score decides (D-072)
     assert found["R-TRC-03"].evidence["share"] == "0.2"
     assert found["R-TRC-05"].evidence["share"] == "0.1"
     assert found["R-TRC-05"].evidence["priority"] == "low"

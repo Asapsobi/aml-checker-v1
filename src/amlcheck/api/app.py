@@ -299,7 +299,9 @@ def create_app(rt: runtime.Runtime, token: str) -> FastAPI:
                     "last_check_id": cp.last_check_id,
                     "last_verdict": cp.last_verdict,
                     "last_score": cp.last_score,
-                    "last_score_shown": shown(cp.last_score, cp.last_verdict),
+                    "last_score_shown": shown(
+                        cp.last_score, cp.last_verdict, cp.last_score_version
+                    ),
                     "clients": list(cp.clients),
                     "check_count": cp.check_count,
                 }

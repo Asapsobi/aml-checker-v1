@@ -567,7 +567,7 @@ the stored values.
 
 | Exposure | `H` | `X` | Level |
 |---|---|---|---|
-| 1% scam, direct | 0.007 | 5.5 | Low |
+| 1% scam, direct | 0.007 | 5.4 | Low |
 | 2% sanctioned, direct | 0.02 | 14.8 | Low |
 | 5% mixer, direct | 0.04 | 27.4 | Low |
 | 5% sanctioned, direct | 0.05 | 33.0 | Moderate |

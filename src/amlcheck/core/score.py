@@ -1,119 +1,121 @@
-"""Score version 1: one number from 0 to 100 with its breakdown (methodology §9, PRD F10, D-052).
+"""Score version 2: one number from 0 to 100 from the check's exposures and behaviour (methodology
+§11.3, D-071). Version 1 scores (§9, D-052) stay stored with the checks v1 made and are read back
+as they were, never recomputed.
 
-- Hazard `H` = Σ weight × share over the trace's terminals; an inferred category also multiplies by
-  its terminal's confidence (share-weighted, D-052), plus 0.5 × the layering annotation. 0–1.
-- Exposure `E` = 60 × (1 − e^(−20·H)); direct `D` from R-EXP-01/02, capped at 30; behaviour `B` from
-  the behaviour rules, capped at 30; uncertainty `U` = 10 × (1 − coverage) for a complete trace.
-- Each component is stored to 0.1, half up, and the score is computed from the stored values, so a
-  stored breakdown always reproduces its score (D-052). BLOCK ⇒ 100; otherwise
-  min(99, ⌊E + D + B + U + 0.5⌋).
-- INCOMPLETE ⇒ the score is a lower bound, shown `≥ 34` with the band `medium+` (F10.1).
-- The score never changes the verdict; only R-SCR-01, when the owner turns it on, can (D-051).
+- `H_dir` = Σ w × (1 − decay)^(hop − 1) × percent × confidence over a direction's exposures, at most
+  1; `H` = 1 − (1 − H_in)(1 − H_out).
+- Exposure points `X` = 100 × (1 − e^(−k·H)); behaviour points `B` from the behaviour rules, at most
+  30. Both stored to 0.1, half up; the score is computed from the stored values, so a stored
+  breakdown always reproduces its score.
+- BLOCK ⇒ 100; otherwise min(99, ⌊X + (100 − X) × B / 100 + 0.5⌋).
+- Levels: low 0–30, moderate 31–70, high 71–90, severe 91–100 (§11.4). INCOMPLETE ⇒ a lower bound,
+  shown `≥ 34 · moderate+`.
+- The score never makes a BLOCK; R-SCR-01 can make a REVIEW from `[score] review_at` (D-072).
 """
 
 from __future__ import annotations
 
 import json
-from collections.abc import Iterable, Mapping
+from collections.abc import Iterable
 from dataclasses import dataclass
 from decimal import ROUND_FLOOR, ROUND_HALF_UP, Decimal
 from typing import Any
 
 from amlcheck.chain.base import canonical_amount
+from amlcheck.config import Score as ScoreSettings
 from amlcheck.core.models import Finding, Verdict
-from amlcheck.intel.categories import BY_NAME, CATEGORIES
-from amlcheck.trace.model import Trace
+from amlcheck.core.risk import DIRECTIONS, Exposure
+from amlcheck.trace.model import dec
 
-SCORE_VERSION = 1
+SCORE_VERSION = 2
 
-#: Inferred-only categories (methodology §8): their share counts at their terminal's confidence.
-INFERRED = frozenset(c.name for c in CATEGORIES if c.provenances == frozenset({"inferred"}))
-LAYERING_WEIGHT = Decimal("0.5")
-DIRECT: dict[str, int] = {"R-EXP-01": 25, "R-EXP-02": 15}
+#: §11.3 behaviour points. R-HEU-05's counterparties are direct exposures now, so it adds none.
 BEHAVIOUR: dict[str, int] = {
     "R-HEU-01": 5,
     "R-HEU-02": 10,
     "R-HEU-03": 10,
     "R-HEU-04": 5,
-    "R-HEU-05": 15,
     "R-HEU-06": 20,
     "R-HEU-07": 15,
     "R-FRZ-02": 15,
 }
-CAP = 30
-BANDS = ((80, "severe"), (50, "high"), (20, "medium"), (0, "low"))
+BEHAVIOUR_CAP = 30
+LEVELS = ((91, "severe"), (71, "high"), (31, "moderate"), (0, "low"))
+V1_BANDS = ((80, "severe"), (50, "high"), (20, "medium"), (0, "low"))  # §9, for v1 records
 _TENTH = Decimal("0.1")
 
 
-def hazard(trace: Trace) -> Decimal:
-    """`H` from the trace's terminals. A partial trace counts what it attributed (D-052)."""
-    h = Decimal(0)
-    for n in trace.nodes:
-        if n.terminal is None or n.terminal.startswith("untraced:"):
-            continue
-        category = BY_NAME[n.terminal]
-        part = category.weight * n.weight
-        if category.name in INFERRED and n.classification is not None:
-            part *= n.classification.confidence
-        h += part
-    h += LAYERING_WEIGHT * trace.annotations.get("layering", Decimal(0))
-    return min(h, Decimal(1))
+def level(score: int, version: int = SCORE_VERSION) -> str:
+    """A score's level (§11.4), or a v1 score's band (§9)."""
+    return next(name for floor, name in (V1_BANDS if version == 1 else LEVELS) if score >= floor)
 
 
-def band(score: int) -> str:
-    return next(name for floor, name in BANDS if score >= floor)
-
-
-def shown(score: int | None, verdict: str) -> str:
-    """A stored score for lists: `66 · high`, `≥ 34 · medium+` (INCOMPLETE), `-` (before P7)."""
+def shown(score: int | None, verdict: str, version: int | None = SCORE_VERSION) -> str:
+    """A stored score for lists: `66 · high`, `≥ 34 · moderate+` (INCOMPLETE), `-` (before P7).
+    `version` None means a score whose version wasn't recorded: a v1 one (before P12)."""
     if score is None:
         return "-"
+    name = level(score, version or 1)
     if verdict == Verdict.INCOMPLETE.value:
-        return f"≥ {score} · {band(score)}+"
-    return f"{score} · {band(score)}"
+        return f"≥ {score} · {name}+"
+    return f"{score} · {name}"
 
 
 def _tenth(x: Decimal) -> Decimal:
     return x.quantize(_TENTH, rounding=ROUND_HALF_UP)
 
 
+def hazards(exposures: Iterable[Exposure], decay: Decimal) -> dict[str, Decimal]:
+    """`H_in`, `H_out`, each at most 1."""
+    h = dict.fromkeys(DIRECTIONS, Decimal(0))
+    for e in exposures:
+        h[e.direction] += e.contribution(decay)
+    return {d: min(v, Decimal(1)) for d, v in h.items()}
+
+
 @dataclass(frozen=True)
 class Score:
     score: int
-    band: str
+    level: str
     lower_bound: bool  # INCOMPLETE: the true score is at least this
-    exposure: Decimal  # E
-    direct: Decimal  # D
+    exposure: Decimal  # X
     behaviour: Decimal  # B
-    uncertainty: Decimal  # U
-    hazard: Decimal | None  # None when no trace ran
+    hazard_in: Decimal
+    hazard_out: Decimal
+    decay: Decimal
+    k: Decimal
     version: int = SCORE_VERSION
 
     @property
+    def band(self) -> str:
+        """The level; the name lists and exports have used since v1."""
+        return self.level
+
+    @property
     def shown(self) -> str:
-        """`66 · high`, or `≥ 34 · medium+` for a lower bound."""
+        """`66 · high`, or `≥ 34 · moderate+` for a lower bound."""
         return shown(self.score, Verdict.INCOMPLETE.value if self.lower_bound else "")
 
     @property
     def breakdown(self) -> str:
-        parts = zip(
-            "EDBU", (self.exposure, self.direct, self.behaviour, self.uncertainty), strict=True
+        return (
+            f"exposure {canonical_amount(self.exposure)} · "
+            f"behaviour {canonical_amount(self.behaviour)}"
         )
-        return " · ".join(f"{k} {canonical_amount(v)}" for k, v in parts)
 
     def to_json(self) -> dict[str, Any]:
         return {
             "score_version": self.version,
             "score": self.score,
-            "band": self.band,
+            "level": self.level,
             "lower_bound": self.lower_bound,
             "components": {
-                "E": canonical_amount(self.exposure),
-                "D": canonical_amount(self.direct),
+                "X": canonical_amount(self.exposure),
                 "B": canonical_amount(self.behaviour),
-                "U": canonical_amount(self.uncertainty),
             },
-            "hazard": canonical_amount(self.hazard) if self.hazard is not None else None,
+            "hazard": {"in": dec(self.hazard_in), "out": dec(self.hazard_out)},
+            "decay": canonical_amount(self.decay),
+            "k": canonical_amount(self.k),
         }
 
     def dumps(self) -> str:
@@ -121,49 +123,84 @@ class Score:
         return json.dumps(self.to_json(), sort_keys=True, separators=(",", ":"))
 
 
+@dataclass(frozen=True)
+class ScoreV1:
+    """A v1 score as stored (§9, D-052), for checks made before v2. Read only."""
+
+    score: int
+    band: str
+    lower_bound: bool
+    stored: dict[str, Any]
+    version: int = 1
+
+    @property
+    def level(self) -> str:
+        return self.band
+
+    @property
+    def shown(self) -> str:
+        return shown(self.score, Verdict.INCOMPLETE.value if self.lower_bound else "", 1)
+
+    @property
+    def breakdown(self) -> str:
+        c = self.stored["components"]
+        return " · ".join(f"{k} {c[k]}" for k in "EDBU")
+
+    def to_json(self) -> dict[str, Any]:
+        return dict(self.stored)
+
+
 def compute(
-    verdict: Verdict, findings: Iterable[Finding], trace: Mapping[str, Any] | None = None
+    verdict: Verdict,
+    findings: Iterable[Finding],
+    exposures: Iterable[Exposure],
+    settings: ScoreSettings,
 ) -> Score:
-    """The score of a check. `trace` is the trace source's evidence, when a trace ran."""
+    """The score of a check from its exposures (§11.1) and behaviour findings."""
     rules = {f.rule_id for f in findings}
-    h: Decimal | None = None
-    exposure = uncertainty = Decimal(0)
-    if trace and trace.get("hazard") is not None:
-        h = Decimal(str(trace["hazard"]))
-        exposure = _tenth(60 * (1 - (-20 * h).exp()))
-        coverage = trace.get("coverage")
-        if trace.get("complete") and coverage is not None:  # no inflow or partial: 0 (D-052)
-            uncertainty = _tenth(10 * (1 - Decimal(str(coverage))))
-    direct = Decimal(min(CAP, sum(v for r, v in DIRECT.items() if r in rules)))
-    behaviour = Decimal(min(CAP, sum(v for r, v in BEHAVIOUR.items() if r in rules)))
+    h = hazards(exposures, settings.decay)
+    combined = 1 - (1 - h["in"]) * (1 - h["out"])
+    exposure = _tenth(100 * (1 - (-settings.k * combined).exp()))
+    behaviour = _tenth(
+        Decimal(min(BEHAVIOUR_CAP, sum(v for r, v in BEHAVIOUR.items() if r in rules)))
+    )
     if verdict is Verdict.BLOCK:
         score = 100
     else:
-        total = exposure + direct + behaviour + uncertainty + Decimal("0.5")
+        total = exposure + (100 - exposure) * behaviour / 100 + Decimal("0.5")
         score = min(99, int(total.to_integral_value(rounding=ROUND_FLOOR)))
     return Score(
         score=score,
-        band=band(score),
+        level=level(score),
         lower_bound=verdict is Verdict.INCOMPLETE,
         exposure=exposure,
-        direct=direct,
         behaviour=behaviour,
-        uncertainty=uncertainty,
-        hazard=h,
+        hazard_in=h["in"],
+        hazard_out=h["out"],
+        decay=settings.decay,
+        k=settings.k,
     )
 
 
-def from_json(text: str) -> Score:
+def shown_stored(score_json: str | None) -> str:
+    """A stored score as lists show it, read through its own JSON: a v1 score keeps its v1 band."""
+    return from_json(score_json).shown if score_json else "-"
+
+
+def from_json(text: str) -> Score | ScoreV1:
     d = json.loads(text)
+    if d["score_version"] == 1:
+        return ScoreV1(d["score"], d["band"], d["lower_bound"], d)
     c = d["components"]
     return Score(
         score=d["score"],
-        band=d["band"],
+        level=d["level"],
         lower_bound=d["lower_bound"],
-        exposure=Decimal(c["E"]),
-        direct=Decimal(c["D"]),
+        exposure=Decimal(c["X"]),
         behaviour=Decimal(c["B"]),
-        uncertainty=Decimal(c["U"]),
-        hazard=Decimal(d["hazard"]) if d.get("hazard") is not None else None,
+        hazard_in=Decimal(d["hazard"]["in"]),
+        hazard_out=Decimal(d["hazard"]["out"]),
+        decay=Decimal(d["decay"]),
+        k=Decimal(d["k"]),
         version=d["score_version"],
     )

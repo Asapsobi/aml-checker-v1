@@ -137,13 +137,13 @@ def collector_world() -> list[Transfer]:
     return xs
 
 
-# AT-34 through the source: COLLECTOR ≥ 0.7 → R-HEU-07, low priority, REVIEW.
+# AT-34 through the source: COLLECTOR ≥ 0.7 → R-HEU-07, low priority, INFO in v2 (D-072).
 async def test_at34_collector_raises_heu07(conn: sqlite3.Connection) -> None:
     profiler, store, _ = make(conn, collector_world())
     r = await ClassifierSource(profiler, store, Classifier(), clock=fixed(NOW)).check(detect(COL))
     assert r.status is SourceStatus.OK
     (f,) = r.findings
-    assert (f.rule_id, f.severity) == ("R-HEU-07", Severity.REVIEW)
+    assert (f.rule_id, f.severity) == ("R-HEU-07", Severity.INFO)
     assert f.evidence["priority"] == "low"
     assert f.evidence["type"] == "COLLECTOR"
     assert Decimal(f.evidence["confidence"]) >= Decimal("0.7")

@@ -19,7 +19,7 @@ from amlcheck.cases.cases import Case, CaseError
 from amlcheck.cli import runtime
 from amlcheck.core.address import AddressError, detect
 from amlcheck.core.models import Chain
-from amlcheck.core.score import shown
+from amlcheck.core.score import shown_stored
 from amlcheck.intel.store import IntelStore
 
 app = typer.Typer(help="Cases: decide on REVIEW, BLOCK or INCOMPLETE checks.", no_args_is_help=True)
@@ -131,6 +131,7 @@ def show(
             "check_id": c.opened_from,
             "verdict": check[0],
             "score": json.loads(check[1])["score"] if check[1] else None,
+            "score_shown": shown_stored(check[1]),
             "created_at": check[2],
         },
         "decisions": [_decision_dict(d) for d in decisions.stored(conn, case_id=c.case_id)],
@@ -144,7 +145,7 @@ def show(
     echo(f"case {c.case_id} · {c.status} · {c.chain.value} {c.address}")
     client = f" · client {c.client}" if c.client else ""
     echo(f"  opened {c.opened_at[:19]}Z by {c.opened_by}{client}")
-    score = shown(data["check"]["score"], check[0])
+    score = data["check"]["score_shown"]
     echo(f"  check {c.opened_from}: {check[0]} · score {score}")
     echo(f"  inferred types now: {', '.join(data['types']) or 'none'}")
     for d in data["decisions"]:

@@ -16,6 +16,7 @@
 | `0007_ops.sql` | P8 | `watchlist` |
 | `0008_cases.sql` | P9 | `cases`, `decisions`, `inference_feedback` |
 | `0009_monitor_api.sql` | P10 | `own_wallets`, `monitor_state`, `api_requests` |
+| `0010_risk_v2.sql` | P12 | `counterparties.last_score_version` |
 
 `storage/db.py` keeps the applied version in `PRAGMA user_version` and applies missing files in order,
 each in one transaction.
@@ -393,6 +394,19 @@ CREATE TABLE api_requests (
     created_at       TEXT NOT NULL
 );
 ```
+
+---
+
+## 0010_risk_v2.sql (P12)
+
+```sql
+-- Which score version `last_score` is (methodology §11, D-071): lists show a v1 score with its v1
+-- band and a v2 score with its level. NULL = before this migration, a v1 score; `cp rebuild` fills it.
+ALTER TABLE counterparties ADD COLUMN last_score_version INTEGER;
+```
+
+The check record needs no new column: exposures are in the sources' evidence, and the v2 score is
+in `score_json` with `"score_version": 2`.
 
 ---
 

@@ -97,7 +97,7 @@ def test_host_allow_list(api: TestClient) -> None:
 # AT-55: POST /v1/check with an Idempotency-Key, repeated → the same check_id, no second record;
 # the same key with another amount → 422.
 def test_at55_idempotent_check(api: TestClient, home: Path, world: World) -> None:
-    world.rules[TRON] = ("R-HEU-02",)
+    world.rules[TRON] = ("R-HEU-06",)
     key = {"Idempotency-Key": "order-1001"}
     first = api.post(
         "/v1/check", json={"address": TRON, "amount": "250", "client": "acme"}, headers=key
@@ -105,7 +105,7 @@ def test_at55_idempotent_check(api: TestClient, home: Path, world: World) -> Non
     assert first.status_code == 200, first.text
     data = first.json()
     assert (data["verdict"], data["amount_usdt"], data["client"]) == ("REVIEW", "250", "acme")
-    assert data["score"]["shown"] == "10 · low"
+    assert data["score"]["shown"] == "20 · low"
     again = api.post(
         "/v1/check", json={"address": TRON, "amount": "250.0", "client": "acme"}, headers=key
     )
@@ -206,14 +206,14 @@ def test_at56_trace(api: TestClient, home: Path) -> None:
 
 
 def test_counterparty(api: TestClient, home: Path, world: World) -> None:
-    world.rules[TRON] = ("R-HEU-02",)
+    world.rules[TRON] = ("R-HEU-06",)
     api.post("/v1/check", json={"address": TRON, "client": "acme"})
     r = api.get(f"/v1/counterparties/tron/{TRON}")
     assert r.status_code == 200
     data = r.json()
     assert data["checked"] is True
     assert data["registry"]["last_verdict"] == "REVIEW"
-    assert data["registry"]["last_score_shown"] == "10 · low"
+    assert data["registry"]["last_score_shown"] == "20 · low"
     assert data["registry"]["clients"] == ["acme"]
     assert (data["own_wallet"], data["watched"], data["open_case"], data["latest_decision"]) == (
         False,
@@ -227,7 +227,7 @@ def test_counterparty(api: TestClient, home: Path, world: World) -> None:
 
 
 def test_decision_shows_on_the_counterparty(api: TestClient, home: Path, world: World) -> None:
-    world.rules[TRON] = ("R-HEU-02",)
+    world.rules[TRON] = ("R-HEU-06",)
     check_id = api.post("/v1/check", json={"address": TRON}).json()["check_id"]
     rt = runtime.load()
     conn = runtime.open_database(rt)

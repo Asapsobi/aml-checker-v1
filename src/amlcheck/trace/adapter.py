@@ -15,7 +15,6 @@ from amlcheck.config import Settings
 from amlcheck.core import risk
 from amlcheck.core.clock import Clock, utcnow
 from amlcheck.core.models import Address, SourceResult, SourceStatus
-from amlcheck.core.score import hazard
 from amlcheck.intel.names import entity_name
 from amlcheck.screening.base import SourceHealth
 from amlcheck.trace.engine import TraceEngine, TraceFailed
@@ -34,7 +33,6 @@ def summary(trace: Trace, name: Callable[[str, str], str] | None = None) -> dict
         "partition": {k: dec(v) for k, v in sorted(trace.partition.items(), key=lambda kv: -kv[1])},
         "coverage": dec(trace.coverage) if trace.coverage is not None else None,
         "layering": dec(trace.annotations.get("layering", Decimal(0))),
-        "hazard": dec(hazard(trace)),  # the score's H (methodology §9), kept with the check
         "target_inflow_usdt": dec(trace.target_inflow),
         "top_paths": [
             {

@@ -5,7 +5,10 @@
 2. Collect findings, apply config severity overrides, add R-SYS-01 for required gaps, decide.
 3. Append the audit record **before** anything is returned for display (non-negotiable #2). If the
    append fails, the check fails: a result that isn't recorded is never shown.
-4. Upsert the counterparty registry (P4). Score (P7) joins later.
+4. Upsert the counterparty registry (P4).
+
+The score (methodology §11.3) comes from the sources' exposures after the verdict; R-SCR-01 can
+then raise a REVIEW, never a BLOCK (D-072).
 """
 
 from __future__ import annotations
@@ -29,6 +32,7 @@ from amlcheck.core.models import (
     SourceStatus,
     Verdict,
 )
+from amlcheck.core.risk import Exposure
 from amlcheck.core.rules import (
     RULES_VERSION,
     SYSTEM_SOURCE,
@@ -78,9 +82,9 @@ async def screen(
     findings = apply_overrides(found, settings.rules.severity) + system_findings(ordered, started)
     findings.sort(key=lambda f: (f.rule_id, f.source, f.summary))
     verdict = decide(findings)
-    trace_evidence = next((r.evidence for r in ordered if r.source == "trace"), None)
-    # After the verdict, never feeding it (F10.2).
-    score = compute(verdict, findings, trace_evidence)
+    exposures = [Exposure.from_json(e) for r in ordered for e in r.evidence.get("exposures", ())]
+    # After the verdict, never feeding it except through R-SCR-01 (F10.2, D-072).
+    score = compute(verdict, findings, exposures, settings.score)
     threshold = settings.score.review_at
     if threshold and verdict is not Verdict.BLOCK and score.score >= threshold:
         # R-SCR-01, only when the owner turned it on (D-051): REVIEW at most, decided again.
@@ -90,7 +94,7 @@ async def screen(
                 SYSTEM_SOURCE,
                 f"Score {score.shown} reaches the review threshold {threshold}",
                 started,
-                {"score": score.score, "review_at": threshold, "band": score.band},
+                {"score": score.score, "review_at": threshold, "level": score.level},
                 overrides=settings.rules.severity,
             )
         )
@@ -155,6 +159,7 @@ async def screen(
             record.verdict,
             client,
             score.score,
+            score.version,
         ),
     )
     return CheckResult(

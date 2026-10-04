@@ -29,7 +29,7 @@ def home(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Path:
 
 
 def record_checks(monkeypatch: pytest.MonkeyPatch) -> None:
-    use(monkeypatch, Fake("ofac_sdn"), Fake("exposure", rules=("R-HEU-02",)))
+    use(monkeypatch, Fake("ofac_sdn"), Fake("exposure", rules=("R-HEU-06",)))
     assert runner.invoke(app, ["check", TRON, "--client", '=HYPERLINK("http://x")']).exit_code == 3
     assert (
         runner.invoke(app, ["check", BSC, "--client", "acme", "--note", "+1 from ops"]).exit_code
@@ -72,9 +72,9 @@ def test_at47_csv_export_is_spreadsheet_safe(
     assert rows[1]["note"] == "'+1 from ops"
     assert (rows[1]["verdict"], rows[1]["score"], rows[1]["band"], rows[1]["rules"]) == (
         "REVIEW",
-        "10",
+        "20",
         "low",
-        "R-HEU-02",
+        "R-HEU-06",
     )
     assert rows[2]["rules"] == ""
 
@@ -110,7 +110,7 @@ def test_json_export_reverifies(home: Path, monkeypatch: pytest.MonkeyPatch) -> 
     assert (
         items[0]["record"]["check"]["client"] == '=HYPERLINK("http://x")'
     )  # JSON keeps data as is
-    assert items[1]["record"]["findings"][0]["rule_id"] == "R-HEU-02"
+    assert items[1]["record"]["findings"][0]["rule_id"] == "R-HEU-06"
 
 
 def test_pdf_export(home: Path, monkeypatch: pytest.MonkeyPatch) -> None:
@@ -130,8 +130,8 @@ def test_pdf_export(home: Path, monkeypatch: pytest.MonkeyPatch) -> None:
         "3 check(s)",
         TRON,
         BSC,
-        "10 · low",
-        "R-HEU-02",
+        "20 · low",
+        "R-HEU-06",
         "INTERNAL USE ONLY",
     ):
         assert expected in t, expected

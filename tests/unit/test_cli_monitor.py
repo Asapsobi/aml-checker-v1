@@ -49,7 +49,7 @@ class World:
                 Decimal(12_000),
             ),
         ]
-        self.rules: dict[str, tuple[str, ...]] = {S2: ("R-HEU-02",)}
+        self.rules: dict[str, tuple[str, ...]] = {S2: ("R-HEU-06",)}
         self.screened: list[str] = []
         self.traced: list[bool] = []
         self.notified: list[str] = []
@@ -106,7 +106,7 @@ def test_at52_monitor_run_exit_6(home: Path, monkeypatch: pytest.MonkeyPatch) ->
     assert r.exit_code == 6, r.output
     assert w.screened == [S1, S2]
     assert w.traced == [False, True]  # 12,000 USDT ≥ [monitor] trace_amount_usdt
-    assert f"ATTENTION REVIEW · 10 · low  {S2}" in r.output
+    assert f"ATTENTION REVIEW · 20 · low  {S2}" in r.output
     assert "2 sender(s) screened, 1 need attention" in r.output
     assert len(w.notified) == 1
     again = runner.invoke(app, ["monitor", "run", "--json"])

@@ -135,8 +135,8 @@ async def test_contents(conn: sqlite3.Connection) -> None:
         T,
         "REVIEW",
         "Review by hand before transacting.",
-        "Score 66 · high",
-        "E 59.5 · D 0 · B 5 · U 1",
+        "Score 70 · moderate",
+        "exposure 68.4 · behaviour 5",
         "R-TRC-01",
         "Funds trace back to a sanctioned wallet 2 hops away",
         "OFAC SDN list",
@@ -220,7 +220,7 @@ def test_cli(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     written = list(tmp_path.glob("case-bsc-*.pdf"))
     assert len(written) == 1
     assert "Case report written to case-bsc-0x54000000-" in r.output
-    assert ": REVIEW, score 66 · high" in r.output
+    assert ": REVIEW, score 70 · moderate" in r.output
     out = tmp_path / "x.pdf"
     assert runner.invoke(app, ["cp", "report", T, "--out", str(out)]).exit_code == 0
     assert out.read_bytes() == written[0].read_bytes()

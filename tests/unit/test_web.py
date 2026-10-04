@@ -122,7 +122,7 @@ def test_security_headers_and_no_scripts(web: TestClient) -> None:
 
 
 def test_check_flow(web: TestClient, world: World, home: Path) -> None:
-    world.rules[TRON] = ("R-HEU-02",)
+    world.rules[TRON] = ("R-HEU-06",)
     r = web.post(
         "/check", data={"address": TRON, "client": "acme", "note": "first", "token": TOKEN}
     )
@@ -131,8 +131,8 @@ def test_check_flow(web: TestClient, world: World, home: Path) -> None:
     assert detail.status_code == 200
     page = detail.text
     assert "REVIEW" in page
-    assert "Score <b>10 · low</b>" in page
-    assert "R-HEU-02" in page
+    assert "Score <b>20 · low</b>" in page
+    assert "R-HEU-06" in page
     assert f"https://tronscan.org/#/address/{TRON}" in page
     assert 'rel="noopener noreferrer"' in page
     assert "matches its contents" in page
@@ -164,7 +164,7 @@ def test_amount_turns_the_trace_on(web: TestClient, world: World) -> None:
 
 
 def test_history_and_counterparties(web: TestClient, world: World) -> None:
-    world.rules[TRON] = ("R-HEU-02",)
+    world.rules[TRON] = ("R-HEU-06",)
     web.post("/check", data={"address": TRON, "client": "<script>x</script>", "token": TOKEN})
     world.rules[TRON] = ()
     web.post("/check", data={"address": T, "token": TOKEN})

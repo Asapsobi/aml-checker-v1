@@ -14,7 +14,7 @@ from amlcheck.core import audit as chain
 from amlcheck.core.address import AddressError, detect
 from amlcheck.core.clock import to_db
 from amlcheck.core.models import Verdict
-from amlcheck.core.score import shown
+from amlcheck.core.score import shown_stored
 from amlcheck.report import export as exporter
 
 app = typer.Typer(help="List, verify and export the audit log.", no_args_is_help=True)
@@ -62,6 +62,7 @@ def list_(
             "client": r[7],
             "record_hash": r[8],
             "score": json.loads(r[9])["score"] if r[9] else None,
+            "score_shown": shown_stored(r[9]),
         }
         for r in rows
     ]
@@ -73,7 +74,7 @@ def list_(
     for rec in records:
         extra = f"  {rec['amount_usdt']} USDT" if rec["amount_usdt"] else ""
         who = f"  {rec['client']}" if rec["client"] else ""
-        score = shown(rec["score"], rec["verdict"])
+        score = rec["score_shown"]
         typer.echo(
             f"#{rec['seq']:<5} {rec['created_at']}  {rec['verdict']:<10} {score:<15} "
             f"{rec['chain']:<4} {rec['address']}{extra}{who}"

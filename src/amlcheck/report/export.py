@@ -32,7 +32,7 @@ from reportlab.platypus import Paragraph, SimpleDocTemplate, Spacer, Table, Tabl
 
 from amlcheck.cases import decisions
 from amlcheck.core.audit import canonical_json, load
-from amlcheck.core.score import from_json, shown
+from amlcheck.core.score import from_json, shown_stored
 from amlcheck.report.case_report import text as _pdf_text
 
 _FORMULA_START = ("=", "+", "-", "@", "\t", "\r")
@@ -97,6 +97,10 @@ class Row:
             return None, ""
         s = from_json(self.score_json)
         return s.score, s.band + ("+" if s.lower_bound else "")
+
+    @property
+    def score_shown(self) -> str:
+        return shown_stored(self.score_json)
 
 
 def rows(conn: sqlite3.Connection, f: Filter) -> list[Row]:
@@ -236,13 +240,12 @@ def to_pdf(found: Sequence[Row], what: Filter) -> bytes:
     ]
     table: list[list[Any]] = [head]
     for r in found:
-        score, _ = r.score
         table.append(
             [
                 r.seq,
                 r.created_at[:19],
                 r.verdict,
-                shown(score, r.verdict) if score is not None else "-",
+                r.score_shown,
                 r.chain,
                 Paragraph(_pdf_text(r.address), _MONO),
                 Paragraph(_pdf_text(r.client or ""), _CELL),

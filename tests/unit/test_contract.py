@@ -42,8 +42,9 @@ CHECK = {
     "config_hash",
     "disclaimer",
 }
-SCORE = {"score_version", "score", "band", "lower_bound", "components", "hazard", "shown"}
-COMPONENTS = {"E", "D", "B", "U"}
+SCORE = {"score_version", "score", "level", "lower_bound", "components", "hazard", "shown"}
+SCORE |= {"decay", "k"}
+COMPONENTS = {"X", "B"}
 FINDING = {"rule_id", "severity", "source", "summary", "observed_at", "evidence"}
 SOURCE = {"source", "label", "required", "status", "detail", "observed_at", "evidence"}
 ROUTES = {
@@ -83,7 +84,7 @@ COUNTERPARTY = {
     "latest_decision",
 }
 VERDICTS = {"BLOCK", "INCOMPLETE", "REVIEW", "NO_HITS"}
-BANDS = {"low", "medium", "high", "severe"}
+LEVELS = {"low", "moderate", "high", "severe"}
 
 
 @pytest.fixture
@@ -105,7 +106,7 @@ async def test_check_json_fields(conn: sqlite3.Connection) -> None:
     assert data["verdict"] in VERDICTS
     assert set(data["score"]) >= SCORE
     assert set(data["score"]["components"]) >= COMPONENTS
-    assert data["score"]["band"] in BANDS
+    assert data["score"]["level"] in LEVELS
     assert set(data["findings"][0]) >= FINDING
     assert set(data["sources"][0]) >= SOURCE
     assert set(data["audit"]) >= {"record_hash"}

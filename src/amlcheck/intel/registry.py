@@ -30,6 +30,7 @@ class CheckRow:
     verdict: str
     client: str | None
     score: int | None = None
+    score_version: int | None = None
 
 
 def _apply(conn: sqlite3.Connection, c: CheckRow) -> None:
@@ -44,7 +45,7 @@ def _apply(conn: sqlite3.Connection, c: CheckRow) -> None:
     conn.execute(
         "INSERT OR REPLACE INTO counterparties (chain, address_norm, lookalike_key, "
         "first_screened_at, last_screened_at, last_check_id, last_verdict, last_score, "
-        "clients_json, check_count) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+        "last_score_version, clients_json, check_count) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
         (
             c.chain,
             c.address_norm,
@@ -54,6 +55,7 @@ def _apply(conn: sqlite3.Connection, c: CheckRow) -> None:
             c.check_id,
             c.verdict,
             c.score,
+            c.score_version,
             json.dumps(sorted(clients)),
             (row[2] if row else 0) + 1,
         ),
@@ -74,8 +76,11 @@ def rebuild(conn: sqlite3.Connection) -> int:
             "SELECT check_id, created_at, chain, address_norm, verdict, client, score_json "
             "FROM checks ORDER BY seq"
         ).fetchall():
-            score = json.loads(r[6]).get("score") if r[6] else None
-            _apply(conn, CheckRow(r[0], r[1], r[2], r[3], r[4], r[5], score))
+            stored = json.loads(r[6]) if r[6] else {}
+            row = CheckRow(
+                r[0], r[1], r[2], r[3], r[4], r[5], stored.get("score"), stored.get("score_version")
+            )
+            _apply(conn, row)
             n += 1
     return n
 
@@ -92,11 +97,12 @@ class Counterparty:
     last_score: int | None
     clients: tuple[str, ...]
     check_count: int
+    last_score_version: int | None = None  # None: before P12, a v1 score
 
 
 _COLS = (
     "chain, address_norm, lookalike_key, first_screened_at, last_screened_at, last_check_id, "
-    "last_verdict, last_score, clients_json, check_count"
+    "last_verdict, last_score, clients_json, check_count, last_score_version"
 )
 
 
@@ -112,6 +118,7 @@ def _row(r: tuple[object, ...]) -> Counterparty:
         r[7] if isinstance(r[7], int) else None,
         tuple(json.loads(str(r[8]))),
         int(str(r[9])),
+        r[10] if isinstance(r[10], int) else None,
     )
 
 

@@ -8,7 +8,7 @@
 {% if not operator %}<p class="error">Set <code>[operator] name</code> in config.toml: decisions and feedback need a name (D-058).</p>{% endif %}
 <div class="card">
   <p>Opened {{ case.opened_at[:16] | replace("T", " ") }} UTC by {{ case.opened_by }}{% if case.client %} · client {{ case.client }}{% endif %}</p>
-  <p>On check <a href="/checks/{{ case.opened_from }}">{{ case.opened_from[:8] }}</a>: {{ verdict(check[0]) }} · score {{ shown(json_score(check[1]), check[0]) }} · recorded {{ check[2][:16] | replace("T", " ") }} UTC</p>
+  <p>On check <a href="/checks/{{ case.opened_from }}">{{ case.opened_from[:8] }}</a>: {{ verdict(check[0]) }} · score {{ shown_stored(check[1]) }} · recorded {{ check[2][:16] | replace("T", " ") }} UTC</p>
 </div>
 
 <h2>Decisions</h2>

@@ -21,7 +21,11 @@ def src(name: str, status: SourceStatus, required: bool = True) -> SourceResult:
     ("rules", "verdict"),
     [
         ([], Verdict.NO_HITS),
-        (["R-HEU-01"], Verdict.REVIEW),
+        (["R-HEU-01"], Verdict.NO_HITS),  # INFO: explains the score, no verdict (D-072)
+        (["R-HEU-02", "R-TRC-04"], Verdict.NO_HITS),
+        (["R-HEU-01", "R-EXP-01"], Verdict.REVIEW),
+        (["R-HEU-06"], Verdict.REVIEW),
+        (["R-FRZ-02"], Verdict.REVIEW),
         (["R-HEU-01", "R-SYS-01"], Verdict.INCOMPLETE),
         (["R-SYS-01", "R-FRZ-02"], Verdict.INCOMPLETE),
         (["R-SAN-01", "R-SYS-01"], Verdict.BLOCK),  # AT-16
@@ -37,7 +41,10 @@ def test_defaults_and_overrides() -> None:
     assert severity_for("R-EXP-01", {}) is Severity.REVIEW
     assert severity_for("R-EXP-01", {"R-EXP-01": "BLOCK"}) is Severity.BLOCK
     assert severity_for("R-SYS-01", {"R-SYS-01": "REVIEW"}) is Severity.INCOMPLETE  # fixed
-    assert severity_for("R-HEU-07", {"R-HEU-07": "BLOCK"}) is Severity.REVIEW  # never BLOCK
+    assert severity_for("R-HEU-07", {"R-HEU-07": "BLOCK"}) is Severity.INFO  # never BLOCK
+    assert severity_for("R-HEU-02", {}) is Severity.INFO  # v2 default (D-072)
+    assert severity_for("R-HEU-02", {"R-HEU-02": "REVIEW"}) is Severity.REVIEW  # v1 restored
+    assert severity_for("R-SAN-01", {"R-SAN-01": "INFO"}) is Severity.BLOCK  # never INFO
     with pytest.raises(KeyError):
         severity_for("R-NOPE-01", {})
 
@@ -49,7 +56,9 @@ def test_apply_overrides_changes_verdict() -> None:
 
 
 def test_low_priority_is_evidence_not_severity() -> None:
-    low = finding("R-HEU-01", "x", "new address", NOW, {"priority": "low"})
+    low = finding(
+        "R-HEU-01", "x", "new address", NOW, {"priority": "low"}, overrides={"R-HEU-01": "REVIEW"}
+    )
     assert low.severity is Severity.REVIEW
     assert decide([low]) is Verdict.REVIEW
 

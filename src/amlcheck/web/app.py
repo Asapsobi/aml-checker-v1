@@ -21,7 +21,6 @@ from __future__ import annotations
 import asyncio
 import contextlib
 import hmac
-import json
 import secrets
 import sqlite3
 from collections.abc import Awaitable, Callable
@@ -45,7 +44,7 @@ from amlcheck.cli import check as check_cli
 from amlcheck.cli import runtime
 from amlcheck.core.address import AddressError, detect
 from amlcheck.core.models import Address, Chain, Verdict
-from amlcheck.core.score import from_json, shown
+from amlcheck.core.score import from_json, shown, shown_stored
 from amlcheck.core.verdict import ACTION
 from amlcheck.intel import registry
 from amlcheck.intel.categories import CATEGORIES
@@ -101,7 +100,7 @@ def _env() -> Environment:
         pct=pct,
         dec=dec,
         shown=shown,
-        json_score=lambda text: json.loads(text)["score"] if text else None,
+        shown_stored=shown_stored,
         verdict_class=lambda v: VERDICT_CLASS.get(str(v), ""),
         action=lambda v: ACTION[Verdict(v)],
     )

@@ -93,7 +93,7 @@ def test_at46_changed_verdict(home: Path, monkeypatch: pytest.MonkeyPatch) -> No
     w.rules[B] = ("R-HEU-06",)
     second = runner.invoke(app, ["watch", "run"])
     assert second.exit_code == 6, second.output
-    assert f"CHANGED NO_HITS → REVIEW · 20 · medium  bsc {B}" in second.output
+    assert f"CHANGED NO_HITS → REVIEW · 20 · low  bsc {B}" in second.output
     assert f"same    NO_HITS · 0 · low  tron {A}" in second.output
     assert "2 watched, 1 changed" in second.output
     assert w.notified == [f"1 watched verdict(s) changed: {B[:8]}…{B[-6:]}: NO_HITS → REVIEW"]

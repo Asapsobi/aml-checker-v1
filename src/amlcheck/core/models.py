@@ -32,12 +32,14 @@ class Verdict(StrEnum):
 class Severity(StrEnum):
     """What a finding pushes the verdict to.
 
-    Low priority is `"priority": "low"` in evidence, not a severity (CLAUDE.md).
+    Low priority is `"priority": "low"` in evidence, not a severity (CLAUDE.md). `INFO` is shown and
+    explains the score but never changes the verdict (methodology §11.5, D-072).
     """
 
     BLOCK = "BLOCK"
     INCOMPLETE = "INCOMPLETE"
     REVIEW = "REVIEW"
+    INFO = "INFO"
 
 
 class SourceStatus(StrEnum):

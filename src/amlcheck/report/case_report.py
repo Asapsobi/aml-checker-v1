@@ -267,8 +267,9 @@ def _header(d: CaseData) -> list[Flowable]:
     if r.score_json:
         s = scoring.from_json(r.score_json)
         bound = " (lower bound: a required source is missing)" if s.lower_bound else ""
-        h = s.hazard
-        hazard = f" · hazard H {dec(h.quantize(Decimal('0.0001')))}" if h is not None else ""
+        hazard = ""
+        if isinstance(s, scoring.Score):
+            hazard = f" · H in {pct(s.hazard_in)}, out {pct(s.hazard_out)}"
         out.append(
             _p(
                 f"<b>Score {text(s.shown)}</b>{text(bound)} · {text(s.breakdown)}{hazard} "

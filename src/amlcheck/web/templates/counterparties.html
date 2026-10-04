@@ -14,7 +14,7 @@
   <tbody>
   {% for c in rows %}
     <tr><td>{{ c.chain.value }} {{ addr(c.chain.value, c.address_norm) }}</td><td>{{ verdict(c.last_verdict) }}</td>
-      <td>{{ shown(c.last_score, c.last_verdict) }}</td><td class="num">{{ c.check_count }}</td>
+      <td>{{ shown(c.last_score, c.last_verdict, c.last_score_version) }}</td><td class="num">{{ c.check_count }}</td>
       <td>{{ c.last_screened_at[:19] }}</td><td>{{ c.clients | join(", ") }}</td></tr>
   {% else %}
     <tr><td colspan="6" class="muted">No counterparties yet.</td></tr>
