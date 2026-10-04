@@ -1,7 +1,7 @@
 # amlcheck — Scheduling
 
 > Run the daily jobs without remembering to: macOS (launchd), Linux (cron or a systemd timer).
-> Part of P8 (T-8.07); `monitor run` joins in P10 the same way.
+> Part of P8 (T-8.07) and P10. For a server with the API as a service, see [server.md](server.md).
 
 ## What to schedule
 
@@ -9,6 +9,7 @@
 |---|---|---|---|
 | `amlcheck sync` | Daily (more often is fine) | The OFAC list must be younger than 48 h and the TRON freeze index current, or every check is INCOMPLETE | 0 ok, 1 failed |
 | `amlcheck watch run` | Daily, after `sync` | Re-screens every watched address; a changed verdict is listed, alerted and recorded | 0 no change, **6 a verdict changed**, 1 could not run |
+| `amlcheck monitor run` | Every 10 minutes (D-062) | Screens new senders to your own wallets (`amlcheck wallets add`); at most 50 per run, the rest next run | 0 nothing to look at, **6 a sender needs attention**, 1 could not run |
 
 - `batch`, `watch run` (and `monitor run`) share one lock file, `runs.lock` in the data folder: a run
   that finds another one going stops at once with exit 1 instead of competing for the provider limits.
@@ -134,6 +135,19 @@ journalctl --user -u amlcheck-daily.service -n 50
 
 `Persistent=true` runs a missed job after the machine was off. For runs while you are logged out:
 `loginctl enable-linger $USER`.
+
+## Monitoring every 10 minutes
+
+`monitor run` follows the same pattern with a shorter interval:
+
+| Scheduler | Interval |
+|---|---|
+| launchd | `<key>StartInterval</key><integer>600</integer>` in place of `StartCalendarInterval`, with `ProgramArguments` running `"$A" monitor run` |
+| cron | `*/10 * * * * AMLCHECK_HOME=… /…/amlcheck monitor run >> …/logs/monitor.log 2>&1` |
+| systemd | `OnCalendar=*:0/10` in the timer, `ExecStart=…/amlcheck monitor run`, `SuccessExitStatus=6` |
+
+It shares the run lock with `batch` and `watch run`: when one is going, the other stops at once and
+the next tick catches up (positions are kept per wallet).
 
 ## Checking that it works
 
