@@ -41,6 +41,12 @@ def pdf_text(pdf: bytes) -> str:
     return "\n".join(out)
 
 
+def flat(pdf: bytes) -> str:
+    """The page text with line breaks as single spaces: a sentence that carries a random hash wraps
+    at a different place each run."""
+    return " ".join(pdf_text(pdf).split())
+
+
 class Stub:
     """A source whose evidence is given: exposure history and classifier types, as recorded."""
 
@@ -123,7 +129,7 @@ async def test_contents(conn: sqlite3.Connection) -> None:
     pdf = render(data)
     assert pdf.startswith(b"%PDF-1.4")
     assert pdf.rstrip().endswith(b"%%EOF")
-    t = pdf_text(pdf)
+    t = flat(pdf)
     for expected in (
         "Case report",
         T,
@@ -189,7 +195,7 @@ async def test_tampered_record_is_flagged(conn: sqlite3.Connection) -> None:
     conn.execute("UPDATE checks SET client = 'other' WHERE check_id = ?", (check_id,))
     data = gather(conn, detect(T))
     assert not data.hash_ok
-    assert "DOES NOT MATCH its contents" in pdf_text(render(data))
+    assert "DOES NOT MATCH its contents" in flat(render(data))
 
 
 async def test_text_outside_winansi(conn: sqlite3.Connection) -> None:
@@ -233,7 +239,7 @@ async def test_decisions_in_the_report(conn: sqlite3.Connection) -> None:
     assert "No decision recorded on this check. A case is open (open)." in gap
     cases.decide(conn, case, "escalated", "asked the lead", by="sobhan", now=NOW, tool_version="x")
     cases.decide(conn, case, "rejected", "sanctioned exposure", by="ali", now=NOW, tool_version="x")
-    t = pdf_text(render(gather(conn, detect(T))))
+    t = flat(render(gather(conn, detect(T))))
     for expected in ("ESCALATED", "asked the lead", "REJECTED", "sanctioned exposure", "ali"):
         assert expected in t, expected
-    assert "Decision chain #2, hash" in t.replace("\n", " ")
+    assert "Decision chain #2, hash" in t
