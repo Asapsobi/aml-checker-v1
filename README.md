@@ -4,7 +4,7 @@
 address classification, risk scoring and a recorded decision trail. Local-first, built on RPC
 providers and indexers, no own nodes.
 
-> **Status:** P10 (monitoring & local API) ready for review, release v0.10.0. Released: v0.1.0 – v0.9.0. The product is built from these docs with Claude Code,
+> **Status:** P11 (calibration & 1.0) ready for review, release **v1.0.0**. Released: v0.1.0 – v0.10.0. Calibration is partly measured; see [docs/calibration.md](docs/calibration.md). The product is built from these docs with Claude Code,
 > phase by phase.
 
 ## Setup
@@ -28,6 +28,12 @@ uv run amlcheck status       # creates ~/.amlcheck/ and the database
    only the keys you change. Unknown keys and invalid values are refused, so a typo can't silently
    fall back to a default.
 3. Try it without touching real data: `AMLCHECK_HOME=$(mktemp -d) uv run amlcheck status`.
+
+**End-to-end test (live).** `uv run python scripts/e2e.py` runs every feature through the real
+commands on a fresh temporary data folder (sync, checks, investigate and trace, case report, cases,
+batch, watchlist, monitor, exports with the hash chain re-verified, the API and the web UI) and prints
+PASS / FAIL per step. It needs the keys and the network, and never touches `~/.amlcheck`. Don't run
+other amlcheck commands at the same time: they share the TronGrid key's rate limit.
 
 ## Commands
 
@@ -83,6 +89,8 @@ Development checks: `uv run pytest -q`, `uv run ruff check .`, `uv run ruff form
 | 08 | [Backlog](docs/08-backlog.md) | Builder | Ticket-sized work per phase |
 | 09 | [Decisions](docs/09-decisions.md) | Owner | ADR log, seeded with the design's decisions |
 | 10 | [Open questions](docs/10-open-questions.md) | Owner | What the owner needs to answer, with proposed answers |
+| — | [Calibration](docs/calibration.md) | Owner | What the golden set measured, what it didn't yet, and the calibration notes |
+| — | [Operator guide](docs/operator-guide.md) | Operator | The daily rhythm, reading a result, findings, cases, intelligence, troubleshooting |
 | — | [Scheduling](docs/scheduling.md) | Operator | Daily `sync` and `watch run`, `monitor run` every 10 minutes, with launchd, cron or a systemd timer |
 | — | [API](docs/api.md) | Integrator | The local API: auth, idempotency, endpoints, errors, the corridor mock |
 | — | [Server](docs/server.md) | Operator | Running the API and the timers under systemd on the corridor server |

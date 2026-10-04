@@ -1,0 +1,1080 @@
+[
+ {
+  "chain": "bsc",
+  "address": "0x0330070fd38ec3bb94f58fa55d40368271e9e54a",
+  "expect": {
+   "verdict": "BLOCK",
+   "type": null,
+   "clean": false
+  },
+  "source": "OFAC SDN list of 2026-10-02",
+  "note": "AMNOKGANG TECHNOLOGY DEVELOPMENT COMPANY (DPRK4)",
+  "recorded": {
+   "at": "2026-10-04T08:46:21.390635Z",
+   "classifier_version": 1,
+   "profile": {
+    "address": "0x0330070fd38ec3bb94f58fa55d40368271e9e54a",
+    "since": "2026-07-06T08:46:20.873478Z",
+    "until": "2026-10-04T08:46:20.873478Z",
+    "n_in": 0,
+    "n_out": 0,
+    "distinct_senders": 0,
+    "distinct_recipients": 0,
+    "volume_in": "0",
+    "volume_out": "0",
+    "retained_share": null,
+    "first_seen": "2024-03-16T13:39:35.000000Z",
+    "last_seen": null,
+    "median_hold_hours": null,
+    "pass_through_share_24h": null,
+    "top_recipient": null,
+    "top_recipient_share_out": null,
+    "top_sender_share_in": null,
+    "small_in_share": null,
+    "round_share": null,
+    "max_senders_24h": 0,
+    "max_recipients_24h": 0,
+    "capped": false,
+    "is_contract": false
+   },
+   "context": {
+    "top_recipient_is_hub": false,
+    "hub_entity_named": false,
+    "top_recipient_fresh_or_pass_through": false
+   },
+   "types": [
+    "PERSONAL"
+   ],
+   "verdict": "BLOCK",
+   "score": 100,
+   "band": "severe",
+   "lower_bound": false,
+   "traced": false,
+   "check_id": "03580873-686e-4b53-9c5d-3c98bb3ecc51"
+  }
+ },
+ {
+  "chain": "bsc",
+  "address": "0x038989cbb1710c72b9920dc4fa529158f463e72c",
+  "expect": {
+   "verdict": "BLOCK",
+   "type": null,
+   "clean": false
+  },
+  "source": "OFAC SDN list of 2026-10-02",
+  "note": "Armando de Jesus OJEDA AVILES (ILLICIT-DRUGS-EO14059, SDGT)",
+  "recorded": {
+   "at": "2026-10-04T08:46:46.342116Z",
+   "classifier_version": 1,
+   "profile": {
+    "address": "0x038989cbb1710c72b9920dc4fa529158f463e72c",
+    "since": "2026-07-06T08:46:33.206364Z",
+    "until": "2026-10-04T08:46:33.206364Z",
+    "n_in": 0,
+    "n_out": 0,
+    "distinct_senders": 0,
+    "distinct_recipients": 0,
+    "volume_in": "0",
+    "volume_out": "0",
+    "retained_share": null,
+    "first_seen": null,
+    "last_seen": null,
+    "median_hold_hours": null,
+    "pass_through_share_24h": null,
+    "top_recipient": null,
+    "top_recipient_share_out": null,
+    "top_sender_share_in": null,
+    "small_in_share": null,
+    "round_share": null,
+    "max_senders_24h": 0,
+    "max_recipients_24h": 0,
+    "capped": false,
+    "is_contract": false
+   },
+   "context": {
+    "top_recipient_is_hub": false,
+    "hub_entity_named": false,
+    "top_recipient_fresh_or_pass_through": false
+   },
+   "types": [
+    "PERSONAL"
+   ],
+   "verdict": "BLOCK",
+   "score": 100,
+   "band": "severe",
+   "lower_bound": false,
+   "traced": false,
+   "check_id": "dc439048-3edc-44d7-a68c-1df016cf3bab"
+  }
+ },
+ {
+  "chain": "bsc",
+  "address": "0x04dba1194ee10112fe6c3207c0687def0e78bacf",
+  "expect": {
+   "verdict": "BLOCK",
+   "type": null,
+   "clean": false
+  },
+  "source": "OFAC SDN list of 2026-10-02",
+  "note": "Alex Adrianus Martinus PEIJNENBURG (ILLICIT-DRUGS-EO14059)",
+  "recorded": {
+   "at": "2026-10-04T08:47:29.997384Z",
+   "classifier_version": 1,
+   "profile": {
+    "address": "0x04dba1194ee10112fe6c3207c0687def0e78bacf",
+    "since": "2026-07-06T08:47:22.986903Z",
+    "until": "2026-10-04T08:47:22.986903Z",
+    "n_in": 0,
+    "n_out": 0,
+    "distinct_senders": 0,
+    "distinct_recipients": 0,
+    "volume_in": "0",
+    "volume_out": "0",
+    "retained_share": null,
+    "first_seen": null,
+    "last_seen": null,
+    "median_hold_hours": null,
+    "pass_through_share_24h": null,
+    "top_recipient": null,
+    "top_recipient_share_out": null,
+    "top_sender_share_in": null,
+    "small_in_share": null,
+    "round_share": null,
+    "max_senders_24h": 0,
+    "max_recipients_24h": 0,
+    "capped": false,
+    "is_contract": false
+   },
+   "context": {
+    "top_recipient_is_hub": false,
+    "hub_entity_named": false,
+    "top_recipient_fresh_or_pass_through": false
+   },
+   "types": [
+    "PERSONAL"
+   ],
+   "verdict": "BLOCK",
+   "score": 100,
+   "band": "severe",
+   "lower_bound": false,
+   "traced": false,
+   "check_id": "16ecbd6e-d1cf-4694-a72d-135d464bfafc"
+  }
+ },
+ {
+  "chain": "bsc",
+  "address": "0x08723392ed15743cc38513c4925f5e6be5c17243",
+  "expect": {
+   "verdict": "BLOCK",
+   "type": null,
+   "clean": false
+  },
+  "source": "OFAC SDN list of 2026-10-02",
+  "note": "LAZARUS GROUP (DPRK3)",
+  "recorded": {
+   "at": "2026-10-04T08:47:45.831323Z",
+   "classifier_version": 1,
+   "profile": {
+    "address": "0x08723392ed15743cc38513c4925f5e6be5c17243",
+    "since": "2026-07-06T08:47:45.212960Z",
+    "until": "2026-10-04T08:47:45.212960Z",
+    "n_in": 0,
+    "n_out": 0,
+    "distinct_senders": 0,
+    "distinct_recipients": 0,
+    "volume_in": "0",
+    "volume_out": "0",
+    "retained_share": null,
+    "first_seen": "2022-05-05T06:08:55.000000Z",
+    "last_seen": null,
+    "median_hold_hours": null,
+    "pass_through_share_24h": null,
+    "top_recipient": null,
+    "top_recipient_share_out": null,
+    "top_sender_share_in": null,
+    "small_in_share": null,
+    "round_share": null,
+    "max_senders_24h": 0,
+    "max_recipients_24h": 0,
+    "capped": false,
+    "is_contract": false
+   },
+   "context": {
+    "top_recipient_is_hub": false,
+    "hub_entity_named": false,
+    "top_recipient_fresh_or_pass_through": false
+   },
+   "types": [
+    "PERSONAL"
+   ],
+   "verdict": "BLOCK",
+   "score": 100,
+   "band": "severe",
+   "lower_bound": false,
+   "traced": false,
+   "check_id": "f6239bfa-92a1-496e-9ca5-ae6b53508a45"
+  }
+ },
+ {
+  "chain": "bsc",
+  "address": "0x08b2efdcdb8822efe5ad0eae55517cf5dc544251",
+  "expect": {
+   "verdict": "BLOCK",
+   "type": null,
+   "clean": false
+  },
+  "source": "OFAC SDN list of 2026-10-02",
+  "note": "Alex Adrianus Martinus PEIJNENBURG (ILLICIT-DRUGS-EO14059)",
+  "recorded": {
+   "at": "2026-10-04T08:47:58.681761Z",
+   "classifier_version": 1,
+   "profile": {
+    "address": "0x08b2efdcdb8822efe5ad0eae55517cf5dc544251",
+    "since": "2026-07-06T08:47:58.149878Z",
+    "until": "2026-10-04T08:47:58.149878Z",
+    "n_in": 0,
+    "n_out": 0,
+    "distinct_senders": 0,
+    "distinct_recipients": 0,
+    "volume_in": "0",
+    "volume_out": "0",
+    "retained_share": null,
+    "first_seen": "2026-01-01T05:04:21.000000Z",
+    "last_seen": null,
+    "median_hold_hours": null,
+    "pass_through_share_24h": null,
+    "top_recipient": null,
+    "top_recipient_share_out": null,
+    "top_sender_share_in": null,
+    "small_in_share": null,
+    "round_share": null,
+    "max_senders_24h": 0,
+    "max_recipients_24h": 0,
+    "capped": false,
+    "is_contract": false
+   },
+   "context": {
+    "top_recipient_is_hub": false,
+    "hub_entity_named": false,
+    "top_recipient_fresh_or_pass_through": false
+   },
+   "types": [
+    "PERSONAL"
+   ],
+   "verdict": "BLOCK",
+   "score": 100,
+   "band": "severe",
+   "lower_bound": false,
+   "traced": false,
+   "check_id": "568de17c-eda6-4a04-8faa-5c7fcd4dd6e3"
+  }
+ },
+ {
+  "chain": "bsc",
+  "address": "0x0931ca4d13bb4ba75d9b7132ab690265d749a5e7",
+  "expect": {
+   "verdict": "BLOCK",
+   "type": null,
+   "clean": false
+  },
+  "source": "OFAC SDN list of 2026-10-02",
+  "note": "CRYPTEX (CYBER2, RUSSIA-EO14024)",
+  "recorded": {
+   "at": "2026-10-04T08:48:17.369121Z",
+   "classifier_version": 1,
+   "profile": {
+    "address": "0x0931ca4d13bb4ba75d9b7132ab690265d749a5e7",
+    "since": "2026-07-06T08:48:10.424617Z",
+    "until": "2026-10-04T08:48:10.424617Z",
+    "n_in": 0,
+    "n_out": 0,
+    "distinct_senders": 0,
+    "distinct_recipients": 0,
+    "volume_in": "0",
+    "volume_out": "0",
+    "retained_share": null,
+    "first_seen": null,
+    "last_seen": null,
+    "median_hold_hours": null,
+    "pass_through_share_24h": null,
+    "top_recipient": null,
+    "top_recipient_share_out": null,
+    "top_sender_share_in": null,
+    "small_in_share": null,
+    "round_share": null,
+    "max_senders_24h": 0,
+    "max_recipients_24h": 0,
+    "capped": false,
+    "is_contract": false
+   },
+   "context": {
+    "top_recipient_is_hub": false,
+    "hub_entity_named": false,
+    "top_recipient_fresh_or_pass_through": false
+   },
+   "types": [
+    "PERSONAL"
+   ],
+   "verdict": "BLOCK",
+   "score": 100,
+   "band": "severe",
+   "lower_bound": false,
+   "traced": false,
+   "check_id": "4ffc24a7-b1ab-458d-acbf-ffe3bdc26094"
+  }
+ },
+ {
+  "chain": "bsc",
+  "address": "0x098b716b8aaf21512996dc57eb0615e2383e2f96",
+  "expect": {
+   "verdict": "BLOCK",
+   "type": null,
+   "clean": false
+  },
+  "source": "OFAC SDN list of 2026-10-02",
+  "note": "LAZARUS GROUP (DPRK3)",
+  "recorded": {
+   "at": "2026-10-04T08:48:33.688590Z",
+   "classifier_version": 1,
+   "profile": {
+    "address": "0x098b716b8aaf21512996dc57eb0615e2383e2f96",
+    "since": "2026-07-06T08:48:33.176261Z",
+    "until": "2026-10-04T08:48:33.176261Z",
+    "n_in": 0,
+    "n_out": 0,
+    "distinct_senders": 0,
+    "distinct_recipients": 0,
+    "volume_in": "0",
+    "volume_out": "0",
+    "retained_share": null,
+    "first_seen": "2022-03-29T15:51:59.000000Z",
+    "last_seen": null,
+    "median_hold_hours": null,
+    "pass_through_share_24h": null,
+    "top_recipient": null,
+    "top_recipient_share_out": null,
+    "top_sender_share_in": null,
+    "small_in_share": null,
+    "round_share": null,
+    "max_senders_24h": 0,
+    "max_recipients_24h": 0,
+    "capped": false,
+    "is_contract": false
+   },
+   "context": {
+    "top_recipient_is_hub": false,
+    "hub_entity_named": false,
+    "top_recipient_fresh_or_pass_through": false
+   },
+   "types": [
+    "PERSONAL"
+   ],
+   "verdict": "BLOCK",
+   "score": 100,
+   "band": "severe",
+   "lower_bound": false,
+   "traced": false,
+   "check_id": "d687ba57-905f-4ed6-a621-fc2d801d19b6"
+  }
+ },
+ {
+  "chain": "bsc",
+  "address": "0x0ee5067b06776a89ccc7dc8ee369984ad7db5e06",
+  "expect": {
+   "verdict": "BLOCK",
+   "type": null,
+   "clean": false
+  },
+  "source": "OFAC SDN list of 2026-10-02",
+  "note": "Alex Adrianus Martinus PEIJNENBURG (ILLICIT-DRUGS-EO14059)",
+  "recorded": {
+   "at": "2026-10-04T08:49:09.387739Z",
+   "classifier_version": 1,
+   "profile": {
+    "address": "0x0ee5067b06776a89ccc7dc8ee369984ad7db5e06",
+    "since": "2026-07-06T08:48:43.270218Z",
+    "until": "2026-10-04T08:48:43.270218Z",
+    "n_in": 0,
+    "n_out": 0,
+    "distinct_senders": 0,
+    "distinct_recipients": 0,
+    "volume_in": "0",
+    "volume_out": "0",
+    "retained_share": null,
+    "first_seen": null,
+    "last_seen": null,
+    "median_hold_hours": null,
+    "pass_through_share_24h": null,
+    "top_recipient": null,
+    "top_recipient_share_out": null,
+    "top_sender_share_in": null,
+    "small_in_share": null,
+    "round_share": null,
+    "max_senders_24h": 0,
+    "max_recipients_24h": 0,
+    "capped": false,
+    "is_contract": false
+   },
+   "context": {
+    "top_recipient_is_hub": false,
+    "hub_entity_named": false,
+    "top_recipient_fresh_or_pass_through": false
+   },
+   "types": [
+    "PERSONAL"
+   ],
+   "verdict": "BLOCK",
+   "score": 100,
+   "band": "severe",
+   "lower_bound": false,
+   "traced": false,
+   "check_id": "5c5202c4-1d2e-4544-b880-bf734b2ea691"
+  }
+ },
+ {
+  "chain": "bsc",
+  "address": "0x12de548f79a50d2bd05481c8515c1ef5183666a9",
+  "expect": {
+   "verdict": "BLOCK",
+   "type": null,
+   "clean": false
+  },
+  "source": "OFAC SDN list of 2026-10-02",
+  "note": "OLD VECTOR LLC (CYBER4)",
+  "recorded": {
+   "at": "2026-10-04T08:49:45.835430Z",
+   "classifier_version": 1,
+   "profile": {
+    "address": "0x12de548f79a50d2bd05481c8515c1ef5183666a9",
+    "since": "2026-07-06T08:49:24.784168Z",
+    "until": "2026-10-04T08:49:24.784168Z",
+    "n_in": 0,
+    "n_out": 0,
+    "distinct_senders": 0,
+    "distinct_recipients": 0,
+    "volume_in": "0",
+    "volume_out": "0",
+    "retained_share": null,
+    "first_seen": null,
+    "last_seen": null,
+    "median_hold_hours": null,
+    "pass_through_share_24h": null,
+    "top_recipient": null,
+    "top_recipient_share_out": null,
+    "top_sender_share_in": null,
+    "small_in_share": null,
+    "round_share": null,
+    "max_senders_24h": 0,
+    "max_recipients_24h": 0,
+    "capped": false,
+    "is_contract": false
+   },
+   "context": {
+    "top_recipient_is_hub": false,
+    "hub_entity_named": false,
+    "top_recipient_fresh_or_pass_through": false
+   },
+   "types": [
+    "PERSONAL"
+   ],
+   "verdict": "BLOCK",
+   "score": 100,
+   "band": "severe",
+   "lower_bound": false,
+   "traced": false,
+   "check_id": "6a27d8b5-abde-4c2d-b754-dc98eb48e9d5"
+  }
+ },
+ {
+  "chain": "bsc",
+  "address": "0x14779cec0b117d5194c750c55ea1f42086631964",
+  "expect": {
+   "verdict": "BLOCK",
+   "type": null,
+   "clean": false
+  },
+  "source": "OFAC SDN list of 2026-10-02",
+  "note": "Armando de Jesus OJEDA AVILES (ILLICIT-DRUGS-EO14059, SDGT)",
+  "recorded": {
+   "at": "2026-10-04T08:50:01.145587Z",
+   "classifier_version": 1,
+   "profile": {
+    "address": "0x14779cec0b117d5194c750c55ea1f42086631964",
+    "since": "2026-07-06T08:49:59.992819Z",
+    "until": "2026-10-04T08:49:59.992819Z",
+    "n_in": 0,
+    "n_out": 0,
+    "distinct_senders": 0,
+    "distinct_recipients": 0,
+    "volume_in": "0",
+    "volume_out": "0",
+    "retained_share": null,
+    "first_seen": "2022-12-08T19:58:38.000000Z",
+    "last_seen": null,
+    "median_hold_hours": null,
+    "pass_through_share_24h": null,
+    "top_recipient": null,
+    "top_recipient_share_out": null,
+    "top_sender_share_in": null,
+    "small_in_share": null,
+    "round_share": null,
+    "max_senders_24h": 0,
+    "max_recipients_24h": 0,
+    "capped": false,
+    "is_contract": false
+   },
+   "context": {
+    "top_recipient_is_hub": false,
+    "hub_entity_named": false,
+    "top_recipient_fresh_or_pass_through": false
+   },
+   "types": [
+    "PERSONAL"
+   ],
+   "verdict": "BLOCK",
+   "score": 100,
+   "band": "severe",
+   "lower_bound": false,
+   "traced": false,
+   "check_id": "c36403c2-0635-4e7c-b2fc-ee471e83cd40"
+  }
+ },
+ {
+  "chain": "tron",
+  "address": "T9yD14Nj9j7xAB4dbGeiX9h8unxZPcVb1B",
+  "expect": {
+   "verdict": "BLOCK",
+   "type": null,
+   "clean": false
+  },
+  "source": "Tether TRON blacklist event of 2021-08-05T17:58:48.000000Z",
+  "note": null,
+  "recorded": {
+   "at": "2026-10-04T08:50:03.710320Z",
+   "classifier_version": 1,
+   "profile": {
+    "address": "T9yD14Nj9j7xAB4dbGeiX9h8unxZPcVb1B",
+    "since": "2026-07-06T08:50:03.111659Z",
+    "until": "2026-10-04T08:50:03.111659Z",
+    "n_in": 0,
+    "n_out": 0,
+    "distinct_senders": 0,
+    "distinct_recipients": 0,
+    "volume_in": "0",
+    "volume_out": "0",
+    "retained_share": null,
+    "first_seen": "2021-07-07T16:27:33.000000Z",
+    "last_seen": null,
+    "median_hold_hours": null,
+    "pass_through_share_24h": null,
+    "top_recipient": null,
+    "top_recipient_share_out": null,
+    "top_sender_share_in": null,
+    "small_in_share": null,
+    "round_share": null,
+    "max_senders_24h": 0,
+    "max_recipients_24h": 0,
+    "capped": false,
+    "is_contract": false
+   },
+   "context": {
+    "top_recipient_is_hub": false,
+    "hub_entity_named": false,
+    "top_recipient_fresh_or_pass_through": false
+   },
+   "types": [
+    "PERSONAL"
+   ],
+   "verdict": "BLOCK",
+   "score": 100,
+   "band": "severe",
+   "lower_bound": false,
+   "traced": false,
+   "check_id": "edcd6e28-2ac1-4446-8ca3-fb7a66a89b4a"
+  }
+ },
+ {
+  "chain": "tron",
+  "address": "T9yD14Nj9j7xAB4dbGeiX9h8uo2Qpmiwc6",
+  "expect": {
+   "verdict": "BLOCK",
+   "type": null,
+   "clean": false
+  },
+  "source": "Tether TRON blacklist event of 2022-01-21T15:41:21.000000Z",
+  "note": null,
+  "recorded": {
+   "at": "2026-10-04T08:50:06.132764Z",
+   "classifier_version": 1,
+   "profile": {
+    "address": "T9yD14Nj9j7xAB4dbGeiX9h8uo2Qpmiwc6",
+    "since": "2026-07-06T08:50:05.534928Z",
+    "until": "2026-10-04T08:50:05.534928Z",
+    "n_in": 0,
+    "n_out": 0,
+    "distinct_senders": 0,
+    "distinct_recipients": 0,
+    "volume_in": "0",
+    "volume_out": "0",
+    "retained_share": null,
+    "first_seen": "2021-11-16T01:39:36.000000Z",
+    "last_seen": null,
+    "median_hold_hours": null,
+    "pass_through_share_24h": null,
+    "top_recipient": null,
+    "top_recipient_share_out": null,
+    "top_sender_share_in": null,
+    "small_in_share": null,
+    "round_share": null,
+    "max_senders_24h": 0,
+    "max_recipients_24h": 0,
+    "capped": false,
+    "is_contract": false
+   },
+   "context": {
+    "top_recipient_is_hub": false,
+    "hub_entity_named": false,
+    "top_recipient_fresh_or_pass_through": false
+   },
+   "types": [
+    "PERSONAL"
+   ],
+   "verdict": "BLOCK",
+   "score": 100,
+   "band": "severe",
+   "lower_bound": false,
+   "traced": false,
+   "check_id": "990ef831-1c04-4912-939a-4868f5d7908a"
+  }
+ },
+ {
+  "chain": "tron",
+  "address": "T9yD14Nj9j7xAB4dbGeiX9h8uo3tUeJYV2",
+  "expect": {
+   "verdict": "BLOCK",
+   "type": null,
+   "clean": false
+  },
+  "source": "Tether TRON blacklist event of 2022-01-21T15:41:51.000000Z",
+  "note": null,
+  "recorded": {
+   "at": "2026-10-04T08:50:08.579495Z",
+   "classifier_version": 1,
+   "profile": {
+    "address": "T9yD14Nj9j7xAB4dbGeiX9h8uo3tUeJYV2",
+    "since": "2026-07-06T08:50:08.044064Z",
+    "until": "2026-10-04T08:50:08.044064Z",
+    "n_in": 0,
+    "n_out": 0,
+    "distinct_senders": 0,
+    "distinct_recipients": 0,
+    "volume_in": "0",
+    "volume_out": "0",
+    "retained_share": null,
+    "first_seen": "2021-11-16T01:42:39.000000Z",
+    "last_seen": null,
+    "median_hold_hours": null,
+    "pass_through_share_24h": null,
+    "top_recipient": null,
+    "top_recipient_share_out": null,
+    "top_sender_share_in": null,
+    "small_in_share": null,
+    "round_share": null,
+    "max_senders_24h": 0,
+    "max_recipients_24h": 0,
+    "capped": false,
+    "is_contract": false
+   },
+   "context": {
+    "top_recipient_is_hub": false,
+    "hub_entity_named": false,
+    "top_recipient_fresh_or_pass_through": false
+   },
+   "types": [
+    "PERSONAL"
+   ],
+   "verdict": "BLOCK",
+   "score": 100,
+   "band": "severe",
+   "lower_bound": false,
+   "traced": false,
+   "check_id": "45b7f2e6-bb1d-49c7-a2ff-4ed0be63e43b"
+  }
+ },
+ {
+  "chain": "tron",
+  "address": "T9yD14Nj9j7xAB4dbGeiX9h8uo57MpD28W",
+  "expect": {
+   "verdict": "BLOCK",
+   "type": null,
+   "clean": false
+  },
+  "source": "Tether TRON blacklist event of 2021-11-09T15:46:21.000000Z",
+  "note": null,
+  "recorded": {
+   "at": "2026-10-04T08:50:11.064103Z",
+   "classifier_version": 1,
+   "profile": {
+    "address": "T9yD14Nj9j7xAB4dbGeiX9h8uo57MpD28W",
+    "since": "2026-07-06T08:50:10.512232Z",
+    "until": "2026-10-04T08:50:10.512232Z",
+    "n_in": 0,
+    "n_out": 0,
+    "distinct_senders": 0,
+    "distinct_recipients": 0,
+    "volume_in": "0",
+    "volume_out": "0",
+    "retained_share": null,
+    "first_seen": "2021-10-14T12:57:06.000000Z",
+    "last_seen": null,
+    "median_hold_hours": null,
+    "pass_through_share_24h": null,
+    "top_recipient": null,
+    "top_recipient_share_out": null,
+    "top_sender_share_in": null,
+    "small_in_share": null,
+    "round_share": null,
+    "max_senders_24h": 0,
+    "max_recipients_24h": 0,
+    "capped": false,
+    "is_contract": false
+   },
+   "context": {
+    "top_recipient_is_hub": false,
+    "hub_entity_named": false,
+    "top_recipient_fresh_or_pass_through": false
+   },
+   "types": [
+    "PERSONAL"
+   ],
+   "verdict": "BLOCK",
+   "score": 100,
+   "band": "severe",
+   "lower_bound": false,
+   "traced": false,
+   "check_id": "43fbaf0a-32a9-4b37-be87-4453e2428c61"
+  }
+ },
+ {
+  "chain": "tron",
+  "address": "T9yD14Nj9j7xAB4dbGeiX9h8uo5kKupXs6",
+  "expect": {
+   "verdict": "BLOCK",
+   "type": null,
+   "clean": false
+  },
+  "source": "Tether TRON blacklist event of 2022-03-10T16:19:33.000000Z",
+  "note": null,
+  "recorded": {
+   "at": "2026-10-04T08:50:13.492952Z",
+   "classifier_version": 1,
+   "profile": {
+    "address": "T9yD14Nj9j7xAB4dbGeiX9h8uo5kKupXs6",
+    "since": "2026-07-06T08:50:12.930221Z",
+    "until": "2026-10-04T08:50:12.930221Z",
+    "n_in": 0,
+    "n_out": 0,
+    "distinct_senders": 0,
+    "distinct_recipients": 0,
+    "volume_in": "0",
+    "volume_out": "0",
+    "retained_share": null,
+    "first_seen": "2021-12-30T07:22:18.000000Z",
+    "last_seen": null,
+    "median_hold_hours": null,
+    "pass_through_share_24h": null,
+    "top_recipient": null,
+    "top_recipient_share_out": null,
+    "top_sender_share_in": null,
+    "small_in_share": null,
+    "round_share": null,
+    "max_senders_24h": 0,
+    "max_recipients_24h": 0,
+    "capped": false,
+    "is_contract": false
+   },
+   "context": {
+    "top_recipient_is_hub": false,
+    "hub_entity_named": false,
+    "top_recipient_fresh_or_pass_through": false
+   },
+   "types": [
+    "PERSONAL"
+   ],
+   "verdict": "BLOCK",
+   "score": 100,
+   "band": "severe",
+   "lower_bound": false,
+   "traced": false,
+   "check_id": "14ee01b3-a2dc-404b-a006-5c1576455841"
+  }
+ },
+ {
+  "chain": "tron",
+  "address": "TA3941uFAvmVibSkQ6fMJXxmaSNovX86mz",
+  "expect": {
+   "verdict": "BLOCK",
+   "type": null,
+   "clean": false
+  },
+  "source": "OFAC SDN list of 2026-10-02",
+  "note": "CHEIL CREDIT BANK (DPRK4)",
+  "recorded": {
+   "at": "2026-10-04T08:50:15.825123Z",
+   "classifier_version": 1,
+   "profile": {
+    "address": "TA3941uFAvmVibSkQ6fMJXxmaSNovX86mz",
+    "since": "2026-07-06T08:50:15.280347Z",
+    "until": "2026-10-04T08:50:15.280347Z",
+    "n_in": 0,
+    "n_out": 0,
+    "distinct_senders": 0,
+    "distinct_recipients": 0,
+    "volume_in": "0",
+    "volume_out": "0",
+    "retained_share": null,
+    "first_seen": "2024-11-19T10:56:12.000000Z",
+    "last_seen": null,
+    "median_hold_hours": null,
+    "pass_through_share_24h": null,
+    "top_recipient": null,
+    "top_recipient_share_out": null,
+    "top_sender_share_in": null,
+    "small_in_share": null,
+    "round_share": null,
+    "max_senders_24h": 0,
+    "max_recipients_24h": 0,
+    "capped": false,
+    "is_contract": false
+   },
+   "context": {
+    "top_recipient_is_hub": false,
+    "hub_entity_named": false,
+    "top_recipient_fresh_or_pass_through": false
+   },
+   "types": [
+    "PERSONAL"
+   ],
+   "verdict": "BLOCK",
+   "score": 100,
+   "band": "severe",
+   "lower_bound": false,
+   "traced": false,
+   "check_id": "0d2f4825-7b6a-42c7-a80f-47d6ed6eaac8"
+  }
+ },
+ {
+  "chain": "tron",
+  "address": "TA39q3p75XRSWYAEaSF7dANtyksoa3sLge",
+  "expect": {
+   "verdict": "BLOCK",
+   "type": null,
+   "clean": false
+  },
+  "source": "OFAC SDN list of 2026-10-02",
+  "note": "CHEIL CREDIT BANK (DPRK4)",
+  "recorded": {
+   "at": "2026-10-04T08:50:18.296487Z",
+   "classifier_version": 1,
+   "profile": {
+    "address": "TA39q3p75XRSWYAEaSF7dANtyksoa3sLge",
+    "since": "2026-07-06T08:50:17.736543Z",
+    "until": "2026-10-04T08:50:17.736543Z",
+    "n_in": 0,
+    "n_out": 0,
+    "distinct_senders": 0,
+    "distinct_recipients": 0,
+    "volume_in": "0",
+    "volume_out": "0",
+    "retained_share": null,
+    "first_seen": "2024-05-06T04:49:06.000000Z",
+    "last_seen": null,
+    "median_hold_hours": null,
+    "pass_through_share_24h": null,
+    "top_recipient": null,
+    "top_recipient_share_out": null,
+    "top_sender_share_in": null,
+    "small_in_share": null,
+    "round_share": null,
+    "max_senders_24h": 0,
+    "max_recipients_24h": 0,
+    "capped": false,
+    "is_contract": false
+   },
+   "context": {
+    "top_recipient_is_hub": false,
+    "hub_entity_named": false,
+    "top_recipient_fresh_or_pass_through": false
+   },
+   "types": [
+    "PERSONAL"
+   ],
+   "verdict": "BLOCK",
+   "score": 100,
+   "band": "severe",
+   "lower_bound": false,
+   "traced": false,
+   "check_id": "09ab3311-283a-4425-b93e-ac1ff65e9f3c"
+  }
+ },
+ {
+  "chain": "tron",
+  "address": "TA3rH2A7iHnm6pKH8gr9cK1EZnShnmZdFg",
+  "expect": {
+   "verdict": "BLOCK",
+   "type": null,
+   "clean": false
+  },
+  "source": "OFAC SDN list of 2026-10-02",
+  "note": "ISIL KHORASAN (FTO, SDGT)",
+  "recorded": {
+   "at": "2026-10-04T08:50:20.759260Z",
+   "classifier_version": 1,
+   "profile": {
+    "address": "TA3rH2A7iHnm6pKH8gr9cK1EZnShnmZdFg",
+    "since": "2026-07-06T08:50:20.197666Z",
+    "until": "2026-10-04T08:50:20.197666Z",
+    "n_in": 0,
+    "n_out": 0,
+    "distinct_senders": 0,
+    "distinct_recipients": 0,
+    "volume_in": "0",
+    "volume_out": "0",
+    "retained_share": null,
+    "first_seen": "2026-04-23T09:12:24.000000Z",
+    "last_seen": null,
+    "median_hold_hours": null,
+    "pass_through_share_24h": null,
+    "top_recipient": null,
+    "top_recipient_share_out": null,
+    "top_sender_share_in": null,
+    "small_in_share": null,
+    "round_share": null,
+    "max_senders_24h": 0,
+    "max_recipients_24h": 0,
+    "capped": false,
+    "is_contract": false
+   },
+   "context": {
+    "top_recipient_is_hub": false,
+    "hub_entity_named": false,
+    "top_recipient_fresh_or_pass_through": false
+   },
+   "types": [
+    "PERSONAL"
+   ],
+   "verdict": "BLOCK",
+   "score": 100,
+   "band": "severe",
+   "lower_bound": false,
+   "traced": false,
+   "check_id": "73a84c4d-e53b-4bcb-bd7c-d7d42216fd6c"
+  }
+ },
+ {
+  "chain": "tron",
+  "address": "TA82wQ77kb9DieW4C8q7C4KwMfnCzfziqN",
+  "expect": {
+   "verdict": "BLOCK",
+   "type": null,
+   "clean": false
+  },
+  "source": "OFAC SDN list of 2026-10-02",
+  "note": "ISIL KHORASAN (FTO, SDGT)",
+  "recorded": {
+   "at": "2026-10-04T08:50:23.316581Z",
+   "classifier_version": 1,
+   "profile": {
+    "address": "TA82wQ77kb9DieW4C8q7C4KwMfnCzfziqN",
+    "since": "2026-07-06T08:50:22.793559Z",
+    "until": "2026-10-04T08:50:22.793559Z",
+    "n_in": 0,
+    "n_out": 0,
+    "distinct_senders": 0,
+    "distinct_recipients": 0,
+    "volume_in": "0",
+    "volume_out": "0",
+    "retained_share": null,
+    "first_seen": "2025-05-10T18:52:03.000000Z",
+    "last_seen": null,
+    "median_hold_hours": null,
+    "pass_through_share_24h": null,
+    "top_recipient": null,
+    "top_recipient_share_out": null,
+    "top_sender_share_in": null,
+    "small_in_share": null,
+    "round_share": null,
+    "max_senders_24h": 0,
+    "max_recipients_24h": 0,
+    "capped": false,
+    "is_contract": false
+   },
+   "context": {
+    "top_recipient_is_hub": false,
+    "hub_entity_named": false,
+    "top_recipient_fresh_or_pass_through": false
+   },
+   "types": [
+    "PERSONAL"
+   ],
+   "verdict": "BLOCK",
+   "score": 100,
+   "band": "severe",
+   "lower_bound": false,
+   "traced": false,
+   "check_id": "09042594-5374-4e1e-97d3-4737f2945e3f"
+  }
+ },
+ {
+  "chain": "tron",
+  "address": "TAQPzv9941nVuTj4ng2vd6L11Re57r42pW",
+  "expect": {
+   "verdict": "BLOCK",
+   "type": null,
+   "clean": false
+  },
+  "source": "OFAC SDN list of 2026-10-02",
+  "note": "XINBI GUARANTEE (TCO)",
+  "recorded": {
+   "at": "2026-10-04T08:50:28.440861Z",
+   "classifier_version": 1,
+   "profile": {
+    "address": "TAQPzv9941nVuTj4ng2vd6L11Re57r42pW",
+    "since": "2026-07-06T08:50:27.679375Z",
+    "until": "2026-10-04T08:50:27.679375Z",
+    "n_in": 412,
+    "n_out": 41,
+    "distinct_senders": 117,
+    "distinct_recipients": 23,
+    "volume_in": "173202.282811",
+    "volume_out": "167776.782811",
+    "retained_share": "0.031325",
+    "first_seen": "2024-05-07T05:49:36.000000Z",
+    "last_seen": "2026-09-08T08:40:39.000000Z",
+    "median_hold_hours": "200.7925",
+    "pass_through_share_24h": "0.165321",
+    "top_recipient": "TE3GhYJUGvHuusXzJmLSfjW9LYShoaEa8r",
+    "top_recipient_share_out": "0.558041",
+    "top_sender_share_in": "0.157227",
+    "small_in_share": "0.097087",
+    "round_share": "0.090508",
+    "max_senders_24h": 13,
+    "max_recipients_24h": 5,
+    "capped": false,
+    "is_contract": false
+   },
+   "context": {
+    "top_recipient_is_hub": false,
+    "hub_entity_named": false,
+    "top_recipient_fresh_or_pass_through": false
+   },
+   "types": [],
+   "verdict": "BLOCK",
+   "score": 100,
+   "band": "severe",
+   "lower_bound": false,
+   "traced": false,
+   "check_id": "2bf94f7f-8b15-4665-bf00-f75f4a528917"
+  }
+ }
+]

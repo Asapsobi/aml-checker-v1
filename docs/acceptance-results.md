@@ -315,3 +315,36 @@ JSON for a check everywhere (`check --json`, `investigate --json`, the API, from
 Notes for P11 calibration: the monitor's live sender was NO_HITS with a medium score (48) from its
 trace's unattributed-service exposure: the same weighting note as P7.
 
+## P11 · Calibration & 1.0
+
+| AT | Tests | Status |
+|---|---|---|
+| AT-58 | **live** golden set; offline part `test_calibration.py::test_at58_golden_set_offline` | **Partly measured** (D-069): 20 BLOCK entries recorded, 20/20 verdicts as expected. HUB, DEPOSIT, COLLECTOR precision and the clean band **not measured**: owner's addresses pending (Q-36). Report: [calibration.md](calibration.md) |
+| AT-59 | **live** 3 TRON + 3 BSC traces, cold then warm (2026-10-04, code of `p11-calibration`) | **Passed** |
+
+AT-59, the VS-07 targets on fresh copies of the database emptied of all cached chain data:
+
+| Target | Cold requests | Cold time | Warm requests | Warm time | Saving |
+|---|---|---|---|---|---|
+| TRON `TRwJi21T…i6vSwo` | 43 TronGrid | 25 s | 1 | 0.6 s | 98% |
+| TRON `TS5t3Vh8…iGB3hE` | 105 TronGrid | 51 s | 1 | 0.7 s | 99% |
+| TRON `TVvWhZyL…LeSsWP` | 86 TronGrid | 40 s | 1 | 0.6 s | 99% |
+| BSC `0xc613cf…a1eeda` | 7 HyperSync | 34 s | 2 | 1.0 s | 71% |
+| BSC `0x0c1e52…ee1576` | 31 HyperSync, 14 RPC | 42 s | 2 | 1.2 s | 94% |
+| BSC `0x090354…26600c` | 38 HyperSync | 152 s | 2 | 1.2 s | 95% |
+
+Within PRD G8 (≤ 120 HyperSync, ≤ 200 TronGrid per cold trace), G7 (warm ≥ 50% fewer) and the
+performance targets (cold BSC ≤ 5 min, warm ≤ 90 s). Coverage and partitions identical to VS-07.
+
+Also in P11 so far: the v1 JSON contract pinned (`test_contract.py`, D-068), the operator guide, the
+golden-set harness (offline replay, precision report naming what it could not measure).
+
+COLLECTOR candidates from public data (2026-10-04): recipients of many small USDT payments in a recent
+slice (15 TronGrid event pages; 3,000 BSC blocks), the top 6 per chain classified live. All 12 are
+busy services: over 1,000 transfers in 90 days (capped → HUB 0.95) or contracts; one TRON address is
+also COLLECTOR 1.0 but primary HUB. No collector ground truth can be drawn from this without circular
+labelling, so COLLECTOR precision needs owner-known collectors or decided cases (D-066). Calibration
+note: a very busy collector, like a very busy deposit (P5), is primary HUB with the type as a tag.
+
+Sign-off: the owner chose to release v1.0.0 with the golden set partly measured (D-069); the remaining
+measurements follow in a v1.0.x (Q-36).
