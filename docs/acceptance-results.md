@@ -339,3 +339,10 @@ performance targets (cold BSC ≤ 5 min, warm ≤ 90 s). Coverage and partitions
 Also in P11 so far: the v1 JSON contract pinned (`test_contract.py`, D-068), the operator guide, the
 golden-set harness (offline replay, precision report naming what it could not measure).
 
+COLLECTOR candidates from public data (2026-10-04): recipients of many small USDT payments in a recent
+slice (15 TronGrid event pages; 3,000 BSC blocks), the top 6 per chain classified live. All 12 are
+busy services: over 1,000 transfers in 90 days (capped → HUB 0.95) or contracts; one TRON address is
+also COLLECTOR 1.0 but primary HUB. No collector ground truth can be drawn from this without circular
+labelling, so COLLECTOR precision needs owner-known collectors or decided cases (D-066). Calibration
+note: a very busy collector, like a very busy deposit (P5), is primary HUB with the type as a tag.
+
