@@ -18,8 +18,8 @@ ACTION = {
     Verdict.NO_HITS: "Proceed per policy. Not a clearance.",
 }
 DISCLAIMER = (
-    "Internal use only. NO_HITS means nothing was found in the sources checked, as of the times "
-    "shown; it is not a clearance."
+    "Internal use only. NO_HITS means no rule needs a review and the score is below the review "
+    "threshold, in the sources checked, as of the times shown; it is not a clearance."
 )
 
 

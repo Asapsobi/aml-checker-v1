@@ -76,7 +76,7 @@ WantedBy=multi-user.target
 
 ```bash
 sudo systemctl daemon-reload && sudo systemctl enable --now amlcheck-api
-curl -s -H "Authorization: Bearer $AMLCHECK_API_TOKEN" http://127.0.0.1:8766/v1/checks/none
+curl -s -H "Authorization: Bearer $AMLCHECK_API_TOKEN" http://127.0.0.1:8766/v2/checks/none
 # → a problem+json 404 means the API is up and the token is right
 ```
 

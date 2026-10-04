@@ -170,14 +170,20 @@ def main() -> int:
         need(data["verdict"] == "BLOCK", data["verdict"])
         need("R-SAN-01" in rules, f"no R-SAN-01 in {sorted(rules)}")
         need(data["score"]["score"] == 100, f"score {data['score']}")
-        return f"BLOCK · {', '.join(sorted(rules))}"
+        need(data.get("contract") == 2, f"contract {data.get('contract')}")
+        label = (data.get("address_label") or {}).get("name", "")
+        need(label.startswith("OFAC SDN"), f"address label {label!r}")
+        return f"BLOCK · {', '.join(sorted(rules))} · {label}"
 
     def bsc_check() -> str:
         out = r.amlcheck("check", BSC, "--json")
         need(out.returncode in (0, 3, 4, 5), f"exit {out.returncode}")
         data = json.loads(out.stdout)
-        need({"verdict", "score", "findings", "sources", "audit"} <= set(data), "fields missing")
-        return f"{data['verdict']} · {data['score']['shown']}"
+        fields = {"verdict", "score", "exposures", "detail_list", "findings", "sources", "audit"}
+        need(fields <= set(data), "fields missing")
+        return (
+            f"{data['verdict']} · {data['score']['shown']} · {len(data['exposures'])} exposure(s)"
+        )
 
     def investigate() -> str:
         out = r.amlcheck("investigate", TRON_TRACED, "--amount", "20000", "--json")
@@ -188,7 +194,11 @@ def main() -> int:
         total = sum(float(v) for v in t["partition"].values())
         need(abs(total - 1) < 0.001 or not t["complete"], f"partition sums to {total}")
         need(data["trace_id"] == t["trace_id"], "the check does not carry its trace id")
-        return f"{data['verdict']} · {data['score']['shown']} · coverage {t['coverage']}"
+        indirect = sum(1 for e in data["exposures"] if e["exposure_type"] == "indirect")
+        return (
+            f"{data['verdict']} · {data['score']['shown']} · coverage {t['coverage']} · "
+            f"{indirect} indirect exposure(s)"
+        )
 
     def trace_svg() -> str:
         svg = work / "trace.svg"
@@ -274,29 +284,29 @@ def main() -> int:
         )
         try:
             base = f"http://127.0.0.1:{port}"
-            wait_up(base + "/v1/checks/x")
+            wait_up(base + "/v2/checks/x")
             auth = {"Authorization": f"Bearer {token}"}
-            need(httpx.get(base + "/v1/checks/x").status_code == 401, "no token: not 401")
-            bad_host = httpx.get(base + "/v1/checks/x", headers={**auth, "Host": "evil.com"})
+            need(httpx.get(base + "/v2/checks/x").status_code == 401, "no token: not 401")
+            bad_host = httpx.get(base + "/v2/checks/x", headers={**auth, "Host": "evil.com"})
             need(bad_host.status_code == 400, "foreign host: not 400")
             key = {**auth, "Idempotency-Key": f"e2e-{secrets.token_hex(4)}"}
             first = httpx.post(
-                base + "/v1/check", json={"address": BLOCKED}, headers=key, timeout=600
+                base + "/v2/check", json={"address": BLOCKED}, headers=key, timeout=600
             )
             need(first.status_code == 200 and first.json()["verdict"] == "BLOCK", first.text[:200])
             again = httpx.post(
-                base + "/v1/check", json={"address": BLOCKED}, headers=key, timeout=600
+                base + "/v2/check", json={"address": BLOCKED}, headers=key, timeout=600
             )
             need(again.headers.get("idempotent-replayed") == "true", "no replay")
             need(again.json()["check_id"] == first.json()["check_id"], "replay made a new check")
             other = httpx.post(
-                base + "/v1/check",
+                base + "/v2/check",
                 json={"address": BLOCKED, "amount": "5"},
                 headers=key,
                 timeout=600,
             )
             need(other.status_code == 422, f"same key, other request: {other.status_code}")
-            cp = httpx.get(f"{base}/v1/counterparties/tron/{BLOCKED}", headers=auth).json()
+            cp = httpx.get(f"{base}/v2/counterparties/tron/{BLOCKED}", headers=auth).json()
             need(cp["checked"] is True, "counterparty not known")
             return "401, 400, replay, 422, counterparty"
         finally:

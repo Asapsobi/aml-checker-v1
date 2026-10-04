@@ -14,7 +14,7 @@ from typing import Any
 
 from amlcheck.chain.base import canonical_amount
 from amlcheck.intel.categories import BY_NAME, LABELS_CSV_CATEGORY
-from amlcheck.trace.model import Trace, dec
+from amlcheck.trace.model import Trace, dec, pct
 
 RISK_VERSION = 2
 
@@ -144,7 +144,7 @@ def from_trace(trace: Trace, name: Callable[[str, str], str]) -> list[Exposure]:
                 n.hop,
                 n.address,
                 n.terminal,
-                f"{cls.type} (inferred)" if inferred and cls else name(n.address, n.terminal),
+                cls.type if inferred and cls else name(n.address, n.terminal),
                 n.weight * trace.target_inflow,
                 n.weight,
                 (*n.path, n.address),
@@ -169,3 +169,65 @@ def risk_category(flags: Iterable[str]) -> str | None:
     An allowlist tag never hides a sanctions or freeze flag (F5.4)."""
     found = [c for c in (flag_category(f) for f in flags) if c is not None and c in RISK]
     return min(found, key=lambda c: BY_NAME[c].order, default=None)
+
+
+#: One plain line per risk type (methodology §11.1, D-073).
+TITLES = {
+    "sanctioned_entity": "Sanctioned entity",
+    "frozen": "Tether-frozen address",
+    "illicit_activity": "Illicit activity",
+    "mixer": "Mixer",
+    "gambling": "Gambling",
+    "risk_exchange": "High-risk exchange",
+    "bridge": "Bridge",
+}
+
+
+def from_evidence(evidences: Iterable[Mapping[str, Any]]) -> list[Exposure]:
+    """Every exposure a check's sources recorded (the exposure source's direct ones, the trace's
+    indirect ones). Records from before P12 have none."""
+    return [Exposure.from_json(e) for ev in evidences for e in ev.get("exposures", ())]
+
+
+def ranked(exposures: Iterable[Exposure], decay: Decimal) -> list[Exposure]:
+    """Heaviest first by what each adds to the score (§11.3); ties broken fully (CLAUDE.md #6)."""
+    return sorted(
+        exposures,
+        key=lambda e: (
+            -e.contribution(decay),
+            DIRECTIONS.index(e.direction),
+            e.hop,
+            e.address,
+            e.category,
+            e.path,
+        ),
+    )
+
+
+def detail_list(exposures: Iterable[Exposure]) -> list[str]:
+    """`Sanctioned entity: direct received 5.0%, indirect received 0.8%`, one line per risk type in
+    severity order; `(inferred)` when every exposure of that type is an inference."""
+    by_type: dict[str, list[Exposure]] = {}
+    for e in exposures:
+        by_type.setdefault(e.risk_type, []).append(e)
+    lines = []
+    for risk_type in RISK_TYPES:
+        found = by_type.get(risk_type)
+        if not found:
+            continue
+        parts = []
+        for direction, word in (("in", "received"), ("out", "sent")):
+            for kind in ("direct", "indirect"):
+                share = sum(
+                    (
+                        e.percent
+                        for e in found
+                        if (e.direction, e.exposure_type) == (direction, kind)
+                    ),
+                    Decimal(0),
+                )
+                if share:
+                    parts.append(f"{kind} {word} {pct(share)}")
+        inferred = " (inferred)" if all(e.inferred for e in found) else ""
+        lines.append(f"{TITLES[risk_type]}: {', '.join(parts)}{inferred}")
+    return lines

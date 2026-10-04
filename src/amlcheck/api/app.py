@@ -4,11 +4,12 @@
 - Every request needs `Authorization: Bearer <AMLCHECK_API_TOKEN>` (≥ 32 characters, checked at
   start-up; compared in constant time) → 401 otherwise (AT-57).
 - Errors are `application/problem+json`; every verdict, INCOMPLETE included, is HTTP 200 (F14.4).
-- `POST /v1/check` answers with the same JSON as `check --json`, from the stored record.
-- `POST /v1/check` and `POST /v1/traces` honour `Idempotency-Key`: a replay gets the original result
+- `POST /v2/check` answers with the same JSON as `check --json`, from the stored record.
+- `POST /v2/check` and `POST /v2/traces` honour `Idempotency-Key`: a replay gets the original result
   (`Idempotent-Replayed: true`), the same key with another request → 422, still running → 409
   (AT-55, AT-56).
 - One check and one trace at a time per process (architecture §5).
+- v2 (D-073): the contract-2 check JSON. Every `/v1/…` path answers 410 Gone, pointing to `/v2/…`.
 """
 
 from __future__ import annotations
@@ -99,6 +100,17 @@ def create_app(rt: runtime.Runtime, token: str) -> FastAPI:
     async def http_error(request: Request, e: StarletteHTTPException) -> Response:
         return problem(e.status_code, str(e.detail))
 
+    @app.api_route("/v1/{rest:path}", methods=["GET", "POST", "PUT", "PATCH", "DELETE"])
+    async def gone(rest: str) -> Response:
+        # D-073: the v1 contract ended with amlcheck 2; say where it went rather than 404.
+        return problem(
+            410,
+            "The v1 API was removed in amlcheck 2",
+            f"Use /v2/{rest}: the check JSON is contract 2 (D-073).",
+            kind="gone",
+            use=f"/v2/{rest}",
+        )
+
     def _address(text: str, chain: str | None) -> Address | Response:
         try:
             return detect(text, Chain(chain) if chain else None)
@@ -131,7 +143,7 @@ def create_app(rt: runtime.Runtime, token: str) -> FastAPI:
 
     # --- checks --------------------------------------------------------------------------------
 
-    @app.post("/v1/check")
+    @app.post("/v2/check")
     async def post_check(
         body: CheckRequest, idempotency_key: str | None = Header(default=None)
     ) -> Response:
@@ -174,7 +186,7 @@ def create_app(rt: runtime.Runtime, token: str) -> FastAPI:
         finally:
             conn.close()
 
-    @app.get("/v1/checks/{check_id}")
+    @app.get("/v2/checks/{check_id}")
     async def get_check(check_id: str) -> Response:
         conn = db()
         try:
@@ -219,7 +231,7 @@ def create_app(rt: runtime.Runtime, token: str) -> FastAPI:
         }
 
     def _accepted(job: Job, replayed: bool) -> Response:
-        headers = {"Location": f"/v1/traces/{job.trace_id}"}
+        headers = {"Location": f"/v2/traces/{job.trace_id}"}
         if replayed:
             headers["Idempotent-Replayed"] = "true"
         links = {"self": headers["Location"]}
@@ -230,7 +242,7 @@ def create_app(rt: runtime.Runtime, token: str) -> FastAPI:
             headers=headers,
         )
 
-    @app.post("/v1/traces")
+    @app.post("/v2/traces")
     async def post_trace(
         body: TraceRequest,
         background: BackgroundTasks,
@@ -260,7 +272,7 @@ def create_app(rt: runtime.Runtime, token: str) -> FastAPI:
         background.add_task(_run_trace, trace_id)
         return _accepted(job, False)
 
-    @app.get("/v1/traces/{trace_id}")
+    @app.get("/v2/traces/{trace_id}")
     async def get_trace(trace_id: str) -> Response:
         conn = db()
         try:
@@ -273,7 +285,7 @@ def create_app(rt: runtime.Runtime, token: str) -> FastAPI:
 
     # --- counterparties ------------------------------------------------------------------------
 
-    @app.get("/v1/counterparties/{chain}/{address}")
+    @app.get("/v2/counterparties/{chain}/{address}")
     async def get_counterparty(chain: str, address: str) -> Response:
         if chain not in ("tron", "bsc"):
             return problem(404, "Unknown chain", "tron or bsc")

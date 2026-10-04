@@ -17,14 +17,18 @@ import typer
 
 from amlcheck.chain.base import usdt
 from amlcheck.cli import runtime
+from amlcheck.core import risk
 from amlcheck.core.address import AddressError, detect
 from amlcheck.core.clock import to_iso
 from amlcheck.core.engine import screen
 from amlcheck.core.models import Address, Chain, CheckResult, Verdict
+from amlcheck.core.score import Score
 from amlcheck.core.verdict import ACTION, DISCLAIMER
-from amlcheck.intel.names import counterparty_text
+from amlcheck.intel.names import counterparty_text, label_text
 from amlcheck.net.http import Mode
 from amlcheck.report.check_json import check_json
+from amlcheck.trace.graph import short
+from amlcheck.trace.model import pct
 
 EXIT = {Verdict.NO_HITS: 0, Verdict.REVIEW: 3, Verdict.INCOMPLETE: 4, Verdict.BLOCK: 5}
 
@@ -112,9 +116,17 @@ def print_result(r: CheckResult) -> None:
     echo = typer.echo
     echo(f"{r.verdict.value}  ·  {r.address.chain.value.upper()} {r.address.norm}")
     echo(ACTION[r.verdict])
+    who = label_text(r.label)
+    if who:
+        echo(f"Who    {who}")
+    exposures = risk.from_evidence(s.evidence for s in r.sources)
     if r.score is not None:
         bound = "  lower bound: a required source is missing" if r.score.lower_bound else ""
         echo(f"Score {r.score.shown}  ({r.score.breakdown}){bound}")
+        for line in risk.detail_list(exposures):
+            echo(f"       {line}")
+    if exposures and isinstance(r.score, Score):
+        _print_exposures(risk.ranked(exposures, r.score.decay))
     if r.findings:
         echo("")
         echo("Findings")
@@ -137,6 +149,27 @@ def print_result(r: CheckResult) -> None:
         f"audit {r.record_hash[:16]} · amlcheck {r.tool_version}"
     )
     echo(DISCLAIMER)
+
+
+SHOWN_EXPOSURES = 10
+
+
+def _print_exposures(exposures: list[risk.Exposure]) -> None:
+    """The heaviest exposures (methodology §11.1): direct amounts are exact, indirect ones are the
+    trace's estimates (D-016)."""
+    echo = typer.echo
+    echo("")
+    echo(
+        f"Exposures  (heaviest {min(len(exposures), SHOWN_EXPOSURES)} of {len(exposures)}; "
+        "direct amounts exact, indirect ones estimated)"
+    )
+    echo(f"  {'dir':<4}{'hop':>3}  {'risk type':<18} {'share':>7}  {'USDT':>14}  entity · address")
+    for e in exposures[:SHOWN_EXPOSURES]:
+        inferred = f" (inferred, {e.confidence})" if e.confidence is not None else ""
+        echo(
+            f"  {e.direction:<4}{e.hop:>3}  {e.risk_type:<18} {pct(e.percent):>7}  "
+            f"{usdt(e.volume):>14}  {e.entity}{inferred} · {short(e.address)}"
+        )
 
 
 def _print_exposure(chain: Chain, ev: dict[str, Any]) -> None:

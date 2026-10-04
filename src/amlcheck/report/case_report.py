@@ -13,6 +13,7 @@
 from __future__ import annotations
 
 import io
+import json
 import sqlite3
 from collections.abc import Sequence
 from dataclasses import dataclass
@@ -38,6 +39,7 @@ from reportlab.platypus import (
 
 from amlcheck.cases import decisions as decisions_chain
 from amlcheck.chain.base import usdt
+from amlcheck.core import risk
 from amlcheck.core import score as scoring
 from amlcheck.core.audit import AuditRecord, load, record_hash
 from amlcheck.core.models import Address, Verdict
@@ -45,7 +47,7 @@ from amlcheck.core.verdict import ACTION
 from amlcheck.intel import registry
 from amlcheck.intel.lookalike import LABEL as LOOKALIKE_LABEL
 from amlcheck.intel.lookalike import SOURCE as LOOKALIKE
-from amlcheck.intel.names import counterparty_text
+from amlcheck.intel.names import counterparty_text, label_text
 from amlcheck.intel.store import IntelStore
 from amlcheck.profile.adapter import LABEL as CLASSIFIER_LABEL
 from amlcheck.profile.adapter import SOURCE as CLASSIFIER
@@ -265,6 +267,9 @@ def _header(d: CaseData) -> list[Flowable]:
             ParagraphStyle("verdict", parent=BODY, fontSize=11, leading=18),
         ),
     ]
+    who = label_text(json.loads(r.label_json) if r.label_json else None)
+    if who:
+        out.append(_p(f"Who: <b>{text(who)}</b>", BODY))
     if r.score_json:
         s = scoring.from_json(r.score_json)
         bound = " (lower bound: a required source is missing)" if s.lower_bound else ""
@@ -280,7 +285,39 @@ def _header(d: CaseData) -> list[Flowable]:
         )
     else:
         out.append(_p("No score: this check was recorded before scores existed (P7).", SMALL))
+    out += [_p(text(line), SMALL) for line in risk.detail_list(_exposures(d))]
     return out
+
+
+def _exposures(d: CaseData) -> list[risk.Exposure]:
+    return risk.from_evidence(s.evidence for s in d.record.sources)
+
+
+def _risk(d: CaseData) -> list[Flowable]:
+    """The exposures behind the score (methodology §11.1), heaviest first."""
+    found = _exposures(d)
+    if not found:
+        return []
+    s = scoring.from_json(d.record.score_json) if d.record.score_json else None
+    decay = scoring.decay_of(s)
+    rows: list[list[Any]] = [["Dir", "Hop", "Risk type", "Share", "USDT", "Entity · address"]]
+    for e in risk.ranked(found, decay)[:30]:
+        inferred = f" (inferred, {e.confidence})" if e.confidence is not None else ""
+        rows.append(
+            [
+                e.direction,
+                e.hop,
+                _p(text(e.risk_type), CELL),
+                pct(e.percent),
+                usdt(e.volume),
+                _p(text(f"{e.entity}{inferred} · {e.address}"), CELL_MONO),
+            ]
+        )
+    return [
+        _p("Exposures", H2),
+        _p("Direct amounts are exact; indirect ones are the trace's estimates (D-016).", SMALL),
+        _table(rows, [10 * mm, 10 * mm, 28 * mm, 16 * mm, 24 * mm, TEXT_W - 88 * mm]),
+    ]
 
 
 def _findings(d: CaseData) -> list[Flowable]:
@@ -577,6 +614,7 @@ def render(d: CaseData) -> bytes:
     )
     story = (
         _header(d)
+        + _risk(d)
         + _findings(d)
         + _sources(d)
         + _exposure(d)

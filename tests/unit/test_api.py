@@ -64,11 +64,11 @@ def is_problem(r: Any, status: int) -> dict[str, Any]:
 # AT-57: a request without the token → 401; a short token → the server refuses to start.
 def test_at57_token(api: TestClient, home: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     bare = TestClient(api.app, base_url=BASE)
-    r = bare.post("/v1/check", json={"address": TRON})
+    r = bare.post("/v2/check", json={"address": TRON})
     body = is_problem(r, 401)
     assert body["title"] == "Missing or wrong token"
     assert r.headers["www-authenticate"].startswith("Bearer")
-    wrong = bare.get("/v1/checks/x", headers={"Authorization": "Bearer " + "x" * 40})
+    wrong = bare.get("/v2/checks/x", headers={"Authorization": "Bearer " + "x" * 40})
     is_problem(wrong, 401)
     with pytest.raises(ValueError, match="at least 32"):
         create_app(runtime.load(), "short")
@@ -89,37 +89,37 @@ def test_at57_token(api: TestClient, home: Path, monkeypatch: pytest.MonkeyPatch
 
 
 def test_host_allow_list(api: TestClient) -> None:
-    body = is_problem(api.get("/v1/checks/x", headers={"host": "evil.com"}), 400)
+    body = is_problem(api.get("/v2/checks/x", headers={"host": "evil.com"}), 400)
     assert body["title"] == "Host not allowed"
-    assert api.get("/v1/checks/x", headers={"host": "localhost:8766"}).status_code == 404
+    assert api.get("/v2/checks/x", headers={"host": "localhost:8766"}).status_code == 404
 
 
-# AT-55: POST /v1/check with an Idempotency-Key, repeated → the same check_id, no second record;
+# AT-55: POST /v2/check with an Idempotency-Key, repeated → the same check_id, no second record;
 # the same key with another amount → 422.
 def test_at55_idempotent_check(api: TestClient, home: Path, world: World) -> None:
     world.rules[TRON] = ("R-HEU-06",)
     key = {"Idempotency-Key": "order-1001"}
     first = api.post(
-        "/v1/check", json={"address": TRON, "amount": "250", "client": "acme"}, headers=key
+        "/v2/check", json={"address": TRON, "amount": "250", "client": "acme"}, headers=key
     )
     assert first.status_code == 200, first.text
     data = first.json()
     assert (data["verdict"], data["amount_usdt"], data["client"]) == ("REVIEW", "250", "acme")
     assert data["score"]["shown"] == "20 · low"
     again = api.post(
-        "/v1/check", json={"address": TRON, "amount": "250.0", "client": "acme"}, headers=key
+        "/v2/check", json={"address": TRON, "amount": "250.0", "client": "acme"}, headers=key
     )
     assert again.status_code == 200
     assert again.headers["idempotent-replayed"] == "true"
     assert again.content == first.content  # byte for byte
     assert checks(home) == 1
     other = api.post(
-        "/v1/check", json={"address": TRON, "amount": "300", "client": "acme"}, headers=key
+        "/v2/check", json={"address": TRON, "amount": "300", "client": "acme"}, headers=key
     )
     body = is_problem(other, 422)
     assert body["type"].endswith("/idempotency-key-mismatch")
     assert checks(home) == 1
-    got = api.get(f"/v1/checks/{data['check_id']}")
+    got = api.get(f"/v2/checks/{data['check_id']}")
     assert got.content == first.content  # the same JSON from the stored record
 
 
@@ -147,7 +147,7 @@ def test_in_progress_is_409(api: TestClient, home: Path) -> None:
     )
     conn.close()
     body = is_problem(
-        api.post("/v1/check", json={"address": TRON}, headers={"Idempotency-Key": "busy-1"}), 409
+        api.post("/v2/check", json={"address": TRON}, headers={"Idempotency-Key": "busy-1"}), 409
     )
     assert body["type"].endswith("/idempotency-in-progress")
     assert checks(home) == 0
@@ -160,40 +160,40 @@ def test_every_verdict_is_200(api: TestClient, monkeypatch: pytest.MonkeyPatch) 
         return [Fake("ofac_sdn", status=SourceStatus.ERROR)]
 
     monkeypatch.setattr(runtime, "make_screening_sources", failing)
-    r = api.post("/v1/check", json={"address": TRON})
+    r = api.post("/v2/check", json={"address": TRON})
     assert r.status_code == 200
     assert r.json()["verdict"] == "INCOMPLETE"
     assert r.json()["score"]["shown"].startswith("≥ ")
 
 
 def test_bad_requests(api: TestClient) -> None:
-    body = is_problem(api.post("/v1/check", json={"address": "nonsense"}), 422)
+    body = is_problem(api.post("/v2/check", json={"address": "nonsense"}), 422)
     assert body["type"].endswith("/invalid-address")
-    body = is_problem(api.post("/v1/check", json={"address": TRON, "colour": "red"}), 422)
+    body = is_problem(api.post("/v2/check", json={"address": TRON, "colour": "red"}), 422)
     assert body["type"].endswith("/invalid-request")
     assert body["errors"][0]["field"] == "colour"
-    is_problem(api.post("/v1/check", json={"address": TRON, "amount": "-1"}), 422)
+    is_problem(api.post("/v2/check", json={"address": TRON, "amount": "-1"}), 422)
     is_problem(
-        api.post("/v1/check", json={"address": TRON}, headers={"Idempotency-Key": "x" * 300}), 400
+        api.post("/v2/check", json={"address": TRON}, headers={"Idempotency-Key": "x" * 300}), 400
     )
-    is_problem(api.get("/v1/checks/nope"), 404)
-    is_problem(api.get("/v1/nothing"), 404)
-    is_problem(api.get("/v1/counterparties/eth/0x00"), 404)
+    is_problem(api.get("/v2/checks/nope"), 404)
+    is_problem(api.get("/v2/nothing"), 404)
+    is_problem(api.get("/v2/counterparties/eth/0x00"), 404)
 
 
-# AT-56: POST /v1/traces, poll, repeat POST → 202 + id → done; the repeat returns the same id.
+# AT-56: POST /v2/traces, poll, repeat POST → 202 + id → done; the repeat returns the same id.
 def test_at56_trace(api: TestClient, home: Path) -> None:
     key = {"Idempotency-Key": "trace-T-1"}
-    r = api.post("/v1/traces", json={"address": T}, headers=key)
+    r = api.post("/v2/traces", json={"address": T}, headers=key)
     assert r.status_code == 202, r.text
     trace_id = r.json()["trace_id"]
-    assert r.headers["location"] == f"/v1/traces/{trace_id}"
-    polled = api.get(f"/v1/traces/{trace_id}")
+    assert r.headers["location"] == f"/v2/traces/{trace_id}"
+    polled = api.get(f"/v2/traces/{trace_id}")
     assert polled.status_code == 200
     job = polled.json()
     assert (job["status"], job["requested_by"], job["complete"]) == ("done", "api", True)
     assert job["result"]["partition"]["exchange_regulated"] == "0.6"
-    again = api.post("/v1/traces", json={"address": T}, headers=key)
+    again = api.post("/v2/traces", json={"address": T}, headers=key)
     assert again.status_code == 202
     assert again.json()["trace_id"] == trace_id
     assert again.headers["idempotent-replayed"] == "true"
@@ -201,14 +201,14 @@ def test_at56_trace(api: TestClient, home: Path) -> None:
         sqlite3.connect(home / "amlcheck.db").execute("SELECT count(*) FROM traces").fetchone()[0]
         == 1
     )
-    is_problem(api.post("/v1/traces", json={"address": T, "direction": "out"}, headers=key), 422)
-    is_problem(api.get("/v1/traces/nope"), 404)
+    is_problem(api.post("/v2/traces", json={"address": T, "direction": "out"}, headers=key), 422)
+    is_problem(api.get("/v2/traces/nope"), 404)
 
 
 def test_counterparty(api: TestClient, home: Path, world: World) -> None:
     world.rules[TRON] = ("R-HEU-06",)
-    api.post("/v1/check", json={"address": TRON, "client": "acme"})
-    r = api.get(f"/v1/counterparties/tron/{TRON}")
+    api.post("/v2/check", json={"address": TRON, "client": "acme"})
+    r = api.get(f"/v2/counterparties/tron/{TRON}")
     assert r.status_code == 200
     data = r.json()
     assert data["checked"] is True
@@ -221,14 +221,14 @@ def test_counterparty(api: TestClient, home: Path, world: World) -> None:
         None,
         None,
     )
-    never = api.get("/v1/counterparties/bsc/" + "0x" + "12" * 20).json()
+    never = api.get("/v2/counterparties/bsc/" + "0x" + "12" * 20).json()
     assert never["checked"] is False
     assert never["registry"] is None
 
 
 def test_decision_shows_on_the_counterparty(api: TestClient, home: Path, world: World) -> None:
     world.rules[TRON] = ("R-HEU-06",)
-    check_id = api.post("/v1/check", json={"address": TRON}).json()["check_id"]
+    check_id = api.post("/v2/check", json={"address": TRON}).json()["check_id"]
     rt = runtime.load()
     conn = runtime.open_database(rt)
     from amlcheck.cases import cases
@@ -237,7 +237,7 @@ def test_decision_shows_on_the_counterparty(api: TestClient, home: Path, world: 
     case, _ = cases.open_case(conn, detect(TRON), by="sobhan", now=rt.clock())
     cases.decide(conn, case, "approved", "fine", by="sobhan", now=rt.clock(), tool_version="x")
     conn.close()
-    data = api.get(f"/v1/counterparties/tron/{TRON}").json()
+    data = api.get(f"/v2/counterparties/tron/{TRON}").json()
     assert data["latest_decision"]["decision"] == "approved"
     assert data["latest_decision"]["check_id"] == check_id
-    assert api.get(f"/v1/checks/{check_id}").json()["decisions"][0]["decision"] == "approved"
+    assert api.get(f"/v2/checks/{check_id}").json()["decisions"][0]["decision"] == "approved"

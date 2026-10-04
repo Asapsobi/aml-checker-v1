@@ -100,13 +100,13 @@ def test_at45_fixed_file_all_screened(home: Path, monkeypatch: pytest.MonkeyPatc
         "chain",
         "verdict",
         "score",
-        "band",
+        "level",
         "rules",
         "check_id",
         "record_hash",
     ]
     assert [g["row"] for g in got[:3]] == ["2", "3", "4"]
-    assert (got[3]["verdict"], got[3]["rules"], got[3]["score"], got[3]["band"]) == (
+    assert (got[3]["verdict"], got[3]["rules"], got[3]["score"], got[3]["level"]) == (
         "REVIEW",
         "R-HEU-06",
         "20",

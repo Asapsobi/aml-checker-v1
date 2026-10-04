@@ -182,6 +182,12 @@ def compute(
     )
 
 
+def decay_of(score: Score | ScoreV1 | None) -> Decimal:
+    """The decay a stored score used, to rank its exposures; the default for a v1 record (which has
+    no exposures anyway)."""
+    return score.decay if isinstance(score, Score) else ScoreSettings().decay
+
+
 def shown_stored(score_json: str | None) -> str:
     """A stored score as lists show it, read through its own JSON: a v1 score keeps its v1 band."""
     return from_json(score_json).shown if score_json else "-"

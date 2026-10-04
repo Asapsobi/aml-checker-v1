@@ -21,6 +21,7 @@ from __future__ import annotations
 import asyncio
 import contextlib
 import hmac
+import json
 import secrets
 import sqlite3
 from collections.abc import Awaitable, Callable
@@ -43,14 +44,15 @@ from amlcheck.cases.cases import CaseError
 from amlcheck.chain.base import usdt
 from amlcheck.cli import check as check_cli
 from amlcheck.cli import runtime
+from amlcheck.core import risk
 from amlcheck.core.address import AddressError, detect
 from amlcheck.core.models import Address, Chain, Verdict
-from amlcheck.core.score import from_json, shown, shown_stored
+from amlcheck.core.score import decay_of, from_json, shown, shown_stored
 from amlcheck.core.verdict import ACTION
 from amlcheck.intel import registry
 from amlcheck.intel.categories import CATEGORIES
 from amlcheck.intel.lookalike import lookalikes
-from amlcheck.intel.names import counterparty_text
+from amlcheck.intel.names import counterparty_text, label_text
 from amlcheck.intel.store import IntelStore
 from amlcheck.monitor import watchlist
 from amlcheck.net.http import Mode
@@ -269,12 +271,17 @@ def create_app(rt: runtime.Runtime, token: str) -> FastAPI:
             (s.evidence for s in data.record.sources if s.source == "exposure" and s.evidence),
             None,
         )
+        exposures = risk.from_evidence(s.evidence for s in data.record.sources)
+        decay = decay_of(score)
         return page(
             request,
             "check.html",
             d=data,
             score=score,
             exposure=exposure,
+            who=label_text(json.loads(data.record.label_json) if data.record.label_json else None),
+            details=risk.detail_list(exposures),
+            exposures=risk.ranked(exposures, decay),
             labels=case_report.LABELS,
             open_case=open_case,
         )

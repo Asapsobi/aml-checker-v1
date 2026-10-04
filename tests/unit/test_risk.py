@@ -145,6 +145,6 @@ def test_hop1_flagged_is_direct_not_indirect() -> None:
     )
     (e,) = from_trace(trace, lambda a, c: "unused")
     assert (e.address, e.direction, e.hop, e.inferred) == ("TK", "out", 1, True)
-    assert e.entity == "COLLECTOR (inferred)"
+    assert e.entity == "COLLECTOR"  # shown with "(inferred, 0.8)"
     assert e.confidence == Decimal("0.8")
     assert e.contribution(Decimal("0.4")) == Decimal("0.5") * Decimal("0.4") * Decimal("0.8")

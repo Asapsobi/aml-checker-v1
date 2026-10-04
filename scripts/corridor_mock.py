@@ -3,7 +3,7 @@
     export AMLCHECK_API_TOKEN=…
     uv run python scripts/corridor_mock.py <address> --amount 25000 --order 1001
 
-- Sends `POST /v1/check` with `Idempotency-Key: order-<order>`, so a retry after a timeout never
+- Sends `POST /v2/check` with `Idempotency-Key: order-<order>`, so a retry after a timeout never
   makes a second check (the API returns the first one).
 - Prints the verdict, score and what to do, and exits like `amlcheck check`: 0 NO_HITS, 3 REVIEW,
   4 INCOMPLETE, 5 BLOCK, 1 when the API could not answer.
@@ -40,7 +40,7 @@ def main() -> int:
     for attempt in range(1, args.tries + 1):
         try:
             # A check with a trace can take minutes (PRD performance); wait for it.
-            r = httpx.post(f"{args.api}/v1/check", json=body, headers=headers, timeout=420)
+            r = httpx.post(f"{args.api}/v2/check", json=body, headers=headers, timeout=420)
         except httpx.TransportError as e:
             why = type(e).__name__
             print(f"attempt {attempt}: {why}; retrying with the same key", file=sys.stderr)

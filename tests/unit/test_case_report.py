@@ -137,6 +137,10 @@ async def test_contents(conn: sqlite3.Connection) -> None:
         "Review by hand before transacting.",
         "Score 70 · moderate",
         "exposure 68.4 · behaviour 5",
+        "Sanctioned entity: indirect received 20.0%",  # P12: the risk lines
+        "Exposures",
+        "sanctioned_entity",
+        "OFAC SDN: Bad",
         "R-TRC-01",
         "Funds trace back to a sanctioned wallet 2 hops away",
         "OFAC SDN list",

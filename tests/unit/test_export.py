@@ -70,7 +70,7 @@ def test_at47_csv_export_is_spreadsheet_safe(
     assert [x["seq"] for x in rows] == ["1", "2", "3"]  # oldest first
     assert rows[0]["client"] == '\'=HYPERLINK("http://x")'
     assert rows[1]["note"] == "'+1 from ops"
-    assert (rows[1]["verdict"], rows[1]["score"], rows[1]["band"], rows[1]["rules"]) == (
+    assert (rows[1]["verdict"], rows[1]["score"], rows[1]["level"], rows[1]["rules"]) == (
         "REVIEW",
         "20",
         "low",
