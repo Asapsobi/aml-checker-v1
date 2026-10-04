@@ -25,6 +25,7 @@ from amlcheck.cli import runtime
 from amlcheck.core.address import AddressError, detect
 from amlcheck.core.models import Address, Chain
 from amlcheck.net.http import Mode
+from amlcheck.report.check_json import check_json
 from amlcheck.trace.engine import Direction, TraceFailed, TraceProgress
 from amlcheck.trace.graph import render, short
 from amlcheck.trace.jobs import TraceJobs
@@ -201,13 +202,14 @@ def investigate(
         source = next((s for s in result.sources if s.source == "trace"), None)
         trace_id = str(source.evidence.get("trace_id")) if source and source.evidence else None
         job = TraceJobs(conn, rt.settings, clock=rt.clock).get(trace_id) if trace_id else None
+        data = check_json(conn, result.check_id) if as_json else None
     finally:
         conn.close()
     t = (job.result or job.partial) if job else None
     if svg is not None and t is not None:
         _write_svg(svg, t)
     if as_json:
-        out = check_cli.as_dict(result)
+        out = dict(data or {})
         out["trace"] = {"trace_id": trace_id, **t.to_json()} if t is not None else None
         typer.echo(json.dumps(out, indent=2))
     else:

@@ -11,6 +11,7 @@ from typing import Annotated
 import typer
 
 from amlcheck.cli import (
+    api,
     audit,
     batch,
     cache,
@@ -46,6 +47,7 @@ app.command("trace")(trace.trace)
 app.command("investigate")(trace.investigate)
 app.command("sync")(sync.sync)
 app.command("web")(web.web)
+app.command("api")(api.api)
 app.add_typer(audit.app, name="audit")
 app.add_typer(labels.app, name="labels")
 app.add_typer(cp.app, name="cp")
