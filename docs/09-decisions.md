@@ -447,3 +447,52 @@
   until P11).
 - **Consequences:** A scheduled daily run costs one check per watched address.
 
+### D-058 · Every decision carries a name (Q-12)
+- **Status:** Accepted
+- **Date:** 2026-10-03 · **Phase:** P9
+- **Context:** PRD F12.1: a decision is closed "with a note and the operator name".
+- **Decision:** The name comes from `[operator] name`; `--by` overrides it for one decision. With
+  neither, the decision is refused with a message to set `[operator] name`. (Labels and entity names
+  keep recording `operator` when unnamed, P4.)
+- **Alternatives:** Ask each time (scripts can't); record `operator` (an anonymous decision trail).
+- **Consequences:** The decision chain always says who decided.
+
+### D-059 · Confirming and rejecting inferences, per type (Q-28)
+- **Status:** Accepted
+- **Date:** 2026-10-03 · **Phase:** P9
+- **Context:** PRD F12.3: confirm → operator label; reject → suppressed until the classifier version
+  changes. The inferred categories (`suspicious_collector`, `service_unattributed`,
+  `contract_unattributed`) may only be assigned by inference (methodology §8), so a confirmation can't
+  simply copy them.
+- **Decision:** DEPOSIT: the address's entity membership becomes `operator`; naming the entity
+  (name and kind) then makes it a terminal at trace test 4 without a read (AT-51). HUB: confirmed by
+  naming its entity and kind. COLLECTOR, DISTRIBUTOR, PASS_THROUGH: an operator label in the category the
+  operator chooses (`--category`, a human category such as `scam` or `high_risk`). Rejecting a type
+  records it in `inference_feedback` for the current `classifier_version`; the classifier then drops
+  that type for that address (not saved, no R-HEU-07, not a trace terminal) until the version changes.
+- **Alternatives:** A fixed category per type (`COLLECTOR` → `high_risk` is not always true).
+- **Consequences:** Every confirmation and rejection is stored with the case, operator and classifier
+  version.
+
+### D-060 · Case lifecycle (Q-29)
+- **Status:** Accepted
+- **Date:** 2026-10-03 · **Phase:** P9
+- **Context:** PRD F12.1 opens cases from REVIEW/BLOCK checks; INCOMPLETE says "treat as REVIEW".
+- **Decision:** A case opens from a REVIEW, BLOCK or INCOMPLETE check (latest by default). One open case
+  per address: opening again returns it. `approved` and `rejected` close the case; `escalated` is
+  recorded and keeps it open. A decision is linked to the check it was made on (by default the case's
+  check) and to that check's record hash. Decisions are never changed; a new question is a new case.
+- **Alternatives:** Cases for NO_HITS (nothing to decide); several open cases per address (confusing).
+- **Consequences:** The latest decision on an address is easy to find and always tied to evidence.
+
+### D-061 · `case export --jsonl` (Q-30)
+- **Status:** Accepted
+- **Date:** 2026-10-03 · **Phase:** P9
+- **Context:** PRD F12.4: an export "for future model training".
+- **Decision:** One JSON line per decision: case and decision (verdict given, note, operator, time),
+  the check it was made on (verdict, rule IDs, score components, classifier types and profile, trace
+  partition and coverage) and the inference feedback in the case. Addresses included: internal use
+  only (D-023). Built from stored records, same order every time.
+- **Alternatives:** Raw transfers (large, and re-derivable from the cache).
+- **Consequences:** A later model can be trained on what operators actually decided.
+

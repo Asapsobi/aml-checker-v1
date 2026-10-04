@@ -14,6 +14,7 @@ from amlcheck.cli import (
     audit,
     batch,
     cache,
+    case,
     check,
     classify,
     cp,
@@ -49,6 +50,7 @@ app.add_typer(cp.app, name="cp")
 app.add_typer(intel.app, name="intel")
 app.add_typer(cache.app, name="cache")
 app.add_typer(watch.app, name="watch")
+app.add_typer(case.app, name="case")
 
 
 def _version(value: bool) -> None:

@@ -263,3 +263,25 @@ counterparties with escaping of hostile text, traces from the web with progress 
 | `audit export` csv, json, pdf | 22 records each; an independent script recomputed every hash from the JSON file alone and the links hold; `audit verify` OK |
 | `amlcheck web` (scratch copy, port 8799) | Sign-in, check form with recent checks, check detail (score, findings, sources, PDF link), the 57-box trace page, counterparties, the look-alike warning on a poisoned address; no console errors (CSP) |
 
+## P9 · Cases & decisions
+
+| AT | Tests | Status |
+|---|---|---|
+| AT-49 | `test_cases.py::test_at49_tampered_decision` (decision chain broken at #1, check chain verifies); `test_cli_case.py::test_at49_audit_verify_reports_the_decision_chain` (`audit verify` names the decision log, exit 1) | Green locally (2026-10-04) |
+| AT-50 | `test_cases.py::test_at50_rejected_type_suppressed_until_version_changes` (reject COLLECTOR → stored classification stale, reclassification without it; classifier version 2 → it returns) | Green locally |
+| AT-51 | `test_cases.py::test_at51_confirmed_deposit_resolves_locally` (before: `service_unattributed` at test 5; after confirming the DEPOSIT and naming its entity: `exchange_regulated` at test 4, no read) | Green locally |
+
+Also: case open rules (REVIEW/BLOCK/INCOMPLETE only, one open case per address, a name required,
+D-058, D-060), decide (note required, `escalated` keeps the case open, `approved`/`rejected` close it,
+closed cases refuse more), each decision tied to its check's record hash and a changed check record
+caught, confirm per type (DEPOSIT membership, HUB naming, label with a chosen category; inferred-only
+categories refused, D-059), a rejected DEPOSIT unlinked from its hub, `case export --jsonl` (D-061),
+decisions in CSV/JSON/PDF exports and in the case report, web case pages (open, decide, reject).
+
+**Live (2026-10-04, the VS-07 BSC scratch copy, operator `live-test`):** a case on the REVIEW check of
+`0x0c1e52…ee1576` (types PASS_THROUGH, FRESH); escalated, PASS_THROUGH confirmed as `high_risk`
+(operator label #1, now the decisive category), then rejected and closed. `audit verify`: audit log
+OK (22 records), decision log OK (2 decisions). `case export --jsonl`: 2 lines with the check's
+verdict, rules, score and feedback. `audit export`: both decisions on check #22. `cp report`: the
+Decision section lists both with the decision chain head.
+

@@ -16,7 +16,24 @@
   <div class="links"><a href="/checks/{{ r.check_id }}/report.pdf">Case report (PDF)</a>
     {% if r.trace_id %} · <a href="/traces/{{ r.trace_id }}">Source of funds</a>{% endif %}
     · <a href="/counterparties/{{ d.address.chain.value }}/{{ d.address.norm }}">Counterparty</a></div>
+  {% if open_case %}
+  <div class="links">Open case: <a href="/cases/{{ open_case.case_id }}">{{ open_case.case_id[:8] }}</a></div>
+  {% elif r.verdict in ["REVIEW", "BLOCK", "INCOMPLETE"] %}
+  <form method="post" action="/cases" class="inline">
+    <input type="hidden" name="token" value="{{ token }}"><input type="hidden" name="check_id" value="{{ r.check_id }}">
+    <button type="submit">Open a case</button>
+  </form>
+  {% endif %}
 </div>
+{% if d.decisions %}
+<h2>Decisions on this check</h2>
+<table>
+  <thead><tr><th>When (UTC)</th><th>Decision</th><th>By</th><th>Note</th></tr></thead>
+  <tbody>
+  {% for s in d.decisions %}<tr><td>{{ s.decision.created_at[:16] | replace("T", " ") }}</td><td><b>{{ s.decision.decision }}</b></td><td>{{ s.decision.operator }}</td><td>{{ s.decision.note }}</td></tr>{% endfor %}
+  </tbody>
+</table>
+{% endif %}
 
 <h2>Findings</h2>
 <table>

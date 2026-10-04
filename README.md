@@ -4,7 +4,7 @@
 address classification, risk scoring and a recorded decision trail. Local-first, built on RPC
 providers and indexers, no own nodes.
 
-> **Status:** P8 (operator UX) ready for review, release v0.8.0. Released: v0.1.0 – v0.7.0. The product is built from these docs with Claude Code,
+> **Status:** P9 (cases & decisions) ready for review, release v0.9.0. Released: v0.1.0 – v0.8.0. The product is built from these docs with Claude Code,
 > phase by phase.
 
 ## Setup
@@ -38,6 +38,8 @@ uv run amlcheck status       # creates ~/.amlcheck/ and the database
 | `amlcheck investigate <addr> [--amount N] [--client NAME] [--svg FILE] [--json]` | A check with the trace always on, then the full trace breakdown and an optional graph (hop columns, category colours, edge width by amount). Same verdict and exit codes as `check` |
 | `amlcheck batch <file.csv> [--out results.csv]` | Screen a CSV (`address,chain,amount,client,note`, only `address` required) one row at a time. Every row is validated first: one bad row and nothing is screened. Results stream out as CSV (`row,address,chain,verdict,score,band,rules,check_id,record_hash`); exit code = the most serious verdict |
 | `amlcheck watch add <addr> [--client] [--note]` / `watch remove` / `watch list` / `watch run` | A watchlist: `watch run` re-screens every watched address (no trace); a changed verdict is listed, shown as a macOS notification (and POSTed to `[monitor] webhook_url` if set) and the run exits **6**. See [scheduling](docs/scheduling.md) to run it daily |
+| `amlcheck case open <addr>` / `case decide <id> approved\|rejected\|escalated --note …` / `case list` / `case show <id>` | Cases on REVIEW, BLOCK or INCOMPLETE checks; decisions with a note and your name (`[operator] name` or `--by`) go into their own hash chain, tied to the check record. `approved`/`rejected` close the case, `escalated` keeps it open. `audit verify` checks both chains |
+| `amlcheck case confirm <id> TYPE [--category C] [--name N --kind K]` / `case reject <id> TYPE` / `case export --jsonl` | Confirm an inferred type (DEPOSIT joins its hub's entity, HUB names it, COLLECTOR/DISTRIBUTOR/PASS_THROUGH become a label in a category you pick) or reject it (not assigned again until the classifier changes); export every decision with its evidence as JSON lines |
 | `amlcheck web [--port 8765]` | Local web UI on 127.0.0.1: check form, history, check detail with explorer links and the case report, counterparties, traces with progress and graph. Open the sign-in address it prints; no scripts, no CDN |
 | `amlcheck labels import labels.csv` / `labels list` | Your own address tags (`address,chain,tag,note,source`): `mixer`, `bridge`, `high_risk` raise R-HEU-05 and count as flagged; `allowlist` leaves a counterparty out of the behaviour rules. One bad row and nothing is imported |
 | `amlcheck cp list [--chain] [--verdict] [--client]` / `cp show <addr>` / `cp rebuild` | The counterparty registry: every address checked, with its last verdict, score and clients; `rebuild` recreates it from the audit log |

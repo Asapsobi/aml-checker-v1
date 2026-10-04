@@ -1,0 +1,77 @@
+{% extends "base.html" %}
+{% from "_macros.html" import verdict, addr %}
+{% block title %}Case {{ case.case_id[:8] }}{% endblock %}
+{% block body %}
+<p class="muted small">Case {{ case.case_id }} · {{ case.status }}</p>
+<h1 class="mono">{{ addr(case.chain.value, case.address) }}</h1>
+{% if error %}<p class="error">{{ error }}</p>{% endif %}
+{% if not operator %}<p class="error">Set <code>[operator] name</code> in config.toml: decisions and feedback need a name (D-058).</p>{% endif %}
+<div class="card">
+  <p>Opened {{ case.opened_at[:16] | replace("T", " ") }} UTC by {{ case.opened_by }}{% if case.client %} · client {{ case.client }}{% endif %}</p>
+  <p>On check <a href="/checks/{{ case.opened_from }}">{{ case.opened_from[:8] }}</a>: {{ verdict(check[0]) }} · score {{ shown(json_score(check[1]), check[0]) }} · recorded {{ check[2][:16] | replace("T", " ") }} UTC</p>
+</div>
+
+<h2>Decisions</h2>
+<table>
+  <thead><tr><th>#</th><th>When (UTC)</th><th>Decision</th><th>By</th><th>Note</th></tr></thead>
+  <tbody>
+  {% for s in decided %}
+    <tr><td>{{ s.seq }}</td><td>{{ s.decision.created_at[:16] | replace("T", " ") }}</td><td><b>{{ s.decision.decision }}</b></td><td>{{ s.decision.operator }}</td><td>{{ s.decision.note }}</td></tr>
+  {% else %}
+    <tr><td colspan="5" class="muted">No decision yet.</td></tr>
+  {% endfor %}
+  </tbody>
+</table>
+{% if case.status == "open" %}
+<form method="post" action="/cases/{{ case.case_id }}/decide" class="card form">
+  <input type="hidden" name="token" value="{{ token }}">
+  <div class="row">
+    <label>Decision
+      <select name="decision"><option value="approved">approved (closes the case)</option><option value="rejected">rejected (closes the case)</option><option value="escalated">escalated (keeps it open)</option></select>
+    </label>
+  </div>
+  <label>Note: what you looked at and why <input name="note" class="wide" required></label>
+  <button type="submit" {% if not operator %}disabled{% endif %}>Record the decision{% if operator %} as {{ operator }}{% endif %}</button>
+  <p class="muted small">Decisions go into their own hash chain, tied to this check's record; they are never changed.</p>
+</form>
+{% else %}
+<p class="muted">This case is closed. A new question about this address is a new case.</p>
+{% endif %}
+
+<h2>Inferred types</h2>
+{% if types %}
+<table>
+  <thead><tr><th>Type</th><th>Confirm</th><th>Reject</th></tr></thead>
+  <tbody>
+  {% for t in types %}
+    <tr><td><b>{{ t }}</b></td>
+      <td>
+        <form method="post" action="/cases/{{ case.case_id }}/feedback" class="inline">
+          <input type="hidden" name="token" value="{{ token }}"><input type="hidden" name="type" value="{{ t }}"><input type="hidden" name="verdict" value="confirmed">
+          {% if t in label_types %}
+            <select name="category">{% for c in label_categories %}<option>{{ c }}</option>{% endfor %}</select>
+          {% elif t in ["HUB", "DEPOSIT"] %}
+            <input name="name" placeholder="entity name{% if t == 'DEPOSIT' %} (optional){% endif %}">
+            <select name="kind"><option value="">kind</option>{% for k in entity_kinds %}<option>{{ k }}</option>{% endfor %}</select>
+          {% endif %}
+          <button type="submit" {% if not operator %}disabled{% endif %}>Confirm</button>
+        </form>
+      </td>
+      <td>
+        <form method="post" action="/cases/{{ case.case_id }}/feedback" class="inline">
+          <input type="hidden" name="token" value="{{ token }}"><input type="hidden" name="type" value="{{ t }}"><input type="hidden" name="verdict" value="rejected">
+          <button type="submit" {% if not operator %}disabled{% endif %}>Reject</button>
+        </form>
+      </td></tr>
+  {% endfor %}
+  </tbody>
+</table>
+<p class="muted small">Confirm: DEPOSIT joins its hub's entity for good (name the entity to make it known); HUB names its entity; COLLECTOR, DISTRIBUTOR and PASS_THROUGH become a label in the category you pick. Reject: the type is not assigned to this address again until the classifier changes.</p>
+{% else %}
+<p class="muted">No inferred types for this address (or all were rejected).</p>
+{% endif %}
+{% if feedback %}
+<h2>Feedback given</h2>
+<ul>{% for f in feedback %}<li>{{ f.verdict }} {{ f.type }} (classifier v{{ f.classifier_version }}){% if f.label_id %}, label #{{ f.label_id }}{% endif %} by {{ f.operator }}, {{ f.created_at[:16] | replace("T", " ") }} UTC</li>{% endfor %}</ul>
+{% endif %}
+{% endblock %}

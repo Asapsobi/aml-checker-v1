@@ -138,3 +138,24 @@ def test_pdf_export(home: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     again = home.parent / "again.pdf"
     runner.invoke(app, ["audit", "export", "--format", "pdf", "--out", str(again)])
     assert again.read_bytes() == pdf  # same records, same bytes
+
+
+# F12.4: exports include decisions.
+def test_exports_include_decisions(home: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    record_checks(monkeypatch)
+    home.joinpath("config.toml").write_text('[operator]\nname = "sobhan"\n')
+    case_id = runner.invoke(app, ["case", "open", BSC, "--check", "nope"]).output
+    assert "no check nope" in case_id
+    opened = runner.invoke(app, ["case", "open", TRON]).output.split()[1]
+    runner.invoke(app, ["case", "decide", opened, "approved", "--note", "ok"])
+    rows = list(csv.DictReader(io.StringIO(runner.invoke(app, ["audit", "export"]).stdout)))
+    assert rows[0]["decisions"].startswith("approved by sobhan ")
+    assert rows[1]["decisions"] == ""
+    items = json.loads(runner.invoke(app, ["audit", "export", "--format", "json"]).stdout)
+    (made,) = items[0]["decisions"]
+    assert made["decision"]["decision"] == "approved"
+    assert made["decision"]["check_record_hash"] == items[0]["record_hash"]
+    assert items[1]["decisions"] == []
+    out = home.parent / "a.pdf"
+    runner.invoke(app, ["audit", "export", "--format", "pdf", "--out", str(out)])
+    assert "approved by sobhan" in pdf_text(out.read_bytes())

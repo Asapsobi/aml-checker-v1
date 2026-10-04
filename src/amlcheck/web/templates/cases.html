@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+{% from "_macros.html" import addr %}
+{% block title %}Cases{% endblock %}
+{% block body %}
+<h1>Cases</h1>
+<form method="get" action="/cases" class="filters">
+  <select name="status"><option value="">open and closed</option>{% for v in ["open", "closed"] %}<option {% if q.status == v %}selected{% endif %}>{{ v }}</option>{% endfor %}</select>
+  <button type="submit">Filter</button>
+</form>
+<table>
+  <thead><tr><th>Case</th><th>Status</th><th>Opened (UTC)</th><th>Address</th><th>Client</th><th>Latest decision</th></tr></thead>
+  <tbody>
+  {% for c in rows %}
+    {% set d = latest[c.case_id] %}
+    <tr><td><a class="mono" href="/cases/{{ c.case_id }}">{{ c.case_id[:8] }}</a></td><td>{{ c.status }}</td>
+      <td>{{ c.opened_at[:16] | replace("T", " ") }}</td><td>{{ c.chain.value }} {{ addr(c.chain.value, c.address, False) }}</td>
+      <td>{{ c.client or "" }}</td>
+      <td>{% if d %}{{ d.decision.decision }} by {{ d.decision.operator }}{% else %}<span class="muted">none yet</span>{% endif %}</td></tr>
+  {% else %}
+    <tr><td colspan="6" class="muted">No cases. Open one from a REVIEW, BLOCK or INCOMPLETE check.</td></tr>
+  {% endfor %}
+  </tbody>
+</table>
+{% endblock %}
