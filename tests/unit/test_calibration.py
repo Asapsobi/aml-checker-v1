@@ -85,7 +85,14 @@ def test_measure() -> None:
     assert not m.passes()
     report = markdown(m)
     assert "| DEPOSIT | 2 | 1 | 0.500 | ≥ 0.9 | 0 |" in report
-    assert "**Targets NOT met.**" in report
+    assert "**Measured targets NOT met.**" in report
+    assert m.unmeasured == []
+    only_block = measure([g for g in entries() if g.address == "ofac"], S)
+    assert only_block.passes()
+    assert only_block.unmeasured == ["HUB", "DEPOSIT", "COLLECTOR", "clean band"]
+    assert "Not measured (no golden examples yet): HUB, DEPOSIT, COLLECTOR, clean band" in (
+        markdown(only_block)
+    )
     assert "- bsc clean2: 55 · high" in report
 
 

@@ -130,11 +130,20 @@ class Measure:
     clean_too_high: list[str]
 
     def passes(self) -> bool:
+        """Every measured target met (see `unmeasured` for the ones without examples)."""
         for t, target in TARGETS.items():
             p = self.types.get(t, TypeStats()).precision
             if p is not None and p < target:
                 return False
         return not self.clean_too_high and not self.verdict_misses
+
+    @property
+    def unmeasured(self) -> list[str]:
+        """Targets with no golden examples: a pass says nothing about them."""
+        out = [t for t in TARGETS if self.types.get(t, TypeStats()).precision is None]
+        if not self.clean:
+            out.append("clean band")
+        return out
 
 
 def measure(entries: Sequence[Golden], settings: Classifier) -> Measure:
@@ -200,8 +209,10 @@ def markdown(m: Measure) -> str:
         f"Verdicts: {m.verdict_agree} of {m.verdict_known} as expected.",
         f"Clean addresses: {m.clean}, scored high or severe: {len(m.clean_too_high)}.",
         "",
-        f"**Targets {'met' if m.passes() else 'NOT met'}.**",
+        f"**Measured targets {'met' if m.passes() else 'NOT met'}.**",
     ]
+    if m.unmeasured:
+        lines.append(f"**Not measured (no golden examples yet): {', '.join(m.unmeasured)}.**")
     details = [("Wrong type", [x for s in m.types.values() for x in s.wrong])]
     details += [("Verdict not as expected", m.verdict_misses), ("Clean but high", m.clean_too_high)]
     for title, items in details:

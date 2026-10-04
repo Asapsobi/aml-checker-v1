@@ -58,6 +58,16 @@ def _merge(entries: list[Golden], new: list[Golden]) -> list[Golden]:
     return list(by.values())
 
 
+def spread[T](rows: list[T], n: int) -> list[T]:
+    """`n` rows evenly spaced through a sorted list: a sample, not the first ones alphabetically."""
+    if n <= 0 or not rows:
+        return []
+    if len(rows) <= n:
+        return list(rows)
+    step = len(rows) / n
+    return [rows[int(i * step)] for i in range(n)]
+
+
 def propose_lists(conn: sqlite3.Connection, per_chain: int) -> list[Golden]:
     """BLOCK expectations from our own synced lists (D-066): OFAC (both chains), Tether (TRON)."""
     snap = conn.execute(
@@ -70,8 +80,8 @@ def propose_lists(conn: sqlite3.Connection, per_chain: int) -> list[Golden]:
             "WHERE snapshot_id = ? ORDER BY address_norm",
             (snap[0],),
         ).fetchall()
-        tron = [r for r in rows if r[0].startswith("T")][: per_chain // 2]
-        evm = [r for r in rows if r[0].startswith("0x")][:per_chain]
+        tron = spread([r for r in rows if r[0].startswith("T")], per_chain // 2)
+        evm = spread([r for r in rows if r[0].startswith("0x")], per_chain)
         for chain, picked in (("tron", tron), ("bsc", evm)):
             for address, name, program in picked:
                 out.append(
@@ -90,9 +100,9 @@ def propose_lists(conn: sqlite3.Connection, per_chain: int) -> list[Golden]:
         "AND x.address_norm = e.address_norm "
         "AND x.event_type IN ('AddedBlackList', 'RemovedBlackList') "
         "ORDER BY x.block DESC, x.event_index DESC LIMIT 1) = 'AddedBlackList' "
-        "ORDER BY e.address_norm LIMIT ?",
-        (per_chain - per_chain // 2,),
+        "ORDER BY e.address_norm",
     ).fetchall()
+    frozen = spread(frozen, per_chain - per_chain // 2)
     for address, when in frozen:
         out.append(
             Golden(
