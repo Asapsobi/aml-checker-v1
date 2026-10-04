@@ -21,9 +21,11 @@ from amlcheck.cli import (
     history,
     intel,
     labels,
+    monitor,
     status,
     sync,
     trace,
+    wallets,
     watch,
     web,
 )
@@ -51,6 +53,8 @@ app.add_typer(intel.app, name="intel")
 app.add_typer(cache.app, name="cache")
 app.add_typer(watch.app, name="watch")
 app.add_typer(case.app, name="case")
+app.add_typer(wallets.app, name="wallets")
+app.add_typer(monitor.app, name="monitor")
 
 
 def _version(value: bool) -> None:
