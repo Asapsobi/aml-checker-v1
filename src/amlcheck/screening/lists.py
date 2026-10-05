@@ -12,10 +12,12 @@ import io
 import re
 import sqlite3
 import xml.etree.ElementTree as ET
-from collections.abc import Iterable, Iterator
+import zipfile
+from collections.abc import Iterable, Iterator, Sequence
 from dataclasses import dataclass
 from datetime import UTC, datetime
 from decimal import Decimal
+from pathlib import Path
 
 from amlcheck.core.address import is_valid_tron
 from amlcheck.net.http import Http, Provider, SourceError
@@ -168,3 +170,76 @@ async def sync_list(
     data = await download_file(http, Provider(spec.source), url)
     parsed = parse_uk(data) if spec is UK else parse_eu(data)
     return store(conn, data, parsed, min_kept_share, now, source=spec.source)
+
+
+# --- NBCTF: the owner's downloads of the official order annexes (D-085, VS-20) -------------------
+
+_TRON_LIKE = re.compile(
+    r"(?<![1-9A-HJ-NP-Za-km-z])T[1-9A-HJ-NP-Za-km-z]{33}(?![1-9A-HJ-NP-Za-km-z])"
+)
+MAX_FILE_BYTES = 50 * 1024 * 1024  # an order annex is small; refuse anything absurd
+
+
+def file_text(path: Path) -> str:
+    """The text of an order file: every XML part of a zip-based spreadsheet (xlsx, ods), else the
+    raw bytes. Addresses are plain ASCII, so no column names are needed (VS-20)."""
+    data = path.read_bytes()
+    if len(data) > MAX_FILE_BYTES:
+        raise ValueError(f"{path.name}: larger than {MAX_FILE_BYTES // 2**20} MB")
+    if zipfile.is_zipfile(io.BytesIO(data)):
+        with zipfile.ZipFile(io.BytesIO(data)) as z:
+            parts = [
+                z.read(i).decode("utf-8", "replace")
+                for i in z.infolist()
+                if i.filename.endswith(".xml") and i.file_size <= MAX_FILE_BYTES
+            ]
+        return "\n".join(parts)
+    return data.decode("latin-1")
+
+
+@dataclass(frozen=True)
+class FileImport:
+    order: str
+    addresses: tuple[str, ...]  # valid, in order
+    rejected: tuple[str, ...]  # TRON-looking strings whose checksum fails
+
+
+@dataclass(frozen=True)
+class NbctfImport:
+    files: tuple[FileImport, ...]
+    result: SyncResult
+    total: int  # addresses in the new snapshot
+
+
+def read_order(path: Path) -> FileImport:
+    text = file_text(path)
+    valid = addresses_in(text)
+    rejected = tuple(
+        dict.fromkeys(m.group() for m in _TRON_LIKE.finditer(text) if not is_valid_tron(m.group()))
+    )
+    return FileImport(path.stem, tuple(valid), rejected)
+
+
+def import_nbctf(
+    conn: sqlite3.Connection, paths: Sequence[Path], now: datetime, *, replace: bool = False
+) -> NbctfImport:
+    """A new `nbctf` snapshot: the addresses of the given order files, added to the last
+    snapshot's unless `replace`. Each file is one order (its name is the entry)."""
+    files = tuple(read_order(p) for p in sorted(paths))
+    rows: dict[tuple[str, str], ListedAddress] = {}
+    if not replace:
+        for a, entry, name, program in conn.execute(
+            "SELECT address_norm, list_entry_id, entity_name, program FROM sanctioned_addresses "
+            "WHERE snapshot_id = (SELECT max(id) FROM list_snapshots WHERE source = ?)",
+            (NBCTF.source,),
+        ):
+            rows[(a, entry)] = next(_listed([a], entry, name, program))
+    for f in files:
+        for listed in _listed(f.addresses, f.order, f"order {f.order}", "NBCTF seizure order"):
+            rows[(listed.address_norm, listed.entry_id)] = listed
+    ordered = tuple(rows[k] for k in sorted(rows))
+    entries = len({a.entry_id for a in ordered})
+    digest_input = "\n".join(f"{a.entry_id} {a.address_norm}" for a in ordered).encode()
+    parsed = ParsedList(now.date().isoformat(), entries, ordered)
+    result = store(conn, digest_input, parsed, Decimal(0), now, source=NBCTF.source)
+    return NbctfImport(files, result, len(ordered))
