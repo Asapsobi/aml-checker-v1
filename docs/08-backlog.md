@@ -186,6 +186,7 @@
 | T-13.04 | Trace v2: best-first, 5 hops, path-volume pruning, time limit → `untraced:budget` | L | T-13.01 | AT-67 |
 | T-13.05 | Every check traces both directions at once; evidence, CLI, web, PDF show both | L | T-13.04 | AT-67 |
 | T-13.06 | Monitor cap 10; live budget run; docs; `2.0.0a2` | M | T-13.05 | Budget report |
+| T-13.07 | BSC traces stop at 3 hops (D-082, owner's choice after the budget run) | S | T-13.06 | AT-67; BSC re-measured |
 
 ## P14 · Intelligence v2
 

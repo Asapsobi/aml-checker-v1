@@ -644,7 +644,8 @@ own 90-day window (§5).
 |---|---|---|---|
 | `every_check` | — | `true` | Every check traces, whatever the amount (D-079); `--no-trace` still skips it |
 | directions | in | **in and out**, at the same time, one shared deadline | Outgoing risk counts (D-075) |
-| `max_hops` | 3 | **5** | D-075 |
+| `max_hops` | 3 | **5** on TRON | D-075 |
+| `bsc_max_hops` | 3 | **3** on BSC | HyperSync's free plan can't reach 5 in 3 minutes (D-082) |
 | `max_nodes` | 40 | **50 per direction** | Bounds requests; reaching it is `untraced:budget` (§7.7) |
 | `time_budget_seconds` | 300, a failure | **180 for both directions**, not a failure | D-079, D-080 |
 | `min_attributed_usdt` | 100, on the proportional estimate | 100, on the **path volume** | D-081 |

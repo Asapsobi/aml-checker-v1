@@ -161,7 +161,8 @@ class Trace(_Section):
 
     auto_amount_usdt: PosDec = Decimal("10000")  # only when `every_check` is off
     every_check: bool = True  # D-079: every check traces both ways; --no-trace skips it
-    max_hops: PosInt = 5  # §12.2 (D-075)
+    max_hops: PosInt = 5  # §12.2 (D-075); TRON
+    bsc_max_hops: PosInt = 3  # D-082: HyperSync's free plan can't reach 5 hops in 3 minutes
     branch: PosInt = 5
     coverage_share: Share = Decimal("0.8")
     min_attributed_usdt: Annotated[Decimal, Field(ge=0)] = Decimal("100")

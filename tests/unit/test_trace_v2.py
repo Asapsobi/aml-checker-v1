@@ -6,6 +6,7 @@ from pathlib import Path
 
 import pytest
 
+from amlcheck.chain.base import Transfer
 from amlcheck.cli import runtime
 from amlcheck.config import Settings, Trace
 from amlcheck.core.address import detect
@@ -25,12 +26,11 @@ def conn(tmp_path: Path) -> sqlite3.Connection:
     return open_db(tmp_path / "a.db")
 
 
-# AT-67: risk 5 hops back on the way in and 4 hops on the way out are both found in one check;
-# each direction's partition sums to 1.
-async def test_at67_both_directions_deep(conn: sqlite3.Connection) -> None:
+def deep_world() -> list[Transfer]:
+    """Sanctioned 5 hops back on the way in, 4 hops on the way out."""
     a, b, c, d, s = (addr(x) for x in ("in1", "in2", "in3", "in4", "inS"))
     x, y, z, f = (addr(n) for n in ("out1", "out2", "out3", "outF"))
-    xs = [
+    return [
         tr(5, a, T, 1000),
         tr(10, b, a, 1000),
         tr(15, c, b, 1000),
@@ -41,10 +41,20 @@ async def test_at67_both_directions_deep(conn: sqlite3.Connection) -> None:
         tr(15, y, z, 1000),
         tr(10, z, f, 1000),  # hop 4 out: sanctioned
     ]
-    eng, _ = engine(conn, Fake(xs))
+
+
+S_IN, F_OUT = addr("inS"), addr("outF")
+
+
+# AT-67: risk 5 hops back on the way in and 4 hops on the way out are both found in one check;
+# each direction's partition sums to 1. (The fake world is BSC: 5 hops set here, D-082.)
+async def test_at67_both_directions_deep(conn: sqlite3.Connection) -> None:
+    s, f = S_IN, F_OUT
+    settings = Settings(trace=Trace(bsc_max_hops=5))
+    eng, _ = engine(conn, Fake(deep_world()), settings)
     sanction(conn, s, f)
-    src = TraceSource(TraceJobs(conn, Settings(), clock=fixed(NOW)), eng, Settings())
-    result = await screen(detect(T), [src], conn=conn, settings=Settings(), now=fixed(NOW))
+    src = TraceSource(TraceJobs(conn, settings, clock=fixed(NOW)), eng, settings)
+    result = await screen(detect(T), [src], conn=conn, settings=settings, now=fixed(NOW))
     (r,) = result.sources
     found = {
         (e.direction, e.hop, e.address) for e in map(Exposure.from_json, r.evidence["exposures"])
@@ -57,6 +67,18 @@ async def test_at67_both_directions_deep(conn: sqlite3.Connection) -> None:
     assert result.score is not None
     # in: 1.0 × 0.6^4 = 0.1296; out: 1.0 × 0.6^3 = 0.216; H = 1 − 0.8704 × 0.784 = 0.3176
     assert result.score.score >= 91  # severe, though no address the check dealt with is listed
+
+
+# D-082: BSC stops at 3 hops by default; TRON keeps 5.
+async def test_bsc_stops_at_3_hops(conn: sqlite3.Connection) -> None:
+    sanction(conn, S_IN, F_OUT)
+    eng, _ = engine(conn, Fake(deep_world()))
+    t_in = await eng.run(detect(T), "in")
+    t_out = await eng.run(detect(T), "out")
+    assert t_in.partition == {"untraced:depth": D0(1)}  # stopped at hop 3, short of hop 5
+    assert t_out.partition == {"untraced:depth": D0(1)}  # and short of hop 4
+    assert max(n.hop for n in t_in.nodes) == 3
+    assert Settings().trace.max_hops == 5
 
 
 # Best first (D-081): a heavy hop-2 branch is read before a light hop-1 one.

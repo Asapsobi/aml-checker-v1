@@ -37,6 +37,7 @@ def test_defaults_match_methodology() -> None:
     assert s.classifier.window_days == 90
     assert s.classifier.ttl_days == 14
     assert s.trace.max_hops == 5  # §12.2
+    assert s.trace.bsc_max_hops == 3  # D-082
     assert s.trace.max_nodes == 50
     assert s.trace.time_budget_seconds == 180
     assert s.trace.coverage_share == Decimal("0.8")

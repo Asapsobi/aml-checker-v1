@@ -766,3 +766,17 @@
   criterion (c) uses the path bottleneck instead of the estimate (§12.2). `trace_version = 2`.
 - **Alternatives:** Hop by hop (spends the budget on small far branches); estimate-based pruning.
 - **Consequences:** Traces made by v1 keep `trace_version` 1 and are shown as they were.
+
+### D-082 · BSC traces stop at 3 hops (owner's choice)
+- **Status:** Accepted
+- **Date:** 2026-10-05 · **Phase:** P13
+- **Context:** The P13 live budget run: TRON full checks fit in about 1.5 minutes, but HyperSync's
+  free plan answers one query in 4–15 s, so a BSC check gets about 45–50 queries in its 3 minutes.
+  Two of three BSC wallets stopped at the time budget with 0% inbound coverage at 5 hops. The owner
+  chose fewer hops on BSC over batching reads first, pushing as is, or accepting it.
+- **Decision:** `[trace] bsc_max_hops` = 3; TRON keeps `max_hops` = 5. Everything else in §12.2 is the
+  same on both chains.
+- **Alternatives:** Batched multi-address HyperSync queries (more work, kept as a later option); a
+  paid HyperSync plan; accept low BSC coverage.
+- **Consequences:** BSC traces reach risk up to 3 hops (decayed to 36% there); more of a busy BSC
+  wallet's money is followed in one check. Setting it back to 5 is one config line.

@@ -87,6 +87,8 @@ round_unit_usdt = 100
 every_check = true
 auto_amount_usdt = 10000
 max_hops = 5
+# BSC traces stop at 3 hops: HyperSync's free plan can't reach 5 in 3 minutes (D-082).
+bsc_max_hops = 3
 branch = 5
 coverage_share = 0.8
 min_attributed_usdt = 100

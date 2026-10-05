@@ -340,6 +340,10 @@ class TraceEngine:
         coverage = sum((v for k, v in st.buckets.items() if k not in UNTRACED), Decimal(0))
         return trace(in_t=in_t, coverage=coverage)
 
+    def _max_hops(self, chain: Chain) -> int:
+        """5 on TRON, 3 on BSC (D-082): BSC reads are slow on HyperSync's free plan (VS-16)."""
+        return self._t.bsc_max_hops if chain is Chain.BSC else self._t.max_hops
+
     def _priority(self, item: _Item) -> Decimal:
         """`bottleneck × (1 − decay)^(hop − 1)` (methodology §12.2)."""
         return item.bottleneck * (1 - self._s.score.decay) ** (item.hop - 1)
@@ -366,7 +370,7 @@ class TraceEngine:
         if terminal is not None:
             category, test, cls = terminal
             return self._end(item, category, test, cls, False, in_t, st)
-        if item.hop >= self._t.max_hops:
+        if item.hop >= self._max_hops(chain):
             return self._end(item, "untraced:depth", 6, None, False, in_t, st)
         if item.address not in st.read and len(st.read) >= self._t.max_nodes:
             return self._end(item, "untraced:budget", 7, None, False, in_t, st)
