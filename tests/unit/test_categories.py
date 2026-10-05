@@ -14,9 +14,10 @@ from amlcheck.intel.categories import (
 
 
 def test_table_matches_methodology_section_8() -> None:
-    assert CATEGORY_VERSION == 1
+    assert CATEGORY_VERSION == 2  # P14: suspected_malicious appended (§13.2)
     assert [c.name for c in CATEGORIES][:3] == ["sanctioned", "frozen", "stolen_funds"]
-    assert [c.order for c in CATEGORIES] == list(range(1, 18))
+    assert [c.order for c in CATEGORIES] == list(range(1, 19))
+    assert CATEGORIES[-1].name == "suspected_malicious"
     assert {c.name for c in CATEGORIES if c.high_risk} == {
         "sanctioned",
         "frozen",

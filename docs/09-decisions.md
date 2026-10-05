@@ -824,10 +824,11 @@
 - **Context:** MistTrack shows "Suspected Malicious Address". Tether has frozen about 7,700 TRON
   addresses; wallets that fed or emptied them are the closest public equivalent. The hard constraint
   limits intelligence to our counterparties and what their traces reach.
-- **Decision:** When a trace reads an address (hop ≥ 1), we look at its flows in that window: if at
-  least `[intel] neighbour_share` (20%) of what it received, or of what it sent, went from or to
-  sanctioned or frozen addresses, and that is at least `[intel] neighbour_min_usdt` (1,000 USDT), it
-  ends as `suspected_malicious`: inferred, risk type illicit_activity, weight 0.6 × confidence
+- **Decision:** When a trace reads an address (hop ≥ 1), we look at its flows in that window in the
+  direction the trace does not follow (tracing in: what it sent; tracing out: what it received;
+  the followed direction reaches flagged addresses as facts by itself): if at least `[intel]
+  neighbour_share` (20%) went to or came from sanctioned or frozen addresses, and that is at least
+  `[intel] neighbour_min_usdt` (1,000 USDT), it ends as `suspected_malicious`: inferred, risk type illicit_activity, weight 0.6 × confidence
   (confidence = the share, at most 1), never BLOCK. It is also stored as an inferred label for 30
   days, so later checks find it without a read.
 - **Alternatives:** A global scan of all frozen addresses' counterparties (outside the hard

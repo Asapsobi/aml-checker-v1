@@ -32,7 +32,7 @@ from amlcheck.config import Settings
 from amlcheck.core.clock import Clock, from_iso, utcnow
 from amlcheck.core.models import Address, Chain
 from amlcheck.intel.categories import BY_NAME
-from amlcheck.intel.store import IntelStore
+from amlcheck.intel.store import IntelStore, NewLabel, Terminal
 from amlcheck.net.http import SourceError
 from amlcheck.profile import classifier as clf
 from amlcheck.profile.adapter import SERVICE_CATEGORIES
@@ -50,9 +50,12 @@ from amlcheck.trace.model import (
     NodeClass,
     Trace,
     TracePath,
+    dec,
 )
 
 Direction = Literal["in", "out"]
+SUSPECTED = "suspected_malicious"  # §13.2
+_BAD_FLAGS = frozenset({"sanctioned", "frozen"})
 MAX_PATHS = 50
 TX_SAMPLE = 3
 UNFINISHED = "untraced:unfinished"  # only in a failed trace's partial result
@@ -384,6 +387,9 @@ class TraceEngine:
         if read_terminal is not None:
             category, cls = read_terminal
             return self._end(item, category, 9, cls, True, in_t, st)
+        suspect = self._neighbour(chain, item.address, transfers, direction)
+        if suspect is not None:  # test 12, after 9 (§13.2): a freeze neighbour
+            return self._end(item, "suspected_malicious", 12, suspect, True, in_t, st)
         senders = flows(item.address, transfers, direction)
         in_n = sum((f.amount for f in senders.values()), Decimal(0))
         if not in_n:
@@ -530,9 +536,14 @@ class TraceEngine:
         ).fetchone()
         if "frozen" in flags or destroyed:  # 3
             return "frozen", 3, None
-        terminal = self._store.best_terminal(chain, a)  # 4
+        terminal = self._fresh_terminal(chain, a)  # 4
         if terminal is not None:
-            return terminal.category, 4, None
+            cls = (
+                NodeClass("SUSPECTED_MALICIOUS", terminal.confidence)
+                if terminal.provenance == "inferred" and terminal.category == SUSPECTED
+                else None
+            )
+            return terminal.category, 4, cls
         cached = clf.cached(self._conn, chain, a, self._clock())  # 5
         if cached:
             hit = self._class_terminal(
@@ -582,6 +593,59 @@ class TraceEngine:
             hub_entity_named=entity is not None and entity.named_by is not None,
             top_recipient_fresh_or_pass_through=bool(kinds & {"FRESH", "PASS_THROUGH"}),
         )
+
+    def _fresh_terminal(self, chain: Chain, address: str) -> Terminal | None:
+        """Test 4's label, once a freeze-neighbour inference older than `[intel] neighbour_days`
+        is retracted (§13.2): it is derived again when the address is read."""
+        while True:
+            terminal = self._store.best_terminal(chain, address)
+            if terminal is None or terminal.category != SUSPECTED or terminal.label_id is None:
+                return terminal
+            made = self._conn.execute(
+                "SELECT created_at FROM intel_labels WHERE id = ?", (terminal.label_id,)
+            ).fetchone()
+            age = self._clock() - from_iso(made[0])
+            if age <= timedelta(days=self._s.intel.neighbour_days):
+                return terminal
+            self._store.retract(terminal.label_id, "freeze-neighbour inference expired", None)
+
+    def _neighbour(
+        self, chain: Chain, address: str, transfers: list[Transfer], direction: Direction
+    ) -> NodeClass | None:
+        """§13.2 (D-086): a suspected freeze neighbour, judged on the direction the trace does
+        *not* follow: tracing in, the share of what `address` sent to sanctioned or frozen
+        addresses; tracing out, the share it received from them. (In the followed direction the
+        trace reaches those addresses itself, as facts.) At `neighbour_share` and
+        `neighbour_min_usdt` it ends here with that share as confidence, stored as a label."""
+        others = {t.sender if t.recipient == address else t.recipient for t in transfers}
+        flagged = {a for a, f in local_flags(self._conn, chain, others).items() if f & _BAD_FLAGS}
+        if not flagged:
+            return None
+        moved = flows(address, transfers, "out" if direction == "in" else "in")
+        total = sum((f.amount for f in moved.values()), Decimal(0))
+        amount = sum((f.amount for a, f in moved.items() if a in flagged), Decimal(0))
+        if not total:
+            return None
+        share = amount / total
+        cfg = self._s.intel
+        if share < cfg.neighbour_share or amount < cfg.neighbour_min_usdt:
+            return None
+        confidence = min(share, Decimal(1)).quantize(Decimal("0.01"))
+        terminal = self._store.best_terminal(chain, address)
+        if terminal is None or terminal.category != SUSPECTED:
+            self._store.add_label(
+                NewLabel(
+                    chain,
+                    address,
+                    SUSPECTED,
+                    "inferred",
+                    "derived:freeze-neighbour",
+                    confidence,
+                    note=f"{dec(share)} of its flow, {dec(amount)} USDT, with sanctioned or "
+                    "frozen addresses",
+                )
+            )
+        return NodeClass("SUSPECTED_MALICIOUS", confidence)
 
     def _class_terminal(
         self,

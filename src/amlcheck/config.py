@@ -248,6 +248,14 @@ class Bsc(_Section):
     rpc_requests_per_second: PosFloat = 2.0
 
 
+class Intel(_Section):
+    """Methodology §13.2 (D-086): freeze neighbours, inferred while tracing."""
+
+    neighbour_share: Share = Decimal("0.2")
+    neighbour_min_usdt: PosDec = Decimal("1000")
+    neighbour_days: PosInt = 30
+
+
 class Lists(_Section):
     """Methodology §13.1: sanctions lists beside OFAC (D-084, D-085). UK and EU are downloaded by
     `sync` and required; NBCTF is imported from the owner's files and not required."""
@@ -278,6 +286,7 @@ class Settings(_Section):
     operator: Operator = Operator()
     ofac: Ofac = Ofac()
     lists: Lists = Lists()
+    intel: Intel = Intel()
     tron: Tron = Tron()
     bsc: Bsc = Bsc()
 

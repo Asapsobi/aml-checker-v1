@@ -113,8 +113,9 @@ def local_flags(
     conn: sqlite3.Connection, chain: Chain, addresses: Iterable[str]
 ) -> Mapping[str, set[str]]:
     """sanctioned (the latest snapshot of any list, §13.1), frozen (TRON index: latest blacklist
-    event is an add), label:<tag> (labels.csv tags and active intel-label categories). Local data
-    only (D-015)."""
+    event is an add), label:<tag> (labels.csv tags and active intel-label categories that a list,
+    the operator or an import gave; inferred ones carry a confidence and reach the score through
+    the trace, §13.2). Local data only (D-015)."""
     wanted = sorted(set(addresses))
     flags: dict[str, set[str]] = {}
     # The latest snapshot of every list (OFAC, UK, EU, NBCTF, methodology §13.1).
@@ -152,7 +153,8 @@ def local_flags(
         marks = ",".join("?" * len(chunk))
         for a, category in conn.execute(
             "SELECT address_norm, category FROM intel_labels "  # noqa: S608 - placeholders only
-            f"WHERE chain = ? AND retracted_at IS NULL AND address_norm IN ({marks})",
+            "WHERE chain = ? AND retracted_at IS NULL AND provenance != 'inferred' "
+            f"AND address_norm IN ({marks})",
             [chain.value, *chunk],
         ):
             flags.setdefault(a, set()).add(f"label:{category}")

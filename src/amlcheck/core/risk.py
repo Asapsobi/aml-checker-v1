@@ -29,6 +29,7 @@ RISK: dict[str, tuple[str, Decimal]] = {
     "scam": ("illicit_activity", Decimal("0.7")),
     "high_risk": ("illicit_activity", Decimal("0.6")),
     "suspicious_collector": ("illicit_activity", Decimal("0.5")),
+    "suspected_malicious": ("illicit_activity", Decimal("0.6")),  # §13.2, × confidence
     "gambling": ("gambling", Decimal("0.3")),
     "exchange_nokyc": ("risk_exchange", Decimal("0.3")),
     "bridge": ("bridge", Decimal("0.2")),
@@ -147,8 +148,10 @@ def from_trace(
         return []
     found: list[tuple[str, Exposure]] = []
     for n in trace.nodes:
-        if n.terminal not in RISK or (n.hop == 1 and n.test in _LOCAL_TESTS):
+        if n.terminal not in RISK:
             continue
+        if n.hop == 1 and n.test in _LOCAL_TESTS and n.classification is None:
+            continue  # a fact local flags already made a direct exposure (inferred ones aren't)
         inferred = BY_NAME[n.terminal].provenances == frozenset({"inferred"})
         cls = n.classification
         estimate = n.weight * total
