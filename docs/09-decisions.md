@@ -780,3 +780,68 @@
   paid HyperSync plan; accept low BSC coverage.
 - **Consequences:** BSC traces reach risk up to 3 hops (decayed to 36% there); more of a busy BSC
   wallet's money is followed in one check. Setting it back to 5 is one config line.
+
+### D-083 · TRC20 first; BSC stays as it is (owner's choice)
+- **Status:** Accepted
+- **Date:** 2026-10-05 · **Phase:** P14
+- **Context:** After P13, BSC deep traces are limited by HyperSync's free plan. VS-17 measured batched
+  multi-address reads: 6 quiet addresses in 1 query instead of 6, but no gain on busy hubs. The owner
+  stopped work on BSC: "just focus on highest performance on trc20", meaning catching more risk.
+- **Decision:** BSC keeps what it has (3 hops, D-082); no batching. P14 and P15 work on TRON:
+  intelligence and deeper TRON coverage.
+- **Alternatives:** Batched BSC reads (VS-17 recorded for later); a paid HyperSync plan.
+- **Consequences:** BSC results stay less complete than TRON's; the docs say so.
+
+### D-084 · UK and EU sanctions lists, BLOCK like OFAC (owner's choice)
+- **Status:** Accepted
+- **Date:** 2026-10-05 · **Phase:** P14
+- **Context:** VS-18 and VS-19: the UK Sanctions List (FCDO XML, Open Government Licence v3.0) names
+  49 TRON addresses (5 not on OFAC), mostly Xinbi Guarantee. The EU Financial Sanctions Files (XML,
+  Commission Decision 2011/833/EU) name 3 TRON addresses (1 not on OFAC; Grinex). Addresses appear
+  only in free text.
+- **Decision:** Both are list sources like OFAC: downloaded by `sync`, snapshots kept, a listing is
+  R-SAN-01 BLOCK with the list's name, required with the same 48-hour freshness. Addresses are taken
+  from each entry's text and kept only when their checksum holds.
+- **Alternatives:** REVIEW only; OpenSanctions (needs a paid business licence).
+- **Consequences:** `sync` downloads three lists; a stale one makes checks INCOMPLETE.
+
+### D-085 · NBCTF seizure orders, imported from the owner's downloads, BLOCK (owner's choice)
+- **Status:** Accepted
+- **Date:** 2026-10-05 · **Phase:** P14
+- **Context:** Israel's NBCTF publishes about 26 crypto seizure orders (about 690 addresses, many TRON
+  USDT) as Excel annexes on a bot-protected site, which we don't get round. OpenSanctions republishes
+  them under CC BY-NC 4.0, which needs a paid licence for a business.
+- **Decision:** The owner downloads the order files in a browser; `amlcheck lists import-nbctf
+  FILES…` reads every TRON and EVM address in them (checksum-validated) into an `nbctf` snapshot.
+  A listing is R-SAN-01 BLOCK, named "NBCTF". Not required: orders don't expire; `status` shows when
+  they were last imported.
+- **Alternatives:** REVIEW only; skip NBCTF.
+- **Consequences:** Kept current by the owner's re-imports, not by `sync`.
+
+### D-086 · Freeze neighbours: suspected malicious, inferred
+- **Status:** Accepted
+- **Date:** 2026-10-05 · **Phase:** P14
+- **Context:** MistTrack shows "Suspected Malicious Address". Tether has frozen about 7,700 TRON
+  addresses; wallets that fed or emptied them are the closest public equivalent. The hard constraint
+  limits intelligence to our counterparties and what their traces reach.
+- **Decision:** When a trace reads an address (hop ≥ 1), we look at its flows in that window: if at
+  least `[intel] neighbour_share` (20%) of what it received, or of what it sent, went from or to
+  sanctioned or frozen addresses, and that is at least `[intel] neighbour_min_usdt` (1,000 USDT), it
+  ends as `suspected_malicious`: inferred, risk type illicit_activity, weight 0.6 × confidence
+  (confidence = the share, at most 1), never BLOCK. It is also stored as an inferred label for 30
+  days, so later checks find it without a read.
+- **Alternatives:** A global scan of all frozen addresses' counterparties (outside the hard
+  constraint, and about 25,000 requests).
+- **Consequences:** More of MistTrack's "suspected" cases found, with a confidence shown.
+
+### D-087 · Tronscan tags, through the official API with the owner's key
+- **Status:** Proposed (needs the owner's Tronscan key, VS-21)
+- **Date:** 2026-10-05 · **Phase:** P14
+- **Context:** Tronscan's Terms of Service (2022-01-04) forbid scraping and "automated means or
+  interface not provided by us"; its own API is such an interface and needs a key. The API returns
+  account tags (exchange, project, risk).
+- **Decision:** Look up tags only for addresses our checks reach (shown counterparties and trace
+  nodes), cached, within the key's rate limit. Red (risk) tags become labels (`scam`, `stolen_funds`
+  or `high_risk` by tag), exchange tags name entities. The terms are recorded as the licence.
+- **Alternatives:** Skip Tronscan.
+- **Consequences:** Verified live (VS-21) before code relies on it.

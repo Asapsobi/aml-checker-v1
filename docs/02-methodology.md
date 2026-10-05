@@ -673,3 +673,37 @@ followed, R-TRC-04 says when it is low, and the check stays decidable. A read th
 R-TRC-01 to R-TRC-05 keep reading the inbound trace. Outbound risk is in the exposures (§11.1), with
 `direction` `out`.
 
+---
+
+## 13. TRON intelligence (P14)
+
+> TRC20 first (D-083). New sources of who an address is; how they score is §11.
+
+### 13.1 Lists that BLOCK
+
+| List | Source | Addresses | Refresh | Required |
+|---|---|---|---|---|
+| OFAC SDN (`ofac_sdn`) | §2.2 | `Digital Currency Address` ids | `sync`, 48 h | yes |
+| UK Sanctions List (`uk_sanctions`) | FCDO XML, OGL v3.0 (VS-18) | TRON and EVM addresses in each designation's text | `sync`, 48 h | yes |
+| EU Financial Sanctions (`eu_sanctions`) | Commission FSF XML, Decision 2011/833/EU (VS-19) | addresses in each entity's text | `sync`, 48 h | yes |
+| NBCTF seizure orders (`nbctf`) | the owner's downloads of the official annexes (VS-20) | every address in the files | `lists import-nbctf` | no |
+
+An address from free text is kept only when it passes its checksum (TRON base58check; `0x` with 40
+hex characters). A listing on any of them is R-SAN-01, BLOCK, naming the list (D-084, D-085). For
+exposures (§11.1) every list is `sanctioned`; the entity names the list (`UK sanctions: XINBI COMPANY
+LIMITED`), OFAC first when several list it.
+
+### 13.2 Freeze neighbours (`suspected_malicious`, inferred)
+
+When a trace reads an address at hop ≥ 1 (tests 8–11), its window's flows are compared with local
+flags (§3.3): `share = amount from (or to) sanctioned or frozen addresses / all received (or sent)`.
+If `share ≥ [intel] neighbour_share` (0.2) in either direction and that amount ≥
+`[intel] neighbour_min_usdt` (1,000), the item ends at test 9b as `suspected_malicious` with
+confidence `min(1, share)`. §11.2: risk type `illicit_activity`, weight 0.6 × confidence. It is
+stored as an inferred label for `[intel] neighbour_days` (30), found by test 4 next time. Never BLOCK.
+
+### 13.3 Tronscan tags (when the owner's key is set, D-087)
+
+Looked up only for addresses a check reaches, cached for `[intel] tag_days` (7). Red tags → `scam`,
+`stolen_funds` or `high_risk`; exchange tags → a named entity. Pending VS-21.
+

@@ -21,8 +21,54 @@ VS-07 (P6) and VS-11 to VS-14 (later phases) are not P0 items. VS-15 was redone 
 | VS-09 | Dropped (D-033) | — | — |
 | VS-10 | Confirmed (both chains) | `create_time` absent on contract-created contracts | — |
 | VS-16 | Measured (7 TRON, 4 BSC addresses) | TRON cheap; a full BSC read is slow, an exchange-sized one never finishes | — |
+| VS-17 | Measured: batching works, helps quiet addresses only | Pages hold ~1,000 logs | — |
+| VS-18 | Confirmed: 49 TRON addresses in free text | No structured field | — |
+| VS-19 | Confirmed: 3 TRON, 2 EVM addresses in free text | Public token URL, no login | — |
+| VS-20 | Pending: the owner's NBCTF files | — | — |
+| VS-21 | Pending: the owner's Tronscan key; terms read | API needs a key (401 without) | — |
 
 ---
+
+## VS-17 · HyperSync multi-address queries (P13)
+**Checked:** 2026-10-05, with amlcheck's HyperSync client, one window (2026-09-01 to 2026-10-03,
+6.5M blocks), each address alone then all six as one OR of topic values.
+
+| Six addresses | One per query | Batched | Same transfers |
+|---|---|---|---|
+| Busy (589 to 16,562 transfers each) | 34 queries, 93 s | 30 queries, 150 s | yes |
+| Quiet (5 to 847 each) | 6 queries, 13.2 s | **1 query, 5.8 s** | yes |
+
+**Found:** HyperSync accepts many addresses in one query and returns the same transfers. A page holds
+about 1,000 logs, so cost follows transfer volume: batching helps quiet addresses, not busy ones.
+**What this changes:** not built (D-083); recorded for when BSC work resumes.
+
+## VS-18 · UK Sanctions List (P14)
+**Checked:** 2026-10-05. `https://sanctionslist.fcdo.gov.uk/docs/UK-Sanctions-List.xml`, 200, 21.9 MB,
+generated 02/10/2026; also a CSV. The single UK list since 2026-01-28 (OFSI's consolidated list
+closed). Licence: Open Government Licence v3.0 (attribution).
+**Found:** `<Designation>` with `UniqueID` (e.g. `GHR0190`), `Names/Name/Name6` and `NameType`,
+`RegimeName`, `OtherInformation`, `UKStatementofReasons`. Crypto addresses only in free text
+("Xinbi is associated with the following crypto addresses: T…; T…"). **49 TRON addresses, all
+checksum-valid, 5 not on OFAC; 6 EVM.** Fixture: `tests/fixtures/lists/uk_sample.xml` (two real
+designations, trimmed).
+
+## VS-19 · EU Financial Sanctions Files (P14)
+**Checked:** 2026-10-05. `https://webgate.ec.europa.eu/fsd/fsf/public/files/xmlFullSanctionsList_1_1/content?token=dG9rZW4tMjAxNw`,
+200, 25.8 MB, `generationDate` 2026-09-22, no login. Licence: Commission Decision 2011/833/EU
+(reuse for any purpose, free).
+**Found:** `<sanctionEntity euReferenceNumber=… logicalId=…>` with `nameAlias wholeName=…`,
+`regulation programme=…`, `address`/`identification` children whose `<remark>` text holds wallets
+("Known blockchain wallet addresses: T…;"). **3 TRON (1 not on OFAC: Grinex), 2 EVM.** Fixture:
+`tests/fixtures/lists/eu_sample.xml` (two real entities, trimmed).
+
+## VS-20 · NBCTF seizure-order annexes (P14)
+**Pending** the owner's downloaded files: the official site is bot-protected (connection refused from
+here; not worked round). The importer reads every cell, so it needs no column names.
+
+## VS-21 · Tronscan account tags (P14)
+**Pending** the owner's key. `apilist.tronscanapi.com/api/accountv2` answers 401 without one. Terms
+(PDF, 2022-01-04) forbid scraping and "automated means or interface not provided by us"; the API is
+theirs.
 
 ## VS-16 · Cost of a full-history read (P13)
 **Checked:** 2026-10-04, with amlcheck's own readers (`TransferCache` over TronGrid and HyperSync),

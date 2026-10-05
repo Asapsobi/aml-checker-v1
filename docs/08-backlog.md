@@ -188,14 +188,18 @@
 | T-13.06 | Monitor cap 10; live budget run; docs; `2.0.0a2` | M | T-13.05 | Budget report |
 | T-13.07 | BSC traces stop at 3 hops (D-082, owner's choice after the budget run) | S | T-13.06 | AT-67; BSC re-measured |
 
-## P14 · Intelligence v2
+## P14 · TRON intelligence (TRC20 first, D-083)
 
 | ID | Ticket | Size | Needs | Done when |
 |---|---|---|---|---|
-| T-14.01 | Verify UK, EU and NBCTF lists (format, licence); add as list sources | L | P13 | AT-69 |
-| T-14.02 | Official bridge, mixer and exchange addresses, each with its source | M | P13 | Verification log |
-| T-14.03 | Explorer name tags, only if the terms allow (else recorded and dropped) | M | P13 | Decision recorded |
-| T-14.04 | Derived "suspected malicious" addresses from our traces | M | P13 | AT-69 |
+| T-14.01 | Methodology §13, D-083…D-087, VS-17…VS-21 | S | P13 | Reviewed |
+| T-14.02 | Lists generalised: one snapshot store and adapter per list; flags, names and status over all lists | M | T-14.01 | AT-69 (lists) |
+| T-14.03 | UK and EU sanctions lists: parse, `sync`, fixtures | M | T-14.02 | AT-69 |
+| T-14.04 | NBCTF import from the owner's files (`lists import-nbctf`) | M | T-14.02 | AT-71; VS-20 with a real file |
+| T-14.05 | Freeze neighbours: `suspected_malicious`, inferred, stored for 30 days | M | P13 | AT-72 |
+| T-14.06 | Tronscan tags with the owner's key | M | VS-21 | AT-73 |
+| T-14.07 | Deeper TRON coverage within 3 minutes, tuned live | S | P13 | Budget run |
+| T-14.08 | Live comparison, docs, `2.0.0b1` | S | all | Acceptance results |
 
 ## P15 · Benchmark & 2.0
 
