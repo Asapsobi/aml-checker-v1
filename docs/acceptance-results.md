@@ -406,3 +406,15 @@ enough for a quiet wallet, not for 5 hops both ways through busy counterparties.
 decidable (D-080: `untraced:budget`, coverage shown) and every finished read is cached, so repeated
 checks reach further; but a busy BSC wallet's trace covers little in one check. Options are in the
 P13 PR (a paid HyperSync plan, batched multi-address queries, or fewer hops on BSC).
+
+**BSC at 3 hops** (D-082, re-measured 2026-10-05, same method):
+
+| Wallet | Coverage in / out | Addresses read | Calls | Cold | Warm |
+|---|---|---|---|---|---|
+| BSC `0x75f5c1…21c1f6ba` | 13.1% / 22.0%, stopped at 180 s | 6 | 54 | 180 s | 180 s |
+| BSC `0x033007…e9e54a` (OFAC) | 0% / 0%, stopped at 180 s | 5 | 52 | 180 s | 180 s |
+| BSC `0x0c1e52…ee1576` | 15.5% / 100% | 18 | 65 | 148 s | 1.5 s |
+
+Fewer hops helps little: the time goes into reading a few busy (or old) first-hop counterparties
+one query at a time, not into depth. What would change it is reading many queued addresses in one
+HyperSync query (batching), or a faster plan. Live end-to-end on 2.0.0a2: **16 / 16 passed** (354 s).
