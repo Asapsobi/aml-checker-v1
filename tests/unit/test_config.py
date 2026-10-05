@@ -137,7 +137,8 @@ def test_secrets_repr_hides_values(tmp_path: Path) -> None:
     assert s.trongrid_api_key == "sekret-123"
     assert "sekret" not in repr(s)
     assert repr(Secrets()) == (
-        "Secrets({'trongrid_api_key': False, 'hypersync_token': False, 'api_token': False})"
+        "Secrets({'trongrid_api_key': False, 'hypersync_token': False, 'api_token': False, "
+        "'tronscan_api_key': False})"
     )
 
 

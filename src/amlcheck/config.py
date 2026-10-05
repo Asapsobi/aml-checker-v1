@@ -315,12 +315,14 @@ class Secrets:
     trongrid_api_key: str | None = None
     hypersync_token: str | None = None
     api_token: str | None = None
+    tronscan_api_key: str | None = None  # P14 (D-087): Tronscan account tags
 
     def __repr__(self) -> str:
         shown = {
             "trongrid_api_key": bool(self.trongrid_api_key),
             "hypersync_token": bool(self.hypersync_token),
             "api_token": bool(self.api_token),
+            "tronscan_api_key": bool(self.tronscan_api_key),
         }
         return f"Secrets({shown})"
 
@@ -329,6 +331,7 @@ SECRET_VARS = {
     "trongrid_api_key": "AMLCHECK_TRONGRID_API_KEY",
     "hypersync_token": "AMLCHECK_HYPERSYNC_TOKEN",
     "api_token": "AMLCHECK_API_TOKEN",
+    "tronscan_api_key": "AMLCHECK_TRONSCAN_API_KEY",
 }
 
 
@@ -388,4 +391,5 @@ def load_secrets(
         trongrid_api_key=get(SECRET_VARS["trongrid_api_key"]),
         hypersync_token=get(SECRET_VARS["hypersync_token"]),
         api_token=get(SECRET_VARS["api_token"]),
+        tronscan_api_key=get(SECRET_VARS["tronscan_api_key"]),
     )
