@@ -25,7 +25,7 @@ VS-07 (P6) and VS-11 to VS-14 (later phases) are not P0 items. VS-15 was redone 
 | VS-18 | Confirmed: 49 TRON addresses in free text | No structured field | — |
 | VS-19 | Confirmed: 3 TRON, 2 EVM addresses in free text | Public token URL, no login | — |
 | VS-20 | Pending: the owner's NBCTF files | — | — |
-| VS-21 | Pending: the owner's Tronscan key; terms read | API needs a key (401 without) | — |
+| VS-21 | Confirmed with the owner's key: works, but no risk tags on any sanctioned or frozen address tried | Tags name only famous entities | — |
 
 ---
 
@@ -66,9 +66,18 @@ designations, trimmed).
 here; not worked round). The importer reads every cell, so it needs no column names.
 
 ## VS-21 · Tronscan account tags (P14)
-**Pending** the owner's key. `apilist.tronscanapi.com/api/accountv2` answers 401 without one. Terms
-(PDF, 2022-01-04) forbid scraping and "automated means or interface not provided by us"; the API is
-theirs.
+**Checked:** 2026-10-05 with the owner's key (header `TRON-PRO-API-KEY`, never printed). Terms (PDF,
+2022-01-04) forbid scraping and "automated means or interface not provided by us"; the API is theirs.
+Docs (docs.tronscan.org, Deep Analysis → Get Account Tags): `GET /api/account/tag?address=` →
+`redTag` ("risk identifier"), `publicTag`, `blueTag`, `greyTag`, `chainTags` (behaviour: Assets,
+Activity, DeFi, NFT, Governance), `refreshTimeInfo`. `/api/accountv2` carries the same four tags
+among balances (3–38 KB). No rate-limit headers.
+**Found** (14 addresses): Tether Treasury `TKHuVq…` → `publicTag` "Tether Treasury". **No `redTag`
+on any risky address tried**: the OFAC/CHEIL CREDIT BANK address, a Xinbi wallet (OFAC and UK), five
+Tether-frozen addresses, six busy unnamed services. `chainTags` describe size and activity ("High
+Balance", "Whale", "Large Trader"), not risk. Fixtures: `tests/fixtures/tronscan/` (two answers).
+**What this changes:** D-087 is not built: one call per address reached (100+ per check) for almost
+no risk signal. Revisit if a sample of the owner's real counterparties shows useful public tags.
 
 ## VS-16 · Cost of a full-history read (P13)
 **Checked:** 2026-10-04, with amlcheck's own readers (`TransferCache` over TronGrid and HyperSync),

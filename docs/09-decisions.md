@@ -836,7 +836,7 @@
 - **Consequences:** More of MistTrack's "suspected" cases found, with a confidence shown.
 
 ### D-087 · Tronscan tags, through the official API with the owner's key
-- **Status:** Proposed (needs the owner's Tronscan key, VS-21)
+- **Status:** Deferred (VS-21: no risk tags on any sanctioned or frozen address tried)
 - **Date:** 2026-10-05 · **Phase:** P14
 - **Context:** Tronscan's Terms of Service (2022-01-04) forbid scraping and "automated means or
   interface not provided by us"; its own API is such an interface and needs a key. The API returns
