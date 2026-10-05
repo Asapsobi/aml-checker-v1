@@ -126,6 +126,8 @@ def ordered(exposures: Iterable[Exposure]) -> list[Exposure]:
     )
 
 
+#: The node class a trace gives a freeze neighbour (§13.2, trace engine).
+SUSPECTED_CLASS = "SUSPECTED_MALICIOUS"
 #: Terminal tests that read local flags (§7.5 tests 2–4): on hop 1 those counterparties are already
 #: direct exposures, from exact amounts.
 _LOCAL_TESTS = (2, 3, 4)
@@ -148,12 +150,14 @@ def from_trace(
         return []
     found: list[tuple[str, Exposure]] = []
     for n in trace.nodes:
-        if n.terminal not in RISK:
-            continue
-        if n.hop == 1 and n.test in _LOCAL_TESTS and n.classification is None:
-            continue  # a fact local flags already made a direct exposure (inferred ones aren't)
-        inferred = BY_NAME[n.terminal].provenances == frozenset({"inferred"})
         cls = n.classification
+        if n.terminal in RISK and not (n.hop == 1 and n.test in _LOCAL_TESTS):
+            category = n.terminal  # a risk end (hop-1 local facts are direct exposures already)
+        elif cls is not None and cls.type == SUSPECTED_CLASS and n.terminal not in RISK:
+            category = "suspected_malicious"  # a freeze neighbour the trace went through (§13.2)
+        else:
+            continue
+        inferred = BY_NAME[category].provenances == frozenset({"inferred"})
         estimate = n.weight * total
         volume = n.bottleneck if method == "path" and n.bottleneck is not None else estimate
         path = (*n.path, n.address)
@@ -164,8 +168,8 @@ def from_trace(
                     trace.direction,
                     n.hop,
                     n.address,
-                    n.terminal,
-                    cls.type if inferred and cls else name(n.address, n.terminal),
+                    category,
+                    cls.type if inferred and cls else name(n.address, category),
                     volume,
                     volume / total,
                     path,

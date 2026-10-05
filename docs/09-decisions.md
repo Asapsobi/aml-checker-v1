@@ -828,9 +828,11 @@
   direction the trace does not follow (tracing in: what it sent; tracing out: what it received;
   the followed direction reaches flagged addresses as facts by itself): if at least `[intel]
   neighbour_share` (20%) went to or came from sanctioned or frozen addresses, and that is at least
-  `[intel] neighbour_min_usdt` (1,000 USDT), it ends as `suspected_malicious`: inferred, risk type illicit_activity, weight 0.6 × confidence
-  (confidence = the share, at most 1), never BLOCK. It is also stored as an inferred label for 30
-  days, so later checks find it without a read.
+  `[intel] neighbour_min_usdt` (1,000 USDT), the node is marked suspected and gives an inferred
+  `suspected_malicious` exposure at its hop: risk type illicit_activity, weight 0.6 × confidence
+  (confidence = the share, at most 1), never BLOCK. The trace goes on through it, so facts behind
+  it are still found (a first version ended the path there and hid sanctioned senders: the TRON
+  tuning run showed sanctioned exposure falling while the inferred share rose). Not stored.
 - **Alternatives:** A global scan of all frozen addresses' counterparties (outside the hard
   constraint, and about 25,000 requests).
 - **Consequences:** More of MistTrack's "suspected" cases found, with a confidence shown.

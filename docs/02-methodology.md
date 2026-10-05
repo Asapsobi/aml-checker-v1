@@ -701,8 +701,11 @@ trace does not follow** are compared with local flags (§3.3). Tracing in: `shar
 sanctioned or frozen addresses / all it sent`; tracing out: what it received from them. (In the
 followed direction the trace reaches those addresses itself and counts them as facts.) If
 `share ≥ [intel] neighbour_share` (0.2) and that amount ≥ `[intel] neighbour_min_usdt` (1,000), the
-item ends at test 12 as `suspected_malicious` with confidence `min(1, share)`. §11.2: risk type `illicit_activity`, weight 0.6 × confidence. It is
-stored as an inferred label for `[intel] neighbour_days` (30), found by test 4 next time. Never BLOCK.
+node is marked `SUSPECTED_MALICIOUS` with confidence `min(1, share)` and **the trace goes on through
+it**: it is not an end, so facts behind it (a sanctioned sender) are still found and win. It gives an
+inferred exposure `suspected_malicious` at its hop (§11.1: path volume up to it; capped with the
+exposures behind it at the first-hop edge). §11.2: risk type `illicit_activity`, weight 0.6 ×
+confidence. Not stored: it is judged again whenever the address is read. Never BLOCK.
 
 ### 13.3 Tronscan tags (when the owner's key is set, D-087)
 

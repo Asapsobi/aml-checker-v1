@@ -253,7 +253,6 @@ class Intel(_Section):
 
     neighbour_share: Share = Decimal("0.2")
     neighbour_min_usdt: PosDec = Decimal("1000")
-    neighbour_days: PosInt = 30
 
 
 class Lists(_Section):

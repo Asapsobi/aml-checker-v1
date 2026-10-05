@@ -196,7 +196,7 @@
 | T-14.02 | Lists generalised: one snapshot store and adapter per list; flags, names and status over all lists | M | T-14.01 | AT-69 (lists) |
 | T-14.03 | UK and EU sanctions lists: parse, `sync`, fixtures | M | T-14.02 | AT-69 |
 | T-14.04 | NBCTF import from the owner's files (`lists import-nbctf`) | M | T-14.02 | AT-71; VS-20 with a real file |
-| T-14.05 | Freeze neighbours: `suspected_malicious`, inferred, stored for 30 days | M | P13 | AT-72 |
+| T-14.05 | Freeze neighbours: `suspected_malicious`, inferred, traced through | M | P13 | AT-72 |
 | T-14.06 | Tronscan tags with the owner's key | M | VS-21 | AT-73 |
 | T-14.07 | Deeper TRON coverage within 3 minutes, tuned live | S | P13 | Budget run |
 | T-14.08 | Live comparison, docs, `2.0.0b1` | S | all | Acceptance results |

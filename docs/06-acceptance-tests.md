@@ -77,6 +77,6 @@
 | AT-69 | P14 | An address on the UK (or EU) list; a stale UK list; NBCTF never imported | R-SAN-01 BLOCK naming the list and entry; stale → INCOMPLETE, still BLOCK; NBCTF `skipped`, not required |
 | AT-70 | P15 | **live** The owner's benchmark set | Level agreement reported; every mismatch has a reason; targets agreed with the owner met |
 | AT-71 | P14 | NBCTF files with TRON and EVM addresses in any cell, one with a bad checksum | Valid addresses imported as an `nbctf` snapshot with the order id; the bad one reported, not imported; a listed address BLOCKs |
-| AT-72 | P14 | A traced node that took 30% of its inflow (≥ 1,000 USDT) from Tether-frozen addresses; one with 10% | First ends as `suspected_malicious` (confidence 0.3, never BLOCK) and is stored for 30 days; second is expanded as usual |
+| AT-72 | P14 | Tracing in: a node that sent 30% of its outflow (≥ 1,000 USDT) to sanctioned or frozen addresses; one with 9%; one whose sender is sanctioned | First gives a `suspected_malicious` exposure (confidence 0.3, never BLOCK) and is traced through; second nothing; third: the sanctioned sender found as a fact |
 | AT-73 | P14 | Tronscan tags (recorded answers) for a red-tagged and an exchange address | Red tag → `scam`-type label; exchange → named entity; only addresses the check reached are looked up |
 

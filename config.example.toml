@@ -146,11 +146,10 @@ min_kept_share = 0.8
 
 # Methodology §13.2 (D-086): a traced address that sent (tracing in) or received (tracing out)
 # this share of its flow, and at least this much, to or from sanctioned or frozen addresses is a
-# suspected neighbour (inferred, never BLOCK), remembered this many days.
+# suspected neighbour: an inferred exposure at its hop, never BLOCK; the trace goes on through it.
 [intel]
 neighbour_share = 0.2
 neighbour_min_usdt = 1000
-neighbour_days = 30
 
 # Data sources §3, §6. TronGrid limits are per key and unpublished: set them here.
 [tron]
