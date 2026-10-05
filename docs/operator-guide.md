@@ -70,7 +70,7 @@ others are INFO: they explain the score (D-072; `[rules] severity` can change th
 
 | Rule | Means | Look at |
 |---|---|---|
-| R-SAN-01 | On a sanctions list (OFAC) | The list entry named in the finding |
+| R-SAN-01 | On a sanctions list: OFAC, UK, EU or NBCTF (P14) | The list and entry named in the finding |
 | R-FRZ-01 / 02 | Frozen by Tether now / frozen before and released | When; why it was released |
 | R-EXP-01 | Dealt directly with a sanctioned or frozen address | The counterparty table: amounts and dates |
 | R-EXP-02 | 5% or more of what it received came from flagged addresses | Which ones, how much |
@@ -86,6 +86,12 @@ others are INFO: they explain the score (D-072; `[rules] severity` can change th
 | R-TRC-05 | 10% or more passed through inferred suspicious patterns (low priority) | Collectors, layering |
 | R-SYS-01 | A required source failed or is stale | Makes the check INCOMPLETE |
 | R-SCR-01 | The score is 31 or more (moderate or worse) | The exposures and the lines under the score |
+
+**Suspected malicious** (P14) is an inference about an address the trace reached: tracing where
+money came from, it sent at least 20% of its money (and 1,000 USDT or more) to sanctioned or
+Tether-frozen wallets; tracing where money went, it received that much from them. It counts in the
+score at its confidence and never BLOCKs on its own. Like MistTrack's "suspected malicious", it is a
+reason to look, not a fact.
 
 **Inferences are not facts.** Types like COLLECTOR or DEPOSIT, and everything marked "inferred", come
 from the address's own transfers and are never a reason to BLOCK on their own.
