@@ -74,5 +74,9 @@
 | AT-66 | P12 | A BSC transfer of 78951.063947843887500723 USDT | Shown `78,951.06` in text, web and PDF; exact in JSON |
 | AT-67 | P13 | Trace fixtures with risk at hop 4 out and hop 5 in | Both found within budget; best-first order; partition sums to 1 per direction |
 | AT-68 | P13 | History of 3 years, cap reached at 2 years; then the cap reached inside 180 days | Check complete with "older history not read before …"; INCOMPLETE |
-| AT-69 | P14 | Address on a new list; an address derived as suspected | Exposure with the list's name; inferred exposure with confidence, never BLOCK |
+| AT-69 | P14 | An address on the UK (or EU) list; a stale UK list; NBCTF never imported | R-SAN-01 BLOCK naming the list and entry; stale → INCOMPLETE, still BLOCK; NBCTF `skipped`, not required |
 | AT-70 | P15 | **live** The owner's benchmark set | Level agreement reported; every mismatch has a reason; targets agreed with the owner met |
+| AT-71 | P14 | NBCTF files with TRON and EVM addresses in any cell, one with a bad checksum | Valid addresses imported as an `nbctf` snapshot with the order id; the bad one reported, not imported; a listed address BLOCKs |
+| AT-72 | P14 | A traced node that took 30% of its inflow (≥ 1,000 USDT) from Tether-frozen addresses; one with 10% | First ends as `suspected_malicious` (confidence 0.3, never BLOCK) and is stored for 30 days; second is expanded as usual |
+| AT-73 | P14 | Tronscan tags (recorded answers) for a red-tagged and an exchange address | Red tag → `scam`-type label; exchange → named entity; only addresses the check reached are looked up |
+

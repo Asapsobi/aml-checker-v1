@@ -34,6 +34,7 @@ from amlcheck.intel.store import IntelStore
 from amlcheck.net.http import Http, Limiter, Mode, SourceError
 from amlcheck.net.limits import BudgetPacer, TokenBucket
 from amlcheck.profile.adapter import ClassifierSource, Profiler
+from amlcheck.screening import lists
 from amlcheck.screening.base import SourceAdapter
 from amlcheck.screening.bsc_freeze import BscFreezeSource
 from amlcheck.screening.exposure import ExposureSource
@@ -149,6 +150,25 @@ def should_trace(rt: Runtime, asked: bool | None, amount: Decimal | None) -> boo
     return amount is not None and amount >= rt.settings.trace.auto_amount_usdt
 
 
+def list_sources(rt: Runtime, conn: sqlite3.Connection) -> list[SanctionsSource]:
+    """The sanctions lists beside OFAC that are switched on (methodology §13.1)."""
+    on = {lists.UK: rt.settings.lists.uk, lists.EU: rt.settings.lists.eu}
+    on[lists.NBCTF] = rt.settings.lists.nbctf
+    return [
+        SanctionsSource(
+            conn,
+            rt.settings.freshness,
+            clock=rt.clock,
+            source=spec.source,
+            label=spec.label,
+            list_name=spec.list_name,
+            required=spec.required,
+        )
+        for spec, enabled in on.items()
+        if enabled
+    ]
+
+
 def make_screening_sources(
     rt: Runtime,
     conn: sqlite3.Connection,
@@ -161,6 +181,7 @@ def make_screening_sources(
     """The sources for a check on `chain` (methodology §2.1); the trace when asked (PRD F9.4)."""
     http = Http(client, rt.settings.network, mode=mode)
     sanctions = SanctionsSource(conn, rt.settings.freshness, clock=rt.clock)
+    more_lists = list_sources(rt, conn)
     cache = TransferCache(
         conn, make_sources(rt, client, mode, http=http), rt.settings.cache, clock=rt.clock
     )
@@ -195,11 +216,20 @@ def make_screening_sources(
             )
         )
     if chain is Chain.BSC:
-        return [sanctions, BscFreezeSource(clock=rt.clock), exposure, lookalike, classifier, *extra]
+        return [
+            sanctions,
+            *more_lists,
+            BscFreezeSource(clock=rt.clock),
+            exposure,
+            lookalike,
+            classifier,
+            *extra,
+        ]
     tether = make_tether(rt, http, trongrid_limiter(rt))
     index = TronFreezeIndex(tether, conn, clock=rt.clock)
     return [
         sanctions,
+        *more_lists,
         TronFreezeSource(index, rt.settings.freshness, clock=rt.clock),
         TronBlacklistSource(tether, clock=rt.clock),
         exposure,

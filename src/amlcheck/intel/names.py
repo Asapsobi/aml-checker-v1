@@ -12,20 +12,27 @@ from typing import Any
 from amlcheck.core.models import Chain
 from amlcheck.intel.store import IntelStore
 from amlcheck.profile import classifier as clf
+from amlcheck.screening.lists import NAMES, ORDER
 
 
 def sanctions_entry(conn: sqlite3.Connection, address: str) -> str | None:
-    """`OFAC SDN: <name>` from the latest snapshot; the lowest entry id when several list it."""
-    row = conn.execute(
-        "SELECT a.entity_name, a.list_entry_id FROM sanctioned_addresses a "
-        "WHERE a.address_norm = ? AND a.snapshot_id = (SELECT max(id) FROM list_snapshots "
-        "WHERE source = 'ofac_sdn') ORDER BY a.list_entry_id LIMIT 1",
+    """`OFAC SDN: <name>`, `UK sanctions: <name>`…, from each list's latest snapshot, OFAC first
+    (methodology §13.1); the lowest entry id when one list names it several times."""
+    rows = conn.execute(
+        "SELECT s.source, a.entity_name, a.list_entry_id FROM sanctioned_addresses a "
+        "JOIN list_snapshots s ON s.id = a.snapshot_id "
+        "WHERE a.address_norm = ? AND a.snapshot_id IN "
+        "(SELECT max(id) FROM list_snapshots GROUP BY source) "
+        "ORDER BY s.source, a.list_entry_id",
         (address,),
-    ).fetchone()
-    if row is None:
+    ).fetchall()
+    if not rows:
         return None
-    name, entry = row
-    return f"OFAC SDN: {name}" if name else f"OFAC SDN entry {entry}"
+    source, name, entry = min(
+        rows, key=lambda r: (ORDER.index(r[0]) if r[0] in ORDER else len(ORDER), r[0], r[2])
+    )
+    list_name = NAMES.get(source, source)
+    return f"{list_name}: {name}" if name else f"{list_name} entry {entry}"
 
 
 def entity_name(conn: sqlite3.Connection, chain: Chain, address: str, category: str) -> str:

@@ -134,6 +134,16 @@ sdn_url = "https://sanctionslistservice.ofac.treas.gov/api/PublicationPreview/ex
 changes_url = "https://sanctionslistservice.ofac.treas.gov/changes/latest"
 min_kept_share = 0.8
 
+# Methodology §13.1 (D-084, D-085): sanctions lists beside OFAC. UK and EU are downloaded by
+# `amlcheck sync` and required; NBCTF is imported from your files (`lists import-nbctf`).
+[lists]
+uk = true
+eu = true
+nbctf = true
+uk_url = "https://sanctionslist.fcdo.gov.uk/docs/UK-Sanctions-List.xml"
+eu_url = "https://webgate.ec.europa.eu/fsd/fsf/public/files/xmlFullSanctionsList_1_1/content"
+min_kept_share = 0.8
+
 # Data sources §3, §6. TronGrid limits are per key and unpublished: set them here.
 [tron]
 api_url = "https://api.trongrid.io"

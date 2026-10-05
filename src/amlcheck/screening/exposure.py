@@ -112,21 +112,24 @@ def _by_size(cps: Iterable[Counterparty]) -> list[Counterparty]:
 def local_flags(
     conn: sqlite3.Connection, chain: Chain, addresses: Iterable[str]
 ) -> Mapping[str, set[str]]:
-    """sanctioned (latest OFAC snapshot), frozen (TRON index: latest blacklist event is an add),
-    label:<tag> (labels.csv tags and active intel-label categories). Local data only (D-015)."""
+    """sanctioned (the latest snapshot of any list, §13.1), frozen (TRON index: latest blacklist
+    event is an add), label:<tag> (labels.csv tags and active intel-label categories). Local data
+    only (D-015)."""
     wanted = sorted(set(addresses))
     flags: dict[str, set[str]] = {}
-    snap = conn.execute(
-        "SELECT id FROM list_snapshots WHERE source = 'ofac_sdn' ORDER BY id DESC LIMIT 1"
-    ).fetchone()
+    # The latest snapshot of every list (OFAC, UK, EU, NBCTF, methodology §13.1).
+    snaps = [
+        r[0] for r in conn.execute("SELECT max(id) FROM list_snapshots GROUP BY source ORDER BY 1")
+    ]
     for i in range(0, len(wanted), _CHUNK):
         chunk = wanted[i : i + _CHUNK]
         marks = ",".join("?" * len(chunk))
-        if snap:
+        if snaps:
+            snap_marks = ",".join("?" * len(snaps))
             for (a,) in conn.execute(
                 "SELECT DISTINCT address_norm FROM sanctioned_addresses "  # noqa: S608 - placeholders only
-                f"WHERE snapshot_id = ? AND address_norm IN ({marks})",
-                [snap[0], *chunk],
+                f"WHERE snapshot_id IN ({snap_marks}) AND address_norm IN ({marks})",
+                [*snaps, *chunk],
             ):
                 flags.setdefault(a, set()).add("sanctioned")
         if chain is Chain.TRON:

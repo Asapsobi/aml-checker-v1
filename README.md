@@ -57,7 +57,7 @@ other amlcheck commands at the same time: they share the TronGrid key's rate lim
 | `amlcheck intel import-pack <file> --name N --licence TEXT` | A licensed third-party label pack (`address,chain,category,note`); refused without a licence |
 | `amlcheck classify <addr> [--json]` | Who an address probably is (HUB, DEPOSIT, COLLECTOR, DISTRIBUTOR, PASS_THROUGH, PERSONAL, CONTRACT, FRESH), with the conditions that held. Deposits are linked to their hub's entity. Inferences, never a verdict |
 | `amlcheck intel entity list` / `entity show <id>` / `entity name <id> <name> --kind K` | Groups of addresses with one owner; naming a hub (e.g. an exchange) carries its kind to its deposits |
-| `amlcheck sync` | Download the OFAC list (about 29 MB) and refresh the Tether TRON freeze index. **Run at least daily**: a list older than 48 h makes checks INCOMPLETE |
+| `amlcheck sync` | Download the sanctions lists, OFAC (about 3 MB zipped), the UK Sanctions List and the EU list (about 22 and 26 MB), and refresh the Tether TRON freeze index. **Run at least daily**: a list older than 48 h makes checks INCOMPLETE. A listing on any of them BLOCKs (methodology §13.1) |
 | `amlcheck status [--json]` | Data folder, config, database, source freshness and the audit log head |
 | `amlcheck audit list [--address] [--verdict] [--client] [--since] [--json]` | Recorded checks with their score, newest first |
 | `amlcheck audit export --format csv\|json\|pdf [--address] [--verdict] [--client] [--since] [--until] [--out FILE]` | Export the audit log: CSV safe to open in a spreadsheet (formula-like cells prefixed with `'`), JSON with every hash so the chain re-verifies from the file, or a PDF table |

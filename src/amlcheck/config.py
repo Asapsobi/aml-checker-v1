@@ -248,6 +248,21 @@ class Bsc(_Section):
     rpc_requests_per_second: PosFloat = 2.0
 
 
+class Lists(_Section):
+    """Methodology §13.1: sanctions lists beside OFAC (D-084, D-085). UK and EU are downloaded by
+    `sync` and required; NBCTF is imported from the owner's files and not required."""
+
+    uk: bool = True
+    eu: bool = True
+    nbctf: bool = True
+    uk_url: str = "https://sanctionslist.fcdo.gov.uk/docs/UK-Sanctions-List.xml"
+    # The Commission's public download needs its published access parameter; lists.py adds it.
+    eu_url: str = (
+        "https://webgate.ec.europa.eu/fsd/fsf/public/files/xmlFullSanctionsList_1_1/content"
+    )
+    min_kept_share: Share = Decimal("0.8")  # as OFAC: > 20% fewer addresses → rejected
+
+
 class Settings(_Section):
     freshness: Freshness = Freshness()
     network: Network = Network()
@@ -262,6 +277,7 @@ class Settings(_Section):
     web: Web = Web()
     operator: Operator = Operator()
     ofac: Ofac = Ofac()
+    lists: Lists = Lists()
     tron: Tron = Tron()
     bsc: Bsc = Bsc()
 
