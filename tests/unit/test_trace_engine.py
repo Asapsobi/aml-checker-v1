@@ -134,21 +134,31 @@ def real_time_engine(conn: sqlite3.Connection, fake: Fake, budget_s: int) -> Tra
     )
 
 
-# F9.3: the time budget also bounds a read in progress; the trace ends as a partial, on time.
+# F9.3, D-080: the time budget also bounds a read in progress; running out ends the trace on time
+# with what wasn't finished in untraced:budget, not as a failure.
 async def test_time_budget_bounds_a_slow_read(conn: sqlite3.Connection) -> None:
     fake = Slow(example(), slow=B)
     setup_example(conn, IntelStore(conn, clock=fixed(NOW)))
     started = time.monotonic()
-    with pytest.raises(TraceFailed) as exc:
-        await real_time_engine(conn, fake, 1).run(detect(T))
+    t = await real_time_engine(conn, fake, 1).run(detect(T))
     assert time.monotonic() - started < 5
-    partial = exc.value.partial
-    assert not partial.complete
-    assert "time budget of 1 s" in exc.value.reason
-    assert partial.partition["exchange_regulated"] == D0("0.6")  # A resolved before B hung
-    assert partial.partition["untraced:unfinished"] == D0("0.3")  # B, cut off mid-read
-    assert partial.partition["untraced:pruned"] == D0("0.1")  # C, as in §7.11
-    assert sum(partial.partition.values()) == 1
+    assert t.complete
+    assert t.stopped == "time"
+    assert t.partition["exchange_regulated"] == D0("0.6")  # A, the larger, went first
+    assert t.partition["untraced:budget"] == D0("0.3")  # B, cut off mid-read
+    assert t.partition["untraced:pruned"] == D0("0.1")  # C, as in §7.11
+    assert sum(t.partition.values()) == 1
+    assert t.coverage == D0("0.6")
+
+
+async def test_out_of_time_queue_still_gets_the_local_tests(conn: sqlite3.Connection) -> None:
+    """D-080: a sanctioned address still waiting when time runs out is found without a read."""
+    xs = [tr(5, A, T, 1000), tr(6, B, T, 900), tr(20, C, B, 900)]
+    sanction(conn, B)
+    t = await real_time_engine(conn, Slow(xs, slow=A), 1).run(detect(T))
+    assert t.stopped == "time"
+    assert t.partition["sanctioned"] == D0(900) / D0(1900)  # B: queued behind A, still checked
+    assert t.partition["untraced:budget"] == D0(1000) / D0(1900)
 
 
 async def test_time_budget_bounds_the_target_read(conn: sqlite3.Connection) -> None:
@@ -178,12 +188,14 @@ async def test_no_inflow_target(conn: sqlite3.Connection) -> None:
 
 
 async def test_depth_and_no_inflow_buckets(conn: sqlite3.Connection) -> None:
-    x, y, z = addr("x"), addr("y"), addr("z")
+    x, y, z, w, v = addr("x"), addr("y"), addr("z"), addr("w"), addr("v")
     xs = [
         tr(5, A, T, 1000),
         tr(10, x, A, 1000),
         tr(20, y, x, 1000),
         tr(30, z, y, 1000),
+        tr(40, w, z, 1000),  # w at hop 5 = max_hops (§12.2): untraced:depth
+        tr(50, v, w, 1000),
         tr(6, C, T, 1000),
     ]
     eng, _ = engine(conn, Fake(xs))
@@ -209,7 +221,7 @@ def test_prune_worked_example() -> None:
         {"A": f(12000), "B": f(6000), "C": f(2000)},
         parent_weight=D0(1),
         parent_flow=D0(20000),
-        target_flow=D0(20000),
+        parent_bottleneck=D0(-1),
         branch=5,
         coverage_share=D0("0.8"),
         min_attributed=D0(100),
@@ -227,7 +239,7 @@ def test_prune_branch_min_amount_and_ties() -> None:
         senders,
         parent_weight=D0(1),
         parent_flow=D0(80),
-        target_flow=D0(80),
+        parent_bottleneck=D0(-1),
         branch=5,
         coverage_share=D0(1),
         min_attributed=D0(0),
@@ -238,12 +250,27 @@ def test_prune_branch_min_amount_and_ties() -> None:
         {"big": f(1000), "small": f(50)},
         parent_weight=D0("0.1"),
         parent_flow=D0(1050),
-        target_flow=D0(10000),
+        parent_bottleneck=D0(5000),
         branch=5,
         coverage_share=D0(1),
         min_attributed=D0(100),
     )
-    assert [k[0] for k in kept] == ["big"]  # small's estimated amount ≈ 47.6 < 100
+    assert [k[0] for k in kept] == ["big"]  # small's path volume 50 < 100
+
+
+def test_prune_on_path_volume_not_the_estimate() -> None:
+    """D-081: 34,733 USDT through a busy middle address is followed although its proportional
+    share is tiny (the D-078 case); v1 pruned it on the estimate."""
+    kept, _ = prune(
+        {"xinbi": _Flow(D0(34733)), "rest": _Flow(D0(965267))},
+        parent_weight=D0("0.0001"),
+        parent_flow=D0(1_000_000),
+        parent_bottleneck=D0(34733),
+        branch=5,
+        coverage_share=D0(1),
+        min_attributed=D0(100),
+    )
+    assert "xinbi" in [k[0] for k in kept]  # estimate 0.0001 × 3.5% × flow, far below 100
 
 
 async def test_child_window_is_30_days_before_first_payment(conn: sqlite3.Connection) -> None:

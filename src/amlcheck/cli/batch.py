@@ -3,7 +3,7 @@
 - Input: a header row with `address` and any of `chain`, `amount`, `client`, `note`; nothing else.
 - Every row is validated before any is screened: one bad row and nothing is screened (exit 1), with
   every problem listed by line (AT-45).
-- Then one check at a time, like `check` (the trace runs at `[trace] auto_amount_usdt`), within the
+- Then one check at a time, like `check` (with its trace, `[trace] every_check`), within the
   process's rate limits; each result is written as soon as it is known.
 - Output CSV `row,address,chain,verdict,score,level,rules,check_id,record_hash`, guarded against
   spreadsheet formula injection. Exit: the most serious verdict (5 BLOCK, 4, 3, 0).
@@ -144,7 +144,7 @@ def _run(rt: runtime.Runtime, conn: sqlite3.Connection, rows: list[Row], sink: T
     sink.flush()
     seen: set[Verdict] = set()
     for n, row in enumerate(rows, start=1):
-        trace = row.amount is not None and row.amount >= rt.settings.trace.auto_amount_usdt
+        trace = runtime.should_trace(rt, None, row.amount)
         result = asyncio.run(
             check_cli.run_screen(rt, conn, row.address, row.amount, row.client, row.note, trace)
         )

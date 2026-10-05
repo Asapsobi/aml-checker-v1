@@ -150,9 +150,7 @@ def create_app(rt: runtime.Runtime, token: str) -> FastAPI:
         addr = _address(body.address, body.chain)
         if isinstance(addr, Response):
             return addr
-        trace = body.trace
-        if trace is None:
-            trace = body.amount is not None and body.amount >= rt.settings.trace.auto_amount_usdt
+        trace = runtime.should_trace(rt, body.trace, body.amount)
         client, note = body.client or None, body.note or None
         request = {
             "address": addr.norm,

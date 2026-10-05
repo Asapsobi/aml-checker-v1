@@ -8,6 +8,7 @@ from __future__ import annotations
 import sqlite3
 from dataclasses import dataclass, field
 from datetime import UTC, datetime, timedelta
+from decimal import Decimal
 from typing import NoReturn
 
 import httpx
@@ -138,6 +139,16 @@ def make_tether(rt: Runtime, http: Http, limiter: Limiter) -> TronTether:
     return TronTether(http, rt.settings.tron, api_key=rt.secrets.trongrid_api_key, limiter=limiter)
 
 
+def should_trace(rt: Runtime, asked: bool | None, amount: Decimal | None) -> bool:
+    """Whether a check traces (methodology §12.2): as asked (`--trace` / `--no-trace`), else on
+    every check (`[trace] every_check`, D-079), else from `[trace] auto_amount_usdt`."""
+    if asked is not None:
+        return asked
+    if rt.settings.trace.every_check:
+        return True
+    return amount is not None and amount >= rt.settings.trace.auto_amount_usdt
+
+
 def make_screening_sources(
     rt: Runtime,
     conn: sqlite3.Connection,
@@ -172,12 +183,15 @@ def make_screening_sources(
     classifier = ClassifierSource(profiler, store, rt.settings.classifier, clock=rt.clock)
     extra: list[SourceAdapter] = []
     if trace:
-        # The trace gets its own client: it may wait out a suspension (D-036) and its query count
-        # is its own, not the other sources running beside it. The cache is shared through `conn`.
-        engine = build_trace_engine(rt, conn, client, Mode.BACKGROUND)
+        # Each direction gets its own client: it may wait out a suspension (D-036) and its query
+        # count is its own. The limiters are the runtime's, shared; the cache through `conn`.
         extra.append(
             TraceSource(
-                TraceJobs(conn, rt.settings, clock=rt.clock), engine, rt.settings, clock=rt.clock
+                TraceJobs(conn, rt.settings, clock=rt.clock),
+                build_trace_engine(rt, conn, client, Mode.BACKGROUND),
+                rt.settings,
+                clock=rt.clock,
+                outbound=build_trace_engine(rt, conn, client, Mode.BACKGROUND),
             )
         )
     if chain is Chain.BSC:

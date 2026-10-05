@@ -26,6 +26,7 @@ from the part that was read are still reported (they are true), but the check ca
 from __future__ import annotations
 
 import sqlite3
+import time
 from collections.abc import Callable, Iterable, Mapping
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
@@ -43,10 +44,14 @@ from amlcheck.intel.labels_csv import tags_for
 from amlcheck.intel.names import entity_name, known_as
 from amlcheck.screening.base import SourceHealth
 from amlcheck.screening.heuristics import busiest_window, pass_through, recipients, senders
+from amlcheck.screening.history import read as read_history
 
 SOURCE = "exposure"
 LABEL = "USDT history (exposure)"
 SHOWN_COUNTERPARTIES = 20
+#: The source's own timeout: the required window must be read within it; the older history gets
+#: what is left, up to `[exposure] history_extension_seconds` (methodology §12.1).
+TIMEOUT_S = 150.0
 _CHUNK = 500
 
 
@@ -155,7 +160,7 @@ class ExposureSource:
     source = SOURCE
     label = LABEL
     required = True
-    timeout: float | None = None
+    timeout: float | None = TIMEOUT_S
 
     def __init__(
         self,
@@ -165,31 +170,46 @@ class ExposureSource:
         heuristics: Heuristics,
         *,
         clock: Clock = utcnow,
+        monotonic: Callable[[], float] = time.monotonic,
     ) -> None:
         self._cache = cache
         self._conn = conn
         self._exp = exposure
         self._heu = heuristics
         self._clock = clock
+        self._monotonic = monotonic
 
     async def check(self, address: Address) -> SourceResult:
         now = self._clock()
-        since = now - timedelta(days=self._exp.lookback_days)
-        history = await self._cache.history(
-            address.norm, since, None, self._exp.max_transfers, first_activity=True
+        full = await read_history(
+            self._cache,
+            address.chain,
+            address.norm,
+            now,
+            self._exp,
+            deadline=self._monotonic() + TIMEOUT_S,
+            monotonic=self._monotonic,
         )
+        history = full.history
         findings, evidence = self.assess(address, history, now)
+        evidence["required_since"] = to_iso(full.required_since)
+        evidence["all_history"] = full.all_read
         n = len(history.transfers)
-        detail = (
-            f"{n} transfer(s) with {evidence['counterparty_count']} counterparties since "
-            f"{to_iso(since)[:10]}"
-        )
+        cps = evidence["counterparty_count"]
+        if full.all_read:
+            detail = f"{n} transfer(s) with {cps} counterparties, all history"
+        else:
+            detail = (
+                f"{n} transfer(s) with {cps} counterparties since {to_iso(full.history_from)[:10]} "
+                "(older history not read)"
+            )
         status = SourceStatus.OK
         if not history.complete:
             status = SourceStatus.STALE
             detail = (
-                f"more than {self._exp.max_transfers} transfers since {to_iso(since)[:10]}; "
-                f"only the newest {n} were read, so the history is incomplete (D-013)"
+                f"more than {self._exp.max_transfers} transfers since "
+                f"{to_iso(full.required_since)[:10]}; only the newest {n} were read, so the "
+                "history is incomplete (D-013)"
             )
         return SourceResult(SOURCE, LABEL, True, status, now, tuple(findings), detail, evidence)
 

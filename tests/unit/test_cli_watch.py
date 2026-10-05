@@ -97,7 +97,7 @@ def test_at46_changed_verdict(home: Path, monkeypatch: pytest.MonkeyPatch) -> No
     assert f"same    NO_HITS · 0 · low  tron {A}" in second.output
     assert "2 watched, 1 changed" in second.output
     assert w.notified == [f"1 watched verdict(s) changed: {B[:8]}…{B[-6:]}: NO_HITS → REVIEW"]
-    assert w.traced == [False] * 4  # no trace in a watch run (D-057)
+    assert w.traced == [True] * 4  # a watch run traces like every check (D-079)
     conn = db(home)
     row = conn.execute(
         "SELECT last_verdict, last_check_id FROM watchlist WHERE address_norm = ?", (B,)

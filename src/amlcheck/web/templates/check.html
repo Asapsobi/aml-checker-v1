@@ -17,6 +17,7 @@
   <div class="muted small">Check {{ r.check_id }} · recorded {{ r.created_at[:19] }}Z{% if r.amount %} · {{ usdt(r.amount) }} USDT{% endif %}{% if r.client %} · client {{ r.client }}{% endif %}{% if r.operator_note %} · note: {{ r.operator_note }}{% endif %} · amlcheck {{ r.tool_version }}</div>
   <div class="links"><a href="/checks/{{ r.check_id }}/report.pdf">Case report (PDF)</a>
     {% if r.trace_id %} · <a href="/traces/{{ r.trace_id }}">Source of funds</a>{% endif %}
+    {% if trace_out_id %} · <a href="/traces/{{ trace_out_id }}">Destination of funds</a>{% endif %}
     · <a href="/counterparties/{{ d.address.chain.value }}/{{ d.address.norm }}">Counterparty</a></div>
   {% if open_case %}
   <div class="links">Open case: <a href="/cases/{{ open_case.case_id }}">{{ open_case.case_id[:8] }}</a></div>

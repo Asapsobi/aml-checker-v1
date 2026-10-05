@@ -722,3 +722,61 @@
   amount at hop 1, which ignores what the middle address passed on.
 - **Consequences:** More checks reach Moderate through indirect exposure, as they would on MistTrack.
   P15 checks the balance against the owner's wallets.
+
+### D-079 · Every check traces both ways, 5 hops, 3 minutes; history to 20,000 (owner's choices)
+- **Status:** Accepted
+- **Date:** 2026-10-04 · **Phase:** P13
+- **Context:** MistTrack scores every address with its indirect exposure. In v1 the trace ran only from
+  10,000 USDT or on request. The owner chose, over a light trace on every check or keeping v1: the
+  **full** trace on every check, a **3-minute** limit for both directions together, and a history
+  cap of **20,000** transfers.
+- **Decision:** Methodology §12. `[trace] every_check = true`; both directions run at once with one
+  180-second deadline; `max_hops` 5; history read from before USDT existed, up to 20,000 transfers,
+  with the last 180 days required. Batch, watch, monitor, the web UI and the API all trace, so an
+  address reads the same everywhere. `[monitor] max_senders_per_run` goes from 50 to **10**: 50
+  senders × up to 3 minutes would hold one run for hours; the next run continues where it stopped
+  (D-063).
+- **Alternatives:** A light 2-hop trace on every check and the full one from 10,000 USDT; keep v1.
+- **Consequences:** A check takes up to about 3 minutes (much less when warm). Provider use rises:
+  HyperSync's free plan (30 queries a minute) is the limit on BSC; a paid plan makes BSC traces
+  reach further in the same time.
+
+### D-080 · Running out of time is untraced:budget, not INCOMPLETE
+- **Status:** Accepted
+- **Date:** 2026-10-04 · **Phase:** P13
+- **Context:** In v1 a trace that ran out of time failed, and the check became INCOMPLETE (§7.7). With
+  a trace on every check, a deep two-way trace on a busy BSC wallet often needs more than 3 minutes of
+  the free HyperSync budget: most such checks would be INCOMPLETE.
+- **Decision:** At the deadline, the items not finished end in `untraced:budget`, like reaching
+  `max_nodes`, and the trace is complete with `"stopped": "time"`. A failed **read** still makes it
+  `stale` → INCOMPLETE. Non-negotiable 1 holds: a required source that errored is never shown clean;
+  a trace that stopped at its declared budget says how much it followed (coverage, R-TRC-04).
+- **Alternatives:** Keep INCOMPLETE on time (most BSC checks INCOMPLETE); no time limit (checks of
+  unbounded length).
+- **Consequences:** Coverage, not the verdict, shows a trace that stopped early. Supersedes the
+  "time_budget_seconds reached" row of §7.7.
+
+### D-081 · Best-first by discounted path volume; pruning on path volume
+- **Status:** Accepted
+- **Date:** 2026-10-04 · **Phase:** P13
+- **Context:** v1 expanded hop by hop and pruned senders whose proportional estimate fell below 100
+  USDT. At 5 hops the estimate shrinks fast, so large payments through busy middle addresses (the
+  D-078 case) would be pruned before they were followed.
+- **Decision:** One queue per direction, largest `bottleneck × (1 − decay)^(hop − 1)` first; pruning
+  criterion (c) uses the path bottleneck instead of the estimate (§12.2). `trace_version = 2`.
+- **Alternatives:** Hop by hop (spends the budget on small far branches); estimate-based pruning.
+- **Consequences:** Traces made by v1 keep `trace_version` 1 and are shown as they were.
+
+### D-082 · BSC traces stop at 3 hops (owner's choice)
+- **Status:** Accepted
+- **Date:** 2026-10-05 · **Phase:** P13
+- **Context:** The P13 live budget run: TRON full checks fit in about 1.5 minutes, but HyperSync's
+  free plan answers one query in 4–15 s, so a BSC check gets about 45–50 queries in its 3 minutes.
+  Two of three BSC wallets stopped at the time budget with 0% inbound coverage at 5 hops. The owner
+  chose fewer hops on BSC over batching reads first, pushing as is, or accepting it.
+- **Decision:** `[trace] bsc_max_hops` = 3; TRON keeps `max_hops` = 5. Everything else in §12.2 is the
+  same on both chains.
+- **Alternatives:** Batched multi-address HyperSync queries (more work, kept as a later option); a
+  paid HyperSync plan; accept low BSC coverage.
+- **Consequences:** BSC traces reach risk up to 3 hops (decayed to 36% there); more of a busy BSC
+  wallet's money is followed in one check. Setting it back to 5 is one config line.

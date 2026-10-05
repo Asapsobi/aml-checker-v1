@@ -101,6 +101,8 @@ class CaseData:
     trace_status: str | None
     decisions: tuple[decisions_chain.Stored, ...] = ()
     case_status: str | None = None
+    trace_out: Trace | None = None  # P13: where the money went (methodology §12.2)
+    trace_out_id: str | None = None
 
 
 def gather(conn: sqlite3.Connection, address: Address, check_id: str | None = None) -> CaseData:
@@ -132,6 +134,9 @@ def gather(conn: sqlite3.Connection, address: Address, check_id: str | None = No
         found = read_job(conn, record.trace_id)
         if found is not None:
             trace, status = found.result or found.partial, found.status
+    trace_ev = next((s.evidence for s in record.sources if s.source == TRACE), {})
+    out_id = (trace_ev.get("out") or {}).get("trace_id")
+    out_job = read_job(conn, str(out_id)) if out_id else None
     return CaseData(
         address=address,
         seq=int(row[0]),
@@ -148,6 +153,8 @@ def gather(conn: sqlite3.Connection, address: Address, check_id: str | None = No
         category=terminal.category if terminal else None,
         trace=trace,
         trace_status=status,
+        trace_out=(out_job.result or out_job.partial) if out_job else None,
+        trace_out_id=str(out_id) if out_id else None,
         decisions=tuple(decisions_chain.stored(conn, check_id=record.check_id)),
         case_status=(
             "open"
@@ -399,14 +406,25 @@ def _trace(d: CaseData) -> list[Flowable]:
             _p("Source of funds", H2),
             _p("No trace ran with this check (run `amlcheck investigate` for one).", SMALL),
         ]
-    coverage = pct(t.coverage) if t.coverage is not None else "no inflow in the window"
+    out = _trace_body(t, "Source of funds", "received", d.record.trace_id)
+    out += [CondPageBreak(GRAPH_H / 2), _p("Trace graph", H2), _graph(t)]
+    if d.trace_out is not None:
+        out += _trace_body(d.trace_out, "Destination of funds", "sent", d.trace_out_id)
+    return out
+
+
+def _trace_body(t: Trace, title: str, flow: str, trace_id: str | None) -> list[Flowable]:
+    """One direction's breakdown and top paths."""
+    coverage = pct(t.coverage) if t.coverage is not None else f"nothing {flow} in the window"
     state = "" if t.complete else f" · INCOMPLETE: {t.failure or 'stopped early'}"
+    if t.stopped == "time":
+        state += " · stopped at the time budget (the rest is untraced:budget)"
     out: list[Flowable] = [
-        _p("Source of funds", H2),
+        _p(title, H2),
         _p(
             text(
-                f"{usdt(t.target_inflow)} USDT received in the window · coverage {coverage} · "
-                f"{t.budget.nodes_read} address(es) read · trace {d.record.trace_id}{state}"
+                f"{usdt(t.target_inflow)} USDT {flow} in the window · coverage {coverage} · "
+                f"{t.budget.nodes_read} address(es) read · trace {trace_id}{state}"
             )
         ),
         _p("Shares are proportional estimates: USDT is fungible, so no amount is exact.", SMALL),
@@ -419,6 +437,7 @@ def _trace(d: CaseData) -> list[Flowable]:
         rows.append(["layering (annotation)", pct(layering), ""])
     out.append(_table(rows, [60 * mm, 22 * mm, 30 * mm]))
     if t.paths:
+        arrow = " <- " if t.direction == "in" else " -> "
         prows: list[list[Any]] = [["To", "Bottleneck", "Estimate", "Path (target first)"]]
         for p in t.paths[:8]:
             prows.append(
@@ -426,7 +445,7 @@ def _trace(d: CaseData) -> list[Flowable]:
                     _p(text(p.to_category), CELL),
                     usdt(p.bottleneck),
                     usdt(p.estimated),
-                    _p(text(" <- ".join(graph.short(a) for a in p.addresses)), CELL_MONO),
+                    _p(text(arrow.join(graph.short(a) for a in p.addresses)), CELL_MONO),
                 ]
             )
         out += [
@@ -434,7 +453,6 @@ def _trace(d: CaseData) -> list[Flowable]:
             _p("Bottleneck: the smallest hop on the path; every hop moved at least that.", SMALL),
             _table(prows, [38 * mm, 20 * mm, 20 * mm, TEXT_W - 78 * mm]),
         ]
-    out += [CondPageBreak(GRAPH_H / 2), _p("Trace graph", H2), _graph(t)]
     return out
 
 

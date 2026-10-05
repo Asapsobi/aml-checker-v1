@@ -6,8 +6,8 @@ Per active own wallet, oldest first:
 2. Group by sender, in order of each sender's first transfer (address as tie-break). Own wallets
    are never screened; a sender screened within `[monitor] rescreen_days` is skipped (AT-53).
 3. Screen each remaining sender like `check`: client = the wallet's name, note `monitor run`,
-   amount = its largest transfer in the window, so one of `[monitor] trace_amount_usdt` or more is
-   traced.
+   amount = its largest transfer in the window. It is traced when `every_check` (D-079), else when
+   that amount is `[monitor] trace_amount_usdt` or more.
 4. At most `[monitor] max_senders_per_run` screens per run (D-063). When the cap stops a wallet,
    its position is set just before the first sender not screened, so the next run starts there;
    senders already screened come round again but are skipped as recently screened.
@@ -124,6 +124,7 @@ async def run_wallet(
     now: datetime,
     screen: Screen,
     budget: int,
+    every_check: bool = False,
 ) -> WalletRun:
     """One wallet's share of a run; `budget` is how many screens the run has left."""
     after = position(conn, wallet) or now - timedelta(hours=settings.first_lookback_hours)
@@ -145,7 +146,7 @@ async def run_wallet(
             run.position = s.first - _TICK  # the next run starts with this sender
             _save(conn, wallet, run.position, now)
             return run
-        trace = s.largest >= settings.trace_amount_usdt
+        trace = every_check or s.largest >= settings.trace_amount_usdt
         result = await screen(detect(s.address, wallet.chain), s.largest, wallet.name, trace)
         run.screened.append((s, result))
     run.position = newest or after

@@ -15,6 +15,8 @@ facts only (D-045). A read failure or the time budget makes the trace fail with 
 from __future__ import annotations
 
 import asyncio
+import heapq
+import itertools
 import sqlite3
 import time
 from collections import defaultdict
@@ -37,6 +39,7 @@ from amlcheck.profile.adapter import SERVICE_CATEGORIES
 from amlcheck.profile.classifier import ClassifyContext
 from amlcheck.profile.features import profile
 from amlcheck.screening.exposure import local_flags
+from amlcheck.screening.history import read as read_history
 from amlcheck.trace.annotate import layering
 from amlcheck.trace.model import (
     TRACE_VERSION,
@@ -125,15 +128,16 @@ def prune(
     *,
     parent_weight: Decimal,
     parent_flow: Decimal,
-    target_flow: Decimal,
+    parent_bottleneck: Decimal,
     branch: int,
     coverage_share: Decimal,
     min_attributed: Decimal,
 ) -> tuple[list[tuple[str, _Flow, Decimal]], Decimal]:
-    """§7.4: walk senders by amount (ties by address); keep while fewer than `branch` are kept, the
-    kept ones cover less than `coverage_share` *before* adding the next, and its estimated
-    attributed amount is ≥ `min_attributed`. Returns the kept (address, flow, weight) and the
-    weight pruned."""
+    """§7.4 with §12.2: walk senders by amount (ties by address); keep while fewer than `branch`
+    are kept, the kept ones cover less than `coverage_share` *before* adding the next, and its
+    **path volume** `min(parent_bottleneck, amount)` is ≥ `min_attributed` (D-081; a negative
+    `parent_bottleneck` means the target: no bound). Returns the kept (address, flow, weight) and
+    the weight pruned."""
     ordered = sorted(candidates.items(), key=lambda kv: (-kv[1].amount, kv[0]))
     kept: list[tuple[str, _Flow, Decimal]] = []
     covered = Decimal(0)
@@ -141,10 +145,9 @@ def prune(
     open_ = True
     for address, flow in ordered:
         weight = parent_weight * flow.amount / parent_flow
+        path = flow.amount if parent_bottleneck < 0 else min(parent_bottleneck, flow.amount)
         if open_ and (
-            len(kept) < branch
-            and covered < coverage_share * parent_flow
-            and weight * target_flow >= min_attributed
+            len(kept) < branch and covered < coverage_share * parent_flow and path >= min_attributed
         ):
             kept.append((address, flow, weight))
             covered += flow.amount
@@ -187,12 +190,18 @@ class TraceEngine:
         target: Address,
         direction: Direction = "in",
         progress: Callable[[TraceProgress], None] | None = None,
+        *,
+        deadline: float | None = None,
     ) -> Trace:
+        """Trace one direction. `deadline` (a monotonic time) lets two directions share one time
+        budget (methodology §12.2); by default it is `time_budget_seconds` from now."""
         as_of = self._clock()
         started = self._monotonic()
+        end = deadline if deadline is not None else started + self._t.time_budget_seconds
         q0 = self._queries()
         st = _State()
         chain = target.chain
+        stopped: list[str] = []
 
         def trace(
             complete: bool = True,
@@ -227,84 +236,129 @@ class TraceEngine:
                     **self._t.model_dump(mode="json"),
                     "trace_version": TRACE_VERSION,
                     "lookback_days": self._s.exposure.lookback_days,
+                    "max_transfers": self._s.exposure.max_transfers,
+                    "decay": str(self._s.score.decay),
                 },
+                stopped=stopped[0] if stopped else None,
             )
 
-        out_of_time = f"time budget of {self._t.time_budget_seconds} s reached"
+        out_of_time = "the time budget ran out before the target's history was read"
 
         def left() -> float:
             # The budget bounds every read too, not only the gaps between them: one slow read on a
             # bad line must not hold a check past its budget (PRD performance, F9.3).
-            return self._t.time_budget_seconds - (self._monotonic() - started)
+            return end - self._monotonic()
 
-        since = as_of - timedelta(days=self._s.exposure.lookback_days)
         try:
             async with asyncio.timeout(max(left(), 0)):
-                history = await self._read(
-                    target.norm, since, as_of, self._s.exposure.max_transfers, st
+                before = self._queries()
+                full = await read_history(
+                    self._cache,
+                    chain,
+                    target.norm,
+                    as_of,
+                    self._s.exposure,
+                    deadline=end,
+                    monotonic=self._monotonic,
                 )
+                st.read.add(target.norm)
+                if self._queries() == before:
+                    st.cache_hits += 1
         except SourceError as e:
             raise TraceFailed(trace(False, f"target {target.norm}: {e.reason}"), e.reason) from None
         except TimeoutError:
             raise TraceFailed(trace(False, out_of_time), out_of_time) from None
-        if not history[1]:
+        if not full.history.complete:
             reason = (
                 f"target {target.norm} has more than {self._s.exposure.max_transfers} transfers "
-                "in its window; the trace can't attribute a partial history"
+                "in its required window; the trace can't attribute a partial history"
             )
             raise TraceFailed(trace(False, reason), reason)
-        root = flows(target.norm, history[0], direction)
+        root = flows(target.norm, full.history.transfers, direction)
         in_t = sum((f.amount for f in root.values()), Decimal(0))
         st.nodes.append(Node(target.norm, 0, Decimal(1), None, True, None))
         if not in_t:
             return trace(in_t=in_t, coverage=None)
 
-        queue = self._children(
-            target.norm, root, Decimal(1), in_t, in_t, 1, (target.norm,), Decimal(-1), direction, st
+        # Best first (D-081): the largest discounted path volume is expanded next.
+        queue: list[tuple[Decimal, str, tuple[str, ...], int, _Item]] = []
+        order = itertools.count()
+
+        def push(items: Iterable[_Item]) -> None:
+            for i in items:
+                heapq.heappush(queue, (-self._priority(i), i.address, i.path, next(order), i))
+
+        push(
+            self._children(
+                target.norm,
+                root,
+                Decimal(1),
+                in_t,
+                in_t,
+                1,
+                (target.norm,),
+                Decimal(-1),
+                direction,
+                st,
+            )
         )
-        hop = 1
         done = 0
         while queue:
-            current = sorted(queue, key=lambda i: (-i.weight, i.address, i.path))
-            queue = []
-            for n, item in enumerate(current):
-                if left() <= 0:
-                    rest = sum((i.weight for i in current[n:]), Decimal(0))
-                    st.buckets[UNFINISHED] += rest
-                    raise TraceFailed(trace(False, out_of_time, in_t), out_of_time)
-                try:
-                    # Cancelling is safe: a step only changes the partition after its last await.
-                    async with asyncio.timeout(left()):
-                        children = await self._step(item, chain, in_t, direction, st)
-                    queue += children
-                except TimeoutError:
-                    rest = sum((i.weight for i in current[n:]), Decimal(0)) + sum(
-                        (i.weight for i in queue), Decimal(0)
+            if left() <= 0:
+                stopped.append("time")
+                self._stop([q[-1] for q in sorted(queue)], chain, in_t, st)
+                break
+            item = heapq.heappop(queue)[-1]
+            try:
+                # Cancelling is safe: a step only changes the partition after its last await.
+                async with asyncio.timeout(left()):
+                    children = await self._step(item, chain, in_t, direction, st)
+            except TimeoutError:
+                # D-080: out of time is the budget's end, not a failure; the item's edge is in.
+                stopped.append("time")
+                self._end(item, "untraced:budget", 7, None, False, in_t, st)
+                self._stop([q[-1] for q in sorted(queue)], chain, in_t, st)
+                break
+            except SourceError as e:
+                rest = item.weight + sum((q[-1].weight for q in queue), Decimal(0))
+                st.buckets[UNFINISHED] += rest
+                reason = f"could not read {item.address} (hop {item.hop}): {e.reason}"
+                raise TraceFailed(trace(False, reason, in_t), reason) from None
+            push(children)
+            done += 1
+            if progress is not None:
+                progress(
+                    TraceProgress(
+                        item.hop,
+                        done,
+                        len(queue),
+                        len(st.read),
+                        self._queries() - q0,
+                        self._monotonic() - started,
                     )
-                    st.buckets[UNFINISHED] += rest
-                    raise TraceFailed(trace(False, out_of_time, in_t), out_of_time) from None
-                except SourceError as e:
-                    rest = sum((i.weight for i in current[n:]), Decimal(0)) + sum(
-                        (i.weight for i in queue), Decimal(0)
-                    )
-                    st.buckets[UNFINISHED] += rest
-                    reason = f"could not read {item.address} (hop {item.hop}): {e.reason}"
-                    raise TraceFailed(trace(False, reason, in_t), reason) from None
-                done += 1
-                if progress is not None:
-                    progress(
-                        TraceProgress(
-                            hop,
-                            done,
-                            len(current) - n - 1 + len(queue),
-                            len(st.read),
-                            self._queries() - q0,
-                            self._monotonic() - started,
-                        )
-                    )
-            hop += 1
+                )
         coverage = sum((v for k, v in st.buckets.items() if k not in UNTRACED), Decimal(0))
         return trace(in_t=in_t, coverage=coverage)
+
+    def _max_hops(self, chain: Chain) -> int:
+        """5 on TRON, 3 on BSC (D-082): BSC reads are slow on HyperSync's free plan (VS-16)."""
+        return self._t.bsc_max_hops if chain is Chain.BSC else self._t.max_hops
+
+    def _priority(self, item: _Item) -> Decimal:
+        """`bottleneck × (1 − decay)^(hop − 1)` (methodology §12.2)."""
+        return item.bottleneck * (1 - self._s.score.decay) ** (item.hop - 1)
+
+    def _stop(self, items: Iterable[_Item], chain: Chain, in_t: Decimal, st: _State) -> None:
+        """The time ran out (D-080): what is still queued gets the local tests, which cost nothing
+        (a sanctioned or frozen address is still found), and the rest ends in `untraced:budget`."""
+        for item in items:
+            st.edges.append(item.edge)
+            terminal = self._local_terminal(item, chain)
+            if terminal is not None:
+                category, test, cls = terminal
+                self._end(item, category, test, cls, False, in_t, st)
+            else:
+                self._end(item, "untraced:budget", 7, None, False, in_t, st)
 
     # --- one item ---------------------------------------------------------------------------------
 
@@ -316,7 +370,7 @@ class TraceEngine:
         if terminal is not None:
             category, test, cls = terminal
             return self._end(item, category, test, cls, False, in_t, st)
-        if item.hop >= self._t.max_hops:
+        if item.hop >= self._max_hops(chain):
             return self._end(item, "untraced:depth", 6, None, False, in_t, st)
         if item.address not in st.read and len(st.read) >= self._t.max_nodes:
             return self._end(item, "untraced:budget", 7, None, False, in_t, st)
@@ -389,7 +443,7 @@ class TraceEngine:
             senders,
             parent_weight=parent_weight,
             parent_flow=parent_flow,
-            target_flow=in_t,
+            parent_bottleneck=parent_bottleneck,
             branch=self._t.branch,
             coverage_share=self._t.coverage_share,
             min_attributed=self._t.min_attributed_usdt,

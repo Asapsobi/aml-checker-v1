@@ -20,6 +20,39 @@ VS-07 (P6) and VS-11 to VS-14 (later phases) are not P0 items. VS-15 was redone 
 | VS-08 | Dropped (D-033) | Was: `CLEAR` can come with chains behind (spec 1.3.0) | Q-19 (superseded) |
 | VS-09 | Dropped (D-033) | — | — |
 | VS-10 | Confirmed (both chains) | `create_time` absent on contract-created contracts | — |
+| VS-16 | Measured (7 TRON, 4 BSC addresses) | TRON cheap; a full BSC read is slow, an exchange-sized one never finishes | — |
+
+---
+
+## VS-16 · Cost of a full-history read (P13)
+**Checked:** 2026-10-04, with amlcheck's own readers (`TransferCache` over TronGrid and HyperSync),
+a fresh data folder per address, one at a time; requests counted by the HTTP layer. Read from before
+USDT existed (TRON 2018-01-01, BSC 2020-08-01), newest first, up to 20,000 transfers.
+
+| Chain | Address | Kind | Transfers read | All of it | Requests | Time |
+|---|---|---|---|---|---|---|
+| TRON | `TA3941uF…X86mz` | OFAC-listed, quiet | 28 (2024-11 to 2025-02) | yes | 3 TronGrid | 1.6 s |
+| TRON | `TVvWhZyL…LeSsWP` | ordinary, new | 199 | yes | 3 | 1.3 s |
+| TRON | `TSArbmMU…VF2Rku` | ordinary | 394 | yes | 4 | 1.9 s |
+| TRON | `TPwvbEKT…AMAzdBVe` | busy | 3,537 | yes | 20 | 8.8 s |
+| TRON | `TEojgka7…ML6cAT8` | busy | 4,848 | yes | 27 | 17.8 s |
+| TRON | `TE2LiJfp…xfkuL1c` | busy | 8,065 | yes | 43 | 28.5 s |
+| TRON | `TDii6vao…xcqYx` | exchange-sized | 20,000 = **11 hours** | no | 103 | 59.5 s |
+| BSC | `0x0c1e52…ee1576` | new | 58 | yes | 5 HyperSync | 35.8 s |
+| BSC | `0x033007…e9e54a` | OFAC-listed, old | 19 (2024-09 to 2025-06) | yes | 5 | 38.8 s |
+| BSC | `0x75f5c1…21c1f6ba` | ordinary | 443 | yes | 4 | 22.8 s |
+| BSC | `0x8bc070…be2d4b689` | exchange-sized | — | **stopped after 20 min** | — | > 20 min |
+
+**Found:**
+- TRON: about one request per 200 transfers, ~0.15 s each at the 10 req/s limiter. Cheap.
+- BSC: few HyperSync queries (4–5) for an ordinary wallet, but each scans years of blocks: 20–40 s.
+  An exchange-sized wallet doesn't finish in any time a check can wait (30 queries a minute, free plan).
+- The OFAC-listed TRON address has 28 transfers, all older than 180 days: v1 showed it "0 transfers".
+
+**What this changes:** the history is read in two steps (methodology §12.1, `screening/history.py`):
+the required 180 days as before, then older history only within `[exposure] history_extension_seconds`
+(45 s), bounded by the source's own timeout. A finished older read is cached; an unfinished one
+says where history starts. The exposure source's timeout is 150 s.
 
 ---
 

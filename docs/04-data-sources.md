@@ -3,7 +3,7 @@
 > Every external source the product uses, what is known about it, and what must be verified live before
 > code relies on it. Facts below were checked by hand between **2026-09-28 and 2026-09-30**. Providers
 > change: **P0 re-verifies every row marked "verify"** and records the result in
-> `docs/verification-log.md` (VS-01 … VS-15, below).
+> `docs/verification-log.md` (VS-01 … VS-16, below).
 
 ---
 
@@ -148,3 +148,4 @@ as a fixture) in `docs/verification-log.md`, and raises a question for any chang
 | VS-13 | TRON contract detection via `getcontract` (answer for a wallet vs a contract) | P5 |
 | VS-14 | Licence of any label pack before import | P4 |
 | VS-15 | Issuer freezes on TRC20 and BEP20: TRON event history and sync time; BEP20 USDT emits no freeze events (narrowed by D-039) | P2 |
+| VS-16 | Cost of a full-history read (TronGrid pages; HyperSync queries from block 0) for quiet, ordinary and busy wallets, up to 20,000 transfers | P13 |

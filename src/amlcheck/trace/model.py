@@ -15,7 +15,7 @@ from amlcheck.chain.base import canonical_amount
 from amlcheck.core.clock import from_iso, to_iso
 from amlcheck.core.models import Chain
 
-TRACE_VERSION = 1
+TRACE_VERSION = 2  # P13: best first, path-volume pruning, time → untraced:budget (§12.2)
 _PLACES = Decimal("0.000001")
 
 UNTRACED = (
@@ -110,6 +110,7 @@ class Trace:
     failure: str | None = None
     trace_version: int = TRACE_VERSION
     settings: dict[str, Any] = field(default_factory=dict)
+    stopped: str | None = None  # "time": the budget ended it; the rest is untraced:budget (D-080)
 
     def to_json(self) -> dict[str, Any]:
         return {
@@ -180,6 +181,7 @@ class Trace:
             "complete": self.complete,
             "failure": self.failure,
             "settings": self.settings,
+            "stopped": self.stopped,
         }
 
     @classmethod
@@ -244,4 +246,5 @@ class Trace:
             failure=d["failure"],
             trace_version=d["trace_version"],
             settings=d.get("settings", {}),
+            stopped=d.get("stopped"),
         )

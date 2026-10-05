@@ -86,10 +86,12 @@ class Rules(_Section):
 
 
 class Exposure(_Section):
-    """Methodology §3.1, §3.4."""
+    """Methodology §3.1, §3.4, §12.1: `lookback_days` is the required window; history before it is
+    read too, within `max_transfers` and `history_extension_seconds` (D-079)."""
 
     lookback_days: PosInt = 180
-    max_transfers: PosInt = 5000
+    max_transfers: PosInt = 20000
+    history_extension_seconds: PosFloat = 45.0
     flagged_inflow_share: Share = Decimal("0.05")
     max_findings: PosInt = 10
 
@@ -157,14 +159,18 @@ class Classifier(_Section):
 class Trace(_Section):
     """Methodology §7.1."""
 
-    auto_amount_usdt: PosDec = Decimal("10000")
-    max_hops: PosInt = 3
+    auto_amount_usdt: PosDec = Decimal("10000")  # only when `every_check` is off
+    every_check: bool = True  # D-079: every check traces both ways; --no-trace skips it
+    max_hops: PosInt = 5  # §12.2 (D-075); TRON
+    bsc_max_hops: PosInt = 3  # D-082: HyperSync's free plan can't reach 5 hops in 3 minutes
     branch: PosInt = 5
     coverage_share: Share = Decimal("0.8")
     min_attributed_usdt: Annotated[Decimal, Field(ge=0)] = Decimal("100")
     hop_window_days: PosInt = 30
-    max_nodes: PosInt = 40
-    time_budget_seconds: PosInt = 300
+    max_nodes: PosInt = 50  # per direction (§12.2)
+    time_budget_seconds: PosInt = (
+        180  # both directions together; running out isn't a failure (D-080)
+    )
     hub_transfers: PosInt = 1000
     min_flagged_usdt: PosDec = Decimal("1000")
     high_risk_share: Share = Decimal("0.05")
@@ -189,7 +195,7 @@ class Monitor(_Section):
     rescreen_days: PosInt = 7
     trace_amount_usdt: PosDec = Decimal("10000")
     webhook_url: str | None = None
-    max_senders_per_run: PosInt = 50  # D-063
+    max_senders_per_run: PosInt = 10  # D-063; 10 since D-079: each screen traces, up to 3 min
     first_lookback_hours: PosInt = 24  # D-062
 
     @field_validator("webhook_url")

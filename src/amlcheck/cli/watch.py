@@ -1,8 +1,9 @@
 """`amlcheck watch`: the watchlist (PRD F11.3, D-054, D-057).
 
-`watch run` re-screens every watched address like `check` without an amount (no trace), one at a
-time, under the run lock. A verdict different from the last one recorded is a change: it is listed,
-alerted (macOS notification, optional webhook) and the run exits 6. Every check is in the audit log.
+`watch run` re-screens every watched address like `check` without an amount (traced when
+`[trace] every_check`, D-079), one at a time, under the run lock. A verdict different from the last
+one recorded is a change: it is listed, alerted (macOS notification, optional webhook) and the run
+exits 6. Every check is in the audit log.
 """
 
 from __future__ import annotations
@@ -121,7 +122,8 @@ def _run(
     changes: list[dict[str, Any]] = []
     for w in watchlist.watched(conn):
         addr = detect(w.address, w.chain)
-        r = asyncio.run(check_cli.run_screen(rt, conn, addr, None, w.client, "watch run", False))
+        traced = runtime.should_trace(rt, None, None)
+        r = asyncio.run(check_cli.run_screen(rt, conn, addr, None, w.client, "watch run", traced))
         after = r.verdict.value
         changed = w.last_verdict is not None and w.last_verdict != after
         watchlist.record(conn, addr, after, r.check_id, r.checked_at)
