@@ -76,6 +76,9 @@ orders). One type gives a CSV (or XLSX); several give a zip of CSVs.
 - `Assets`: blocks of `Id: <uuid>` / `Name: <value>`, separated by `-------------`.
 
 Wallets appear only in `Assets`. No column links a wallet to a person, so none is named.
+The XLSX export has other columns. The owner's header-only file of 2026-10-05 has no order name
+and misspells "Descriprtions". It can't be read order by order, so the importer refuses it and
+asks for the CSV.
 **Found** (crypto orders, sha256 `0de2471f…f844`):
 - 38 orders (31 FO, 7 ASO); none cancelled, corrected or hidden.
 - 1,777 assets: 997 numbers (exchange accounts, phone numbers), 686 TRON, 15 `0x`, 52 Bitcoin and

@@ -221,6 +221,15 @@ def test_nothing_valid_fails(home: Path, tmp_path: Path) -> None:  # noqa: F811
     assert missing.exit_code == 1
 
 
+def test_the_xlsx_export_is_refused(home: Path, tmp_path: Path) -> None:  # noqa: F811
+    """Its columns name no order (VS-20): the CSV is asked for instead."""
+    name = "seizureAndForfeitureOrderCryptocurrency.xlsx"
+    path = xlsx(tmp_path / name, "Order Type", "Order Number", "Is Canceled", "Assets", XINBI)
+    r = runner.invoke(app, ["lists", "import-nbctf", str(path)])
+    assert r.exit_code == 1
+    assert "export it as CSV" in r.output
+
+
 @pytest.mark.parametrize("name", ["a.xlsx", "a.ods"])
 def test_zip_spreadsheets_are_read_as_xml(tmp_path: Path, name: str) -> None:
     f = lists.read_file(xlsx(tmp_path / name, XINBI))
