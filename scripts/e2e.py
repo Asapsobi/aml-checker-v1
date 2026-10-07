@@ -36,6 +36,7 @@ import httpx
 
 ROOT = Path(__file__).resolve().parents[1]
 BLOCKED = "TA3941uFAvmVibSkQ6fMJXxmaSNovX86mz"  # OFAC SDN (CHEIL CREDIT BANK) and Tether-frozen
+NBCTF_LISTED = "TB5UPBTtXYwwmSviWBkQcFM64o6R1CDXUY"  # NBCTF ASO 06/26 (VS-20)
 TRON_TRACED = "TVvWhZyLcd2DT2Y78XpyrUS3SyzfLeSsWP"  # a real counterparty with a traceable history
 BSC = "0x0c1e52495a1d1ed21f00f389284d0eb4e0ee1576"  # a real BSC address
 GENESIS = "0" * 64
@@ -174,6 +175,19 @@ def main() -> int:
         label = (data.get("address_label") or {}).get("name", "")
         need(label.startswith("OFAC SDN"), f"address label {label!r}")
         return f"BLOCK · {', '.join(sorted(rules))} · {label}"
+
+    def nbctf() -> str:
+        # Five real orders of the official export (VS-20); ASO 06/26's address BLOCKs by name.
+        sample = ROOT / "tests" / "fixtures" / "lists" / "nbctf_orders_sample.csv"
+        out = r.amlcheck("lists", "import-nbctf", str(sample))
+        need(out.returncode == 0, (out.stdout + out.stderr).strip())
+        need("NBCTF list: 10 address(es) in all" in out.stdout, out.stdout)
+        out = r.amlcheck("check", NBCTF_LISTED, "--json")
+        need(out.returncode == 5, f"exit {out.returncode}, expected 5 (BLOCK)")
+        data = json.loads(out.stdout)
+        san = [f["summary"] for f in data["findings"] if f["rule_id"] == "R-SAN-01"]
+        need(any("NBCTF list: order ASO 06/26" in x for x in san), f"R-SAN-01: {san}")
+        return f"BLOCK · {san[0][:60]}…"
 
     def bsc_check() -> str:
         out = r.amlcheck("check", BSC, "--json")
@@ -362,6 +376,7 @@ def main() -> int:
         ("sync (lists)", sync),
         ("status", status),
         ("check: OFAC address BLOCKs", block),
+        ("NBCTF import; a listed address BLOCKs", nbctf),
         ("check: a BSC address", bsc_check),
         ("investigate with the trace", investigate),
         ("trace --svg", trace_svg),
