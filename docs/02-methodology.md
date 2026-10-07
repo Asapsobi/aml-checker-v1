@@ -735,18 +735,20 @@ addresses a check reaches, cached for `[intel] tag_days` (7); red tags → `scam
 
 ## 14. Benchmark against MistTrack (P15)
 
-> How far a result can be trusted next to MistTrack's (D-091, D-092). There is no MistTrack API
-> (D-033): the owner looks wallets up on MistTrack's site.
+> How far a result can be trusted next to MistTrack's (D-093, D-092). Claude looks wallets up on
+> MistTrack Light, MistTrack's free wallet risk assessment (`misttrack.io/aml_risks/<chain>/<address>`),
+> at a person's pace; MistTrack's terms allow it. Its 0–100 score is paid, and no MistTrack API is
+> used (D-033).
 
 ### 14.1 The set
 
 | Field | From | Stored |
 |---|---|---|
 | Address, chain | The owner's wallets where the two disagreed, plus 10 from our runs | Yes |
-| Expected level | The owner's MistTrack lookup: `low`, `moderate`, `high` or `severe` | Yes, with its source and date |
-| MistTrack's score, labels and risk types | — | **Never** (D-091) |
+| MistTrack's level | MistTrack Light: `low` or `risky` | Yes, with the lookup date |
+| MistTrack's risk rows | MistTrack Light's table: risk type, direct or indirect, share of volume | Yes, in the benchmark file only; checks never read it (D-093) |
 | Our check | `scripts/benchmark.py record`: a live check, traced | Verdict, rule IDs, score and its parts, every exposure, coverage, version |
-| Reason | Written for every mismatch | Yes |
+| Reason | Written for every mismatch and every gap | Yes |
 
 The set lives in `tests/benchmark/benchmark.json`.
 
@@ -754,14 +756,26 @@ The set lives in `tests/benchmark/benchmark.json`.
 
 | Measure | Meaning |
 |---|---|
-| Same level | Our level (§11.4) is the expected one. A BLOCK is `severe` |
-| Within one | At most one level apart, in the order low, moderate, high, severe |
-| Missed | Expected `high` or `severe`, ours `low` |
-| Over | Expected `low`, ours `high` or `severe` |
+| Same level | Ours `low` and theirs `low`; or ours `moderate`, `high` or `severe` (a BLOCK too) and theirs `risky` |
+| Gap | A MistTrack row with a share ≥ 5% whose risk type the check finds nowhere |
+| Extra | A risk type the check finds that MistTrack doesn't show |
 
-An INCOMPLETE check counts with its lower bound and is marked. **AT-70 passes** when at least 70% are
-at the same level, every wallet is within one level, and no wallet is missed unless its reason is
-information we can't have (a label only MistTrack holds).
+| MistTrack risk type | Ours |
+|---|---|
+| Sanctioned Entity | `sanctioned_entity` |
+| Illicit Activity | `illicit_activity`, or `frozen`: MistTrack counts a Tether-banned address as illicit activity |
+| Risky Exchange | `risk_exchange` |
+| Mixer, Gambling, Bridge | `mixer`, `gambling`, `bridge` |
+
+An INCOMPLETE check counts with its lower bound and is marked. **AT-70 passes** when at least 80% of
+the wallets have the same level and every mismatch and every gap has a reason (D-093).
+
+| Cause of a reason | When |
+|---|---|
+| `unknowable` | MistTrack holds information we can't have (a private label) |
+| `our_miss` | Something amlcheck could see and doesn't: a gap to build, or a bug |
+| `method` | The two measure differently by design: MistTrack Light calls any risky funds Risky and follows money through exchanges; our level weighs the share, and traces stop at services |
+| `disputed` | The evidence doesn't support MistTrack's view (a public list it doesn't use) |
 
 ### 14.3 Re-scoring and tuning
 

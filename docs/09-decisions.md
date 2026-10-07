@@ -907,7 +907,7 @@
   on the key's daily quota.
 
 ### D-091 · The benchmark set and its targets (owner's choice, Q-37)
-- **Status:** Accepted
+- **Status:** Superseded in part by D-093 (what is kept, and the targets)
 - **Date:** 2026-10-07 · **Phase:** P15
 - **Context:** P15 measures how often amlcheck agrees with MistTrack. There is no MistTrack API and
   none is used (D-033): the owner looks wallets up on MistTrack's site.
@@ -932,3 +932,39 @@
   `RISK_VERSION`.
 - **Alternatives:** The closest fit.
 - **Consequences:** Some mismatches stay, each with its reason.
+
+### D-093 · The benchmark uses MistTrack Light, looked up by Claude (owner's choice)
+- **Status:** Accepted
+- **Date:** 2026-10-07 · **Phase:** P15
+- **Context:** The owner asked Claude to look the levels up itself. MistTrack's free wallet risk
+  assessment (MistTrack Light) gives only `Low` or `Risky`, with a table of risk types: direct or
+  indirect, and share of volume. Its 0–100 score with four levels is paid ($229 a month and up).
+  - Of our 10 wallets, 8 were `Risky`, including Tether's treasury (5.76% indirect sanctioned).
+  - MistTrack's terms (December 2024) allow access for one's own use and reproducing its materials,
+    and don't forbid automated access.
+- **Decision:**
+  - Claude looks every wallet up on MistTrack Light, at a person's pace.
+  - The benchmark file keeps MistTrack's level (`low` or `risky`) and its risk rows. Checks never
+    read them, so nothing of MistTrack's becomes intelligence (D-033 stands).
+  - AT-70 passes at ≥ 80% same level (ours low against theirs low; ours moderate or above against
+    risky), with a reason for every mismatch and every gap. A gap is a risk type MistTrack shows at
+    ≥ 5% that we miss.
+- **Alternatives:** The level only (D-091 as it was); a paid MistTrack plan.
+- **Consequences:** The comparison is coarse on levels and rich on risk types. D-091's targets no
+  longer apply, and its keep-only-the-level rule is replaced. D-092 (tune for patterns only)
+  stands.
+
+
+### D-094 · Tether's own USDT contract is not a frozen counterparty
+- **Status:** Accepted
+- **Date:** 2026-10-07 · **Phase:** P15
+- **Context:** The benchmark checked `TU4vEruv…`, a busy exchange-like wallet that MistTrack Light
+  rates low. It came out with R-EXP-01 ("dealt directly with a frozen address") for 401 USDT it once
+  sent to `TR7NHqjeKQ…`, the TRON USDT contract itself. Tether blacklisted its own contract on
+  2020-06-26 to lock USDT sent to it by mistake. It has destroyed those funds 35 times since.
+- **Decision:** Exposures and traces ignore the freeze events of the token contract itself. Sending
+  USDT to the contract is a user's error, not a risk. A check *of* the contract still BLOCKs:
+  funds sent there are locked.
+- **Alternatives:** Keep the REVIEW; label the contract `allowlist` in the owner's tags.
+- **Consequences:** A wallet that once sent USDT to the contract by mistake no longer gets REVIEW
+  for it. Every other frozen address counts as before.

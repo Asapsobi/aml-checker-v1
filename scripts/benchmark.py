@@ -1,14 +1,15 @@
-"""The benchmark against MistTrack: import levels, record live, give reasons, report (P15, §14).
+"""The benchmark against MistTrack: import lookups, record live, give reasons, report (P15, §14).
 
-    uv run python scripts/benchmark.py import levels.csv [--date 2026-10-08]  # the owner's file
-    uv run python scripts/benchmark.py record [--all]                         # live, traced checks
+    uv run python scripts/benchmark.py import lookups.csv [--date 2026-10-08]  # MistTrack Light
+    uv run python scripts/benchmark.py record [--all]                          # live, traced checks
     uv run python scripts/benchmark.py reason <address> --cause gap --text "…"
     uv run python scripts/benchmark.py report [--k 6] [--decay 0.5] [--weight frozen=0.8] [--write]
 
-The owner's file has the columns `address,chain,level,note` (`chain` and `note` may be empty).
-Writes `tests/benchmark/benchmark.json`; `report --write` also writes `docs/benchmark.md`. Only the
-owner's MistTrack level is kept per wallet (D-091): a score or any other column is ignored.
-`record` runs against `AMLCHECK_HOME`: use a scratch copy, never the real data by accident.
+A lookups file has the columns `address,chain,level,risks,note`: what MistTrack Light showed, its
+level (`low` or `risky`) and its risk rows as `Illicit Activity/direct/52.07; …` (D-093). Writes
+`tests/benchmark/benchmark.json`; `report --write` also writes `docs/benchmark.md`. Checks never
+read MistTrack's side. `record` runs against `AMLCHECK_HOME`: use a scratch copy, never the real
+data by accident.
 """
 
 from __future__ import annotations
@@ -67,7 +68,7 @@ def main() -> int:
     sub = p.add_subparsers(dest="cmd", required=True)
     im = sub.add_parser("import")
     im.add_argument("file", type=Path)
-    im.add_argument("--date", help="when the levels were looked up (default today, UTC)")
+    im.add_argument("--date", help="when MistTrack Light was looked up (default today, UTC)")
     rc = sub.add_parser("record")
     rc.add_argument("--all", action="store_true", help="re-record wallets already recorded")
     rs = sub.add_parser("reason")
@@ -106,11 +107,11 @@ def main() -> int:
     if args.cmd == "import":
         date = args.date or datetime.now(UTC).date().isoformat()
         try:
-            new, ignored = bm.read_levels(args.file, date)
+            new, ignored = bm.read_lookups(args.file, date)
         except ValueError as e:
             raise SystemExit(str(e)) from None
         if ignored:
-            print(f"ignored columns (only the level is kept, D-091): {', '.join(ignored)}")
+            print(f"ignored columns: {', '.join(ignored)}")
         wallets = bm.merge(wallets, new)
     elif args.cmd == "reason":
         hits = [w for w in wallets if w.address == args.address]
@@ -137,7 +138,7 @@ def main() -> int:
                 assert r is not None  # noqa: S101
                 print(
                     f"[{n}/{len(todo)}] {w.chain} {w.address}: {r.verdict} · {r.score} "
-                    f"{r.level} (MistTrack {w.expected}) ({time.monotonic() - started:.0f} s)",
+                    f"{r.level} (MistTrack {w.theirs}) ({time.monotonic() - started:.0f} s)",
                     flush=True,
                 )
             wallets = list(done.values())

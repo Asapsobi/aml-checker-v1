@@ -1,9 +1,9 @@
-"""The benchmark against MistTrack (methodology §14, D-091, D-092).
+"""The benchmark against MistTrack (methodology §14, D-093, D-092).
 
-Each wallet keeps the owner's MistTrack level and nothing else of MistTrack's, and our side: a
-live, traced check with every exposure. So `measure` can re-score offline, with today's settings or
-candidate `k`, `decay` or weights. `changes` says what a candidate would fix and break, and
-`adoptable` applies D-092: fix at least 2 mismatches, break none.
+Each wallet keeps what MistTrack Light showed, its level (`low` or `risky`) and its risk rows, which
+checks never read; and our side, a live, traced check with every exposure. So `measure` can re-score
+offline, with today's settings or candidate `k`, `decay` or weights. `changes` says what a candidate
+would fix and break, and `adoptable` applies D-092: fix at least 2 mismatches, break none.
 """
 
 from __future__ import annotations
@@ -12,7 +12,7 @@ import csv
 import json
 from collections.abc import Iterable, Mapping, Sequence
 from dataclasses import asdict, dataclass, field
-from decimal import Decimal
+from decimal import Decimal, InvalidOperation
 from pathlib import Path
 from typing import Any, Literal, cast
 
@@ -22,16 +22,29 @@ from amlcheck.core.models import Chain, Verdict
 from amlcheck.core.risk import Exposure, detail_list, ranked
 from amlcheck.core.score import score_of
 
-LEVELS = ("low", "moderate", "high", "severe")
-type Cause = Literal["unknowable", "gap", "disputed"]
-#: Why a wallet disagrees (§14.2). Only `unknowable` excuses a missed wallet (D-091).
+LEVELS = ("low", "moderate", "high", "severe")  # ours (§11.4)
+THEIR_LEVELS = ("low", "risky")  # MistTrack Light's
+#: MistTrack Light's risk types, and ours that answer each (§14.2).
+TYPES: dict[str, frozenset[str]] = {
+    "Sanctioned Entity": frozenset({"sanctioned_entity"}),
+    "Illicit Activity": frozenset({"illicit_activity", "frozen"}),
+    "Risky Exchange": frozenset({"risk_exchange"}),
+    "Mixer": frozenset({"mixer"}),
+    "Gambling": frozenset({"gambling"}),
+    "Bridge": frozenset({"bridge"}),
+}
+OWN_RULES = frozenset({"R-SAN-01", "R-FRZ-01"})
+GAP_SHARE = Decimal(5)  # % of volume (D-093)
+SAME_TARGET = Decimal("0.8")  # D-093
+FIX_AT_LEAST = 2  # D-092
+type Cause = Literal["unknowable", "our_miss", "method", "disputed"]
+#: Why a wallet disagrees or has a gap (§14.2).
 CAUSES: dict[str, str] = {
     "unknowable": "MistTrack holds information we can't have (a private label)",
-    "gap": "something amlcheck could see and doesn't",
-    "disputed": "the evidence doesn't support MistTrack's level",
+    "our_miss": "something amlcheck could see and doesn't",
+    "method": "the two measure differently by design",
+    "disputed": "the evidence doesn't support MistTrack's view",
 }
-SAME_TARGET = Decimal("0.7")  # D-091
-FIX_AT_LEAST = 2  # D-092
 
 
 @dataclass(frozen=True)
@@ -101,21 +114,77 @@ class Recorded:
         exposures = [Exposure.from_json(e) for e in self.exposures]
         return detail_list(ranked(exposures, Decimal(self.decay)))
 
+    @property
+    def own(self) -> bool:
+        """The address itself is listed or frozen (R-SAN-01, R-FRZ-01)."""
+        return bool(OWN_RULES & set(self.rules))
+
+    def found(self) -> frozenset[str]:
+        """Every risk type the check found: its exposures' and the address's own (§14.2)."""
+        types = {str(e["risk_type"]) for e in self.exposures}
+        if "R-SAN-01" in self.rules:
+            types.add("sanctioned_entity")
+        if "R-FRZ-01" in self.rules:
+            types.add("frozen")
+        return frozenset(types)
+
+
+@dataclass(frozen=True)
+class TheirRisk:
+    """One row of MistTrack Light's risk table."""
+
+    risk_type: str  # MistTrack's name: a key of TYPES
+    exposure: str  # direct or indirect
+    share: Decimal  # % of volume, as shown
+
+    @property
+    def own(self) -> bool:
+        """A direct row at 100%: MistTrack flags the wallet itself."""
+        return self.exposure == "direct" and self.share == 100
+
+    def text(self) -> str:
+        return f"{self.risk_type} {self.exposure} {self.share}%"
+
+
+def parse_risks(text: str) -> tuple[TheirRisk, ...]:
+    """`Illicit Activity/direct/52.07; Sanctioned Entity/indirect/15.91`; empty for none."""
+    out = []
+    for part in (p.strip() for p in text.split(";")):
+        if not part:
+            continue
+        fields = [x.strip() for x in part.split("/")]
+        if len(fields) != 3:
+            raise ValueError(f"risk {part!r}: write it as type/direct or indirect/share")
+        kind, exposure, share = fields
+        if kind not in TYPES:
+            raise ValueError(f"unknown MistTrack risk type {kind!r}")
+        if exposure not in ("direct", "indirect"):
+            raise ValueError(f"risk {part!r}: exposure must be direct or indirect")
+        try:
+            pct = Decimal(share)
+        except InvalidOperation:
+            raise ValueError(f"risk {part!r}: the share must be a number") from None
+        if not 0 <= pct <= 100:
+            raise ValueError(f"risk {part!r}: the share must be 0 to 100")
+        out.append(TheirRisk(kind, exposure, pct))
+    return tuple(out)
+
 
 @dataclass(frozen=True)
 class Wallet:
     chain: str
     address: str
-    expected: str  # the owner's MistTrack level (D-091)
-    source: str  # who looked it up, where, when
+    theirs: str  # MistTrack Light's level (D-093)
+    source: str  # where and when it was looked up
+    risks: tuple[TheirRisk, ...] = ()  # MistTrack Light's rows; checks never read them
     note: str | None = None
-    cause: Cause | None = None  # why it disagrees, once looked into
+    cause: Cause | None = None  # why it disagrees or has a gap, once looked into
     reason: str | None = None
     recorded: Recorded | None = None
 
     def __post_init__(self) -> None:
-        if self.expected not in LEVELS:
-            raise ValueError(f"{self.address}: level must be one of {', '.join(LEVELS)}")
+        if self.theirs not in THEIR_LEVELS:
+            raise ValueError(f"{self.address}: level must be one of {', '.join(THEIR_LEVELS)}")
         if self.cause is not None and self.cause not in CAUSES:
             raise ValueError(f"{self.address}: cause must be one of {', '.join(CAUSES)}")
 
@@ -134,18 +203,16 @@ def load(path: Path) -> list[Wallet]:
             Wallet(
                 d["chain"],
                 d["address"],
-                d["expected"],
+                d["theirs"],
                 d["source"],
+                tuple(
+                    TheirRisk(x["risk_type"], x["exposure"], Decimal(x["share"]))
+                    for x in d.get("risks", ())
+                ),
                 d.get("note"),
                 d.get("cause"),
                 d.get("reason"),
-                Recorded(
-                    **{
-                        **r,
-                        "rules": tuple(r["rules"]),
-                        "exposures": tuple(r["exposures"]),
-                    }
-                )
+                Recorded(**{**r, "rules": tuple(r["rules"]), "exposures": tuple(r["exposures"])})
                 if r
                 else None,
             )
@@ -156,17 +223,19 @@ def load(path: Path) -> list[Wallet]:
 def dump(wallets: Iterable[Wallet], path: Path) -> None:
     """Sorted, indented and stable, so a diff shows what changed."""
     rows = [asdict(w) for w in sorted(wallets, key=lambda w: w.key)]
-    text = json.dumps({"benchmark_version": 1, "wallets": rows}, indent=1, sort_keys=True)
+    text = json.dumps(
+        {"benchmark_version": 2, "wallets": rows}, indent=1, sort_keys=True, default=str
+    )
     path.write_text(text + "\n", encoding="utf-8")
 
 
-#: Columns kept from the owner's file; any other (a MistTrack score, its risk types) is ignored.
-KEPT = ("address", "chain", "level", "note")
+#: Columns of a lookups file; any other is ignored.
+KEPT = ("address", "chain", "level", "risks", "note")
 
 
-def read_levels(path: Path, date: str) -> tuple[list[Wallet], list[str]]:
-    """The owner's file, `address,chain,level[,note]`: the wallets, and the columns ignored
-    (D-091 keeps only the level). `chain` may be empty when the address says it."""
+def read_lookups(path: Path, date: str) -> tuple[list[Wallet], list[str]]:
+    """MistTrack Light lookups, `address,chain,level,risks,note` (`risks` as `parse_risks` reads
+    them): the wallets, and the columns ignored. `chain` may be empty when the address says it."""
     out = []
     with path.open(newline="", encoding="utf-8-sig") as f:
         reader = csv.DictReader(f)
@@ -183,7 +252,8 @@ def read_levels(path: Path, date: str) -> tuple[list[Wallet], list[str]]:
                         a.chain.value,
                         a.norm,
                         (row["level"] or "").strip().lower(),
-                        f"owner, MistTrack, {date}",
+                        f"MistTrack Light, {date}",
+                        parse_risks(row.get("risks") or ""),
                         (row.get("note") or "").strip() or None,
                     )
                 )
@@ -193,19 +263,19 @@ def read_levels(path: Path, date: str) -> tuple[list[Wallet], list[str]]:
 
 
 def merge(old: Iterable[Wallet], new: Iterable[Wallet]) -> list[Wallet]:
-    """A new lookup replaces the old one for the same wallet and keeps its record. A changed level
-    drops the cause and reason, which explained a different comparison; the same level keeps
-    them."""
+    """A new lookup replaces the old one for the same wallet and keeps its record. A changed lookup
+    drops the cause and reason, which explained a different comparison; the same one keeps them."""
     by = {w.key: w for w in old}
     for w in new:
         prev = by.get(w.key)
         if prev is not None and w.recorded is None:
-            kept = prev.expected == w.expected
+            kept = (prev.theirs, prev.risks) == (w.theirs, w.risks)
             w = Wallet(
                 w.chain,
                 w.address,
-                w.expected,
+                w.theirs,
                 w.source,
+                w.risks,
                 w.note or prev.note,
                 prev.cause if kept else None,
                 prev.reason if kept else None,
@@ -219,30 +289,44 @@ def merge(old: Iterable[Wallet], new: Iterable[Wallet]) -> list[Wallet]:
 class Row:
     wallet: Wallet
     score: int
-    level: str
+    level: str  # ours
 
     @property
-    def apart(self) -> int:
-        """Levels between ours and MistTrack's: + when ours is higher."""
-        return LEVELS.index(self.level) - LEVELS.index(self.wallet.expected)
+    def rec(self) -> Recorded:
+        assert self.wallet.recorded is not None  # noqa: S101 - measure keeps recorded wallets
+        return self.wallet.recorded
+
+    @property
+    def ours(self) -> str:
+        """Ours on MistTrack Light's scale: low, or risky for moderate and above."""
+        return "low" if self.level == "low" else "risky"
 
     @property
     def same(self) -> bool:
-        return self.apart == 0
+        return self.ours == self.wallet.theirs
 
     @property
-    def missed(self) -> bool:
-        return self.wallet.expected in ("high", "severe") and self.level == "low"
+    def gaps(self) -> list[TheirRisk]:
+        """MistTrack rows at ≥ 5% whose risk type the check finds nowhere (§14.2)."""
+        found = self.rec.found()
+        return [
+            r
+            for r in self.wallet.risks
+            if r.share >= GAP_SHARE
+            and not (r.own and self.rec.own)
+            and not TYPES[r.risk_type] & found
+        ]
 
     @property
-    def over(self) -> bool:
-        return self.wallet.expected == "low" and self.level in ("high", "severe")
+    def extras(self) -> list[str]:
+        """Risk types the check finds that MistTrack doesn't show."""
+        shown = frozenset().union(*(TYPES[r.risk_type] for r in self.wallet.risks))
+        return sorted(self.rec.found() - shown)
 
     @property
     def lower_bound(self) -> bool:
         """An INCOMPLETE check: its score is at least this (§11.3)."""
-        r = self.wallet.recorded
-        return r is not None and r.verdict == Verdict.INCOMPLETE.value
+        return self.rec.verdict == Verdict.INCOMPLETE.value
 
 
 @dataclass(frozen=True)
@@ -261,19 +345,14 @@ class Agreement:
         return Decimal(self.same) / len(self.rows) if self.rows else Decimal(0)
 
     @property
-    def far(self) -> list[Row]:
-        """More than one level apart."""
-        return [r for r in self.rows if abs(r.apart) > 1]
-
-    @property
-    def unexcused(self) -> list[Row]:
-        """Missed, with no reason that is information we can't have (D-091)."""
-        return [r for r in self.rows if r.missed and r.wallet.cause != "unknowable"]
+    def unexplained(self) -> list[Row]:
+        """A mismatch or a gap with no reason yet (D-093)."""
+        return [r for r in self.rows if (not r.same or r.gaps) and r.wallet.cause is None]
 
     @property
     def passed(self) -> bool:
-        """AT-70 (D-091)."""
-        return bool(self.rows) and self.share >= SAME_TARGET and not self.far and not self.unexcused
+        """AT-70 (D-093)."""
+        return bool(self.rows) and self.share >= SAME_TARGET and not self.unexplained
 
 
 def measure(
@@ -331,12 +410,9 @@ def _settings(a: Agreement) -> str:
 def _summary(a: Agreement) -> str:
     n = len(a.rows)
     pct = (a.share * 100).quantize(Decimal(1))
-    within = n - len(a.far)
-    missed = sum(r.missed for r in a.rows)
-    over = sum(r.over for r in a.rows)
+    gapped = sum(bool(r.gaps) for r in a.rows)
     return (
-        f"{n} wallet(s): same level {a.same} ({pct}%), within one level {within}, "
-        f"missed {missed}, over {over}."
+        f"{n} wallet(s): same level {a.same} ({pct}%), {n - a.same} mismatched, {gapped} with gaps."
     )
 
 
@@ -344,9 +420,10 @@ def markdown(current: Agreement, candidate: Agreement | None = None) -> str:
     lines = [
         "# amlcheck — Benchmark against MistTrack",
         "",
-        "> P15, methodology §14, D-091, D-092. Generated from `tests/benchmark/benchmark.json`",
-        "> with `uv run python scripts/benchmark.py report --write`. Only the owner's MistTrack",
-        "> level is kept per wallet; nothing else of MistTrack's.",
+        "> P15, methodology §14, D-093, D-092. Generated from `tests/benchmark/benchmark.json`",
+        "> with `uv run python scripts/benchmark.py report --write`. MistTrack's side is",
+        "> MistTrack Light, the free wallet risk assessment, looked up by Claude: its level",
+        "> (`low` or `risky`) and its risk rows. Checks never read them.",
         "",
         "## Agreement",
         "",
@@ -356,40 +433,41 @@ def markdown(current: Agreement, candidate: Agreement | None = None) -> str:
     lines += [
         _summary(current),
         "",
-        f"**AT-70: {'passed' if current.passed else 'not passed'}** (≥ 70% same level, every "
-        "wallet within one level, none missed without a reason we can't have; D-091).",
+        f"**AT-70: {'passed' if current.passed else 'not passed'}** (≥ 80% same level, every "
+        "mismatch and gap explained; D-093).",
         "",
         "| MistTrack ↓ · amlcheck → | " + " | ".join(LEVELS) + " |",
         "|---|" + "---|" * len(LEVELS),
     ]
-    for exp in LEVELS:
+    for theirs in THEIR_LEVELS:
         counts = [
-            str(sum(r.wallet.expected == exp and r.level == ours for r in current.rows))
+            str(sum(r.wallet.theirs == theirs and r.level == ours for r in current.rows))
             for ours in LEVELS
         ]
-        lines.append(f"| {exp} | " + " | ".join(counts) + " |")
+        lines.append(f"| {theirs} | " + " | ".join(counts) + " |")
     lines += [
         "",
         "## Wallets",
         "",
-        "| Wallet | MistTrack | amlcheck | Apart | Risk | Coverage in / out | Reason |",
-        "|---|---|---|---|---|---|---|",
+        "| Wallet | MistTrack | amlcheck | Same | MistTrack's risks (≥ 5%) | Ours | Gaps "
+        "| Reason |",
+        "|---|---|---|---|---|---|---|---|",
     ]
     for r in current.rows:
-        rec = r.wallet.recorded
-        assert rec is not None  # noqa: S101 - measure keeps recorded wallets only
+        rec = r.rec
         ours = f"{'≥ ' if r.lower_bound else ''}{r.score} · {r.level} ({rec.verdict})"
-        apart = "=" if r.same else f"{r.apart:+d}"
-        risk = "; ".join(rec.risks()[:2]) or "—"
-        cov = f"{_pct(rec.coverage_in)} / {_pct(rec.coverage_out)}"
+        theirs = "; ".join(x.text() for x in r.wallet.risks if x.share >= GAP_SHARE) or "—"
+        mine = "; ".join(rec.risks()[:3]) or "—"
+        gaps = "; ".join(x.text() for x in r.gaps) or "—"
+        explain = not r.same or r.gaps
         why = (
             f"{r.wallet.cause}: {r.wallet.reason}"
             if r.wallet.cause
-            else ("—" if r.same else "**to explain**")
+            else ("**to explain**" if explain else "—")
         )
         lines.append(
-            f"| {r.wallet.chain.upper()} `{short(r.wallet.address)}` | {r.wallet.expected} "
-            f"| {ours} | {apart} | {risk} | {cov} | {why} |"
+            f"| {r.wallet.chain.upper()} `{short(r.wallet.address)}` | {r.wallet.theirs} | {ours} "
+            f"| {'yes' if r.same else '**no**'} | {theirs} | {mine} | {gaps} | {why} |"
         )
     if candidate is not None:
         fixed, broken = changes(current, candidate)
@@ -405,12 +483,6 @@ def markdown(current: Agreement, candidate: Agreement | None = None) -> str:
             f"**Adoptable under D-092: {verdict}** (fixes ≥ {FIX_AT_LEAST}, breaks none).",
         ]
     return "\n".join([*lines, ""])
-
-
-def _pct(share: str | None) -> str:
-    if share is None:
-        return "–"
-    return f"{(Decimal(share) * 100).quantize(Decimal('0.1'))}%"
 
 
 def cause_of(text: str) -> Cause:
