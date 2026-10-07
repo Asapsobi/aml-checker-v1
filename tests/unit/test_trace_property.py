@@ -37,7 +37,9 @@ async def _run(
         conn = open_db(Path(d) / "a.db")
         try:
             fake = Fake(list(reversed(xs)) if reverse else xs)
-            eng, _ = engine(conn, fake, Settings(trace=Trace(max_nodes=max_nodes, branch=branch)))
+            eng, _ = engine(
+                conn, fake, Settings(trace=Trace(bsc_max_nodes=max_nodes, branch=branch))
+            )
             if sanctioned:
                 sanction(conn, *(PEOPLE[i] for i in sanctioned))
             t = await eng.run(detect(T))

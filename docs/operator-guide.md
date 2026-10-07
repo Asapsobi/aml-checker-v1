@@ -26,8 +26,8 @@ amlcheck check TXyz… --amount 25000 --client acme --note "invoice 1042"
 - Paste addresses; never type them. A wrong character makes a valid but different address.
 - TRON addresses start with `T`; `0x…` addresses are BNB Smart Chain (BEP20) in this version.
 - Every check traces where the money came from **and** where it went, up to 5 hops, within 3 minutes
-  (TRON usually under a minute cold, seconds when repeated; BSC often the full 3 minutes on
-  HyperSync's free plan). `--no-trace` gives a quick check without it.
+  (TRON about 1.5 minutes cold on a busy wallet, seconds when repeated; BSC often the full
+  3 minutes on HyperSync's free plan). `--no-trace` gives a quick check without it.
 - `amlcheck investigate` is the same check with the full breakdown of both traces.
 - Every check is recorded in the audit log **before** it is shown.
 
@@ -152,3 +152,6 @@ amlcheck case decide <case> approved --note "known OTC client; source of funds m
 - BEP20 USDT cannot be frozen by its issuer: the freeze check is skipped there, never "clean".
 - Sources are public lists and chain data only; no commercial AML provider is consulted (D-033).
 - NO_HITS is never a clearance; a decision is always yours.
+- A TRON check reads up to 100 addresses each way (D-090): several hundred TronGrid requests cold,
+  far fewer when repeated. Monitor runs trace every new sender, so keep your TronGrid plan's daily
+  quota in mind.

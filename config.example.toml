@@ -93,7 +93,9 @@ branch = 5
 coverage_share = 0.8
 min_attributed_usdt = 100
 hop_window_days = 30
-max_nodes = 50
+# Addresses read per direction: 100 on TRON (D-090), 50 on BSC.
+max_nodes = 100
+bsc_max_nodes = 50
 # Queued addresses read at once per direction (D-088): the same result as one at a time, sooner.
 # BSC reads one at a time: HyperSync's free budget is spent per query.
 parallel_reads = 4

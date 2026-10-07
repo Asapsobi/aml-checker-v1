@@ -453,18 +453,19 @@ requests.
 |---|---|---|
 | Branch 5, 50 nodes, one read at a time (as P13) | 52 · moderate (sanctioned 29.4%, illicit 13.5% inferred) · 92 s · 343 calls | 42 · moderate (sanctioned 5.6% direct, 5.7% indirect) · 105 s · 393 calls |
 | Branch 8, 50 nodes | 50 cold, **46 warm** (sanctioned 15.6%) · 128 s · 383 calls | 42 · **177 s** · 408 calls |
-| **Branch 5, 50 nodes, reads ahead: the default now** | **52**, the same exposures · **45 s** · 343 calls | **42**, the same · **51 s** · 393 calls |
-| Branch 5, 100 nodes, reads ahead (Q-39) | 54 (sanctioned **47.6%**) · 99 s · 756 calls* | 41 (adds illicit 2.2% inferred) · 90 s · 747 calls* |
+| Branch 5, 50 nodes, reads ahead (D-088) | 52, the same exposures · **45 s** · 343 calls | 42, the same · **51 s** · 393 calls |
+| **Branch 5, 100 nodes, reads ahead: the default now (D-090)** | **54** (sanctioned **47.6%**) · 94 s · 664 calls (384 in, 280 out) | **41** (adds illicit activity 2.2%, inferred) · 95 s · 655 calls (323 in, 332 out) |
 
-\* Measured before reads ahead used their answer: about 10% more calls than now.
 Warm, every setting: 2–8 s.
 
 Branch 8 finds less and costs more time. Reading ahead keeps the result and the request count of
-one read at a time, and halves the cold time. 100 nodes finds much more distant risk within the
-budget, but costs about twice G8's 200 requests per direction (Q-39).
+one read at a time, and halves the cold time. The owner chose 100 nodes (Q-39, D-090): much more
+distant risk within the budget, at 280–384 requests per direction (G8 restated to 400).
 
 **2.0.0a2 against 2.0.0b1** (T-14.08; live, 2026-10-07): both codes cold on copies of the same
-synced database. 2.0.0a2 ran from its tagged source.
+synced database. 2.0.0a2 ran from its tagged source; 2.0.0b1 read 50 nodes per direction, before
+D-090. At 100, `TVvWhZyL…` is 54 and `TSArbmMU…` 41 (the tuning table). The NBCTF wallets' traces
+ended within 23 nodes, so they are the same at 100.
 
 | Wallet | 2.0.0a2 (P13) | 2.0.0b1 (P14) |
 |---|---|---|

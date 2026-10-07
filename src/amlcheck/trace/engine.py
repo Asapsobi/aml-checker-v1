@@ -313,7 +313,7 @@ class TraceEngine:
 
         def read_ahead() -> None:
             pending = {k[0] for k in ahead if k[0] not in st.read}
-            room = self._t.max_nodes - len(st.read) - len(pending)
+            room = self._max_nodes(chain) - len(st.read) - len(pending)
             for *_, nxt in heapq.nsmallest(self._parallel(chain), queue):
                 key = (nxt.address, *nxt.window)
                 if key in ahead or key in skipped:
@@ -395,6 +395,10 @@ class TraceEngine:
             return None
         return _Ahead(h, hit)
 
+    def _max_nodes(self, chain: Chain) -> int:
+        """Addresses read per direction: 100 on TRON (D-090), 50 on BSC."""
+        return self._t.bsc_max_nodes if chain is Chain.BSC else self._t.max_nodes
+
     def _max_hops(self, chain: Chain) -> int:
         """5 on TRON, 3 on BSC (D-082): BSC reads are slow on HyperSync's free plan (VS-16)."""
         return self._t.bsc_max_hops if chain is Chain.BSC else self._t.max_hops
@@ -433,7 +437,7 @@ class TraceEngine:
             return self._end(item, category, test, cls, False, in_t, st)
         if item.hop >= self._max_hops(chain):
             return self._end(item, "untraced:depth", 6, None, False, in_t, st)
-        if item.address not in st.read and len(st.read) >= self._t.max_nodes:
+        if item.address not in st.read and len(st.read) >= self._max_nodes(chain):
             return self._end(item, "untraced:budget", 7, None, False, in_t, st)
         transfers, complete = await self._read(
             item.address, item.window[0], item.window[1], self._t.hub_transfers, st, pre

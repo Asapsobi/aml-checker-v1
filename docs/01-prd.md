@@ -84,7 +84,7 @@ counterparties.
 | G5 | Explain source of funds | Default trace attributes ≥ 80% of inflow value to a category or a declared untraced reason |
 | G6 | Recognise unknown addresses | Each traced node gets a type with confidence and the features behind it |
 | G7 | Knowledge compounds | A repeat trace uses ≥ 50% fewer API queries than the first |
-| G8 | Stay within free budgets | Default trace ≤ 120 BSC indexer queries and ≤ 200 TRON API requests, cold |
+| G8 | Stay within budgets | Default trace, cold: ≤ 120 BSC indexer queries; ≤ 400 TRON API requests per direction (100 addresses, owner's choice: D-090; was 200) |
 | G9 | Record the human decision | Every REVIEW can be closed with a decision that is exported with the audit log |
 | G10 | Find counterparties automatically | A new sender to an own wallet is screened within one monitoring interval |
 

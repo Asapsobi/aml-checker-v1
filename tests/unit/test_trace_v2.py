@@ -92,7 +92,7 @@ async def test_best_first_spends_the_budget_on_the_heaviest(conn: sqlite3.Connec
         tr(8, addr("Lsrc"), light, 3000),
     ]
     sanction(conn, a3)
-    eng, _ = engine(conn, Fake(xs), Settings(trace=Trace(max_nodes=3)))
+    eng, _ = engine(conn, Fake(xs), Settings(trace=Trace(bsc_max_nodes=3)))
     t = await eng.run(detect(T))
     # Reads: T, A, then A2 (9,000 × 0.6 = 5,400) before L (3,000): hop by hop would read L first.
     # A3 is found locally; L is out of the node budget.
