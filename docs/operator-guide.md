@@ -26,8 +26,8 @@ amlcheck check TXyz… --amount 25000 --client acme --note "invoice 1042"
 - Paste addresses; never type them. A wrong character makes a valid but different address.
 - TRON addresses start with `T`; `0x…` addresses are BNB Smart Chain (BEP20) in this version.
 - Every check traces where the money came from **and** where it went, up to 5 hops, within 3 minutes
-  (TRON usually 1–2 minutes cold, seconds when repeated; BSC often the full 3 minutes on HyperSync's
-  free plan). `--no-trace` gives a quick check without it.
+  (TRON usually under a minute cold, seconds when repeated; BSC often the full 3 minutes on
+  HyperSync's free plan). `--no-trace` gives a quick check without it.
 - `amlcheck investigate` is the same check with the full breakdown of both traces.
 - Every check is recorded in the audit log **before** it is shown.
 
