@@ -1,13 +1,14 @@
 """Sanctions lists beyond OFAC: UK, EU and NBCTF (methodology §13.1, D-084, D-085).
 
 They share OFAC's snapshot store and adapter (`screening.sanctions`): a listing is R-SAN-01, BLOCK,
-naming the list. Their addresses appear only in free text (VS-18, VS-19), so every TRON or `0x`
-address in an entry's text is taken and kept only when its checksum holds: a typo in a government
-list must not make an unrelated address match.
+naming the list. Their addresses appear only in free text (VS-18, VS-19, VS-20), so every TRON or
+`0x` address in an entry's text is taken and kept only when its checksum holds: a typo in a
+government list must not make an unrelated address match.
 """
 
 from __future__ import annotations
 
+import csv
 import io
 import re
 import sqlite3
@@ -15,7 +16,7 @@ import xml.etree.ElementTree as ET
 import zipfile
 from collections.abc import Iterable, Iterator, Sequence
 from dataclasses import dataclass
-from datetime import UTC, datetime
+from datetime import UTC, date, datetime
 from decimal import Decimal
 from pathlib import Path
 
@@ -52,18 +53,40 @@ NAMES = {
 }
 
 
-def addresses_in(text: str) -> list[str]:
-    """TRON and `0x` addresses in free text whose checksum holds, in order, without repeats;
-    `0x` lowercased (as OFAC's are stored, F3.2)."""
-    found: list[str] = []
-    for m in _TRON.finditer(text):
-        if is_valid_tron(m.group()) and m.group() not in found:
-            found.append(m.group())
+#: Cyrillic and Greek letters that look like Latin ones. NBCTF's FO 02/24 lists a TRON address typed
+#: with a Cyrillic "Н" and "с" (VS-20). Read as Latin, a string is kept only when the TRON checksum
+#: then holds, so a look-alike can't make an unrelated address match. `0x` addresses have no
+#: checksum to confirm a reading, so they are never read this way.
+_LATIN = str.maketrans(
+    # Cyrillic capitals, Cyrillic small, Greek capitals, Greek small
+    "АВЕЗІЈКМНОРСЅТУХаеіјорсѕухԁһԛԝΑΒΕΖΗΙΚΜΝΟΡΤΥΧανορυ",
+    "ABE3IJKMHOPCSTYXaeijopcsyxdhqwABEZHIKMNOPTYXavopu",
+)
+
+
+def _scan(text: str) -> tuple[list[str], list[str]]:
+    """TRON and `0x` addresses in free text whose checksum holds, in order, without repeats, `0x`
+    lowercased (as OFAC's are stored, F3.2); and the TRON-looking strings whose checksum fails,
+    as written."""
+    found: dict[str, None] = {}
+    failed: dict[str, None] = {}
+    # A second reading with look-alikes made Latin; the first keeps every plain match, since making
+    # a neighbouring letter Latin can join it to an address.
+    readings = [text] if text.isascii() else [text, text.translate(_LATIN)]
+    for reading in readings:
+        for m in _TRON.finditer(reading):
+            if is_valid_tron(m.group()):
+                found.setdefault(m.group())
+            else:
+                failed.setdefault(text[m.start() : m.end()])  # same length: the original text
     for m in _EVM.finditer(text):
-        a = m.group().lower()
-        if a not in found:
-            found.append(a)
-    return found
+        found.setdefault(m.group().lower())
+    return list(found), list(failed)
+
+
+def addresses_in(text: str) -> list[str]:
+    """TRON and `0x` addresses in free text whose checksum holds (see `_scan`)."""
+    return _scan(text)[0]
 
 
 def _local(tag: str) -> str:
@@ -172,60 +195,124 @@ async def sync_list(
     return store(conn, data, parsed, min_kept_share, now, source=spec.source)
 
 
-# --- NBCTF: the owner's downloads of the official order annexes (D-085, VS-20) -------------------
+# --- NBCTF: seizure orders, imported from the owner's downloads (D-085, VS-20) --------------------
 
-_TRON_LIKE = re.compile(
-    r"(?<![1-9A-HJ-NP-Za-km-z])T[1-9A-HJ-NP-Za-km-z]{33}(?![1-9A-HJ-NP-Za-km-z])"
-)
-MAX_FILE_BYTES = 50 * 1024 * 1024  # an order annex is small; refuse anything absurd
+MAX_FILE_BYTES = 50 * 1024 * 1024  # the official export is about 0.4 MB; refuse anything absurd
+#: Columns of the official export (matal.mod.gov.il, seizure orders, VS-20): one row per order,
+#: its wallets in `Assets`. The export's other lists (organisations, operatives) hold no wallets.
+OFFICIAL_COLUMNS = ("Name en", "Order Type", "Is Canceled", "Assets")
 
 
-def file_text(path: Path) -> str:
-    """The text of an order file: every XML part of a zip-based spreadsheet (xlsx, ods), else the
-    raw bytes. Addresses are plain ASCII, so no column names are needed (VS-20)."""
-    data = path.read_bytes()
-    if len(data) > MAX_FILE_BYTES:
-        raise ValueError(f"{path.name}: larger than {MAX_FILE_BYTES // 2**20} MB")
-    if zipfile.is_zipfile(io.BytesIO(data)):
-        with zipfile.ZipFile(io.BytesIO(data)) as z:
-            parts = [
-                z.read(i).decode("utf-8", "replace")
-                for i in z.infolist()
-                if i.filename.endswith(".xml") and i.file_size <= MAX_FILE_BYTES
-            ]
-        return "\n".join(parts)
-    return data.decode("latin-1")
+@dataclass(frozen=True)
+class OrderImport:
+    order: str  # the order's name ("FO 43/25"), or the file's for a file that is one order
+    addresses: tuple[str, ...]  # valid, in order
+    rejected: tuple[str, ...]  # TRON-looking strings whose checksum fails
+    program: str = "NBCTF seizure order"  # shown in the finding: the export's type and dates
+    valid_to: str | None = None  # the export's Validity Date, ISO (Q-38)
+    cancelled: bool = False  # cancelled on the official list: its addresses are not listed
+
+    def lapsed(self, today: date) -> bool:
+        """Its validity date has passed. It stays listed while NBCTF publishes it (Q-38)."""
+        try:
+            return self.valid_to is not None and date.fromisoformat(self.valid_to) < today
+        except ValueError:
+            return False
 
 
 @dataclass(frozen=True)
 class FileImport:
-    order: str
-    addresses: tuple[str, ...]  # valid, in order
-    rejected: tuple[str, ...]  # TRON-looking strings whose checksum fails
+    name: str
+    orders: tuple[OrderImport, ...]
+    official: bool  # rows of the official export, not one order per file
 
 
 @dataclass(frozen=True)
 class NbctfImport:
     files: tuple[FileImport, ...]
     result: SyncResult
-    total: int  # addresses in the new snapshot
+    total: int  # different addresses in the new snapshot
 
 
-def read_order(path: Path) -> FileImport:
-    text = file_text(path)
-    valid = addresses_in(text)
-    rejected = tuple(
-        dict.fromkeys(m.group() for m in _TRON_LIKE.finditer(text) if not is_valid_tron(m.group()))
+def _decode(data: bytes) -> str:
+    try:
+        return data.decode("utf-8-sig")
+    except UnicodeDecodeError:
+        return data.decode("latin-1")  # any bytes; addresses are ASCII
+
+
+def _official_orders(text: str) -> list[OrderImport] | None:
+    """The orders in a CSV of the official export, or None for any other text."""
+    header = next(csv.reader([text.split("\n", 1)[0]]), [])
+    if not set(OFFICIAL_COLUMNS) <= {h.strip() for h in header}:
+        return None
+    # A cell can be long (FO 56/23 names 582 people); the file's size is bounded already.
+    limit = csv.field_size_limit(MAX_FILE_BYTES)
+    try:
+        rows = list(csv.DictReader(io.StringIO(text)))
+    finally:
+        csv.field_size_limit(limit)
+    orders = []
+    for row in rows:
+        cell = {k.strip(): (v or "").strip() for k, v in row.items() if isinstance(k, str)}
+        name = cell.get("Name en") or cell.get("Name he") or cell.get("Order Number")
+        if not name:
+            continue
+        valid, failed = _scan(cell.get("Assets", ""))
+        program = cell.get("Order Type") or "order"
+        if date := cell.get("Order Date"):
+            program += f" of {date}"
+        if valid_to := cell.get("Validity Date"):
+            program += f", valid to {valid_to}"
+        cancelled = cell.get("Is Canceled", "").lower() == "true"
+        orders.append(
+            OrderImport(name, tuple(valid), tuple(failed), program, valid_to or None, cancelled)
+        )
+    return orders
+
+
+def read_file(path: Path) -> FileImport:
+    """The orders in one file. The official export (its CSV, or its zip of CSVs) gives one order
+    per row; any other file (a spreadsheet, a CSV, a text) is one order named after the file, its
+    addresses taken from any cell (VS-20)."""
+    data = path.read_bytes()
+    if len(data) > MAX_FILE_BYTES:
+        raise ValueError(f"{path.name}: larger than {MAX_FILE_BYTES // 2**20} MB")
+    if zipfile.is_zipfile(io.BytesIO(data)):
+        with zipfile.ZipFile(io.BytesIO(data)) as z:
+            texts = [
+                _decode(z.read(i))
+                for i in sorted(z.infolist(), key=lambda i: i.filename)
+                if i.filename.lower().endswith((".xml", ".csv")) and i.file_size <= MAX_FILE_BYTES
+            ]
+    else:
+        texts = [_decode(data)]
+    official: list[OrderImport] = []
+    rest: list[str] = []
+    for text in texts:
+        orders = _official_orders(text)
+        if orders is None:
+            rest.append(text)
+        else:
+            official.extend(orders)
+    valid, failed = _scan("\n".join(rest))
+    whole = [OrderImport(path.stem, tuple(valid), tuple(failed))]
+    return FileImport(
+        path.name,
+        tuple(official + (whole if valid or failed or not official else [])),
+        bool(official),
     )
-    return FileImport(path.stem, tuple(valid), rejected)
 
 
 def import_nbctf(
     conn: sqlite3.Connection, paths: Sequence[Path], now: datetime, *, replace: bool = False
 ) -> NbctfImport:
-    """A new `nbctf` snapshot: the addresses of the given order files, added to the last
-    snapshot's unless `replace`. Each file is one order (its name is the entry)."""
-    files = tuple(read_order(p) for p in sorted(paths))
+    """A new `nbctf` snapshot from the given files. Unless `replace`, the last snapshot's orders
+    are kept; an order the files bring again with addresses, or cancelled, is replaced: its newest
+    import wins. An order with no wallet in the files leaves what was listed for it alone."""
+    files = tuple(read_file(p) for p in sorted(paths))
+    orders = [o for f in files for o in f.orders]
+    renewed = {o.order for o in orders if o.addresses or o.cancelled}
     rows: dict[tuple[str, str], ListedAddress] = {}
     if not replace:
         for a, entry, name, program in conn.execute(
@@ -233,13 +320,15 @@ def import_nbctf(
             "WHERE snapshot_id = (SELECT max(id) FROM list_snapshots WHERE source = ?)",
             (NBCTF.source,),
         ):
-            rows[(a, entry)] = next(_listed([a], entry, name, program))
-    for f in files:
-        for listed in _listed(f.addresses, f.order, f"order {f.order}", "NBCTF seizure order"):
-            rows[(listed.address_norm, listed.entry_id)] = listed
+            if entry not in renewed:
+                rows[(a, entry)] = next(_listed([a], entry, name, program))
+    for o in orders:
+        if not o.cancelled:
+            for listed in _listed(o.addresses, o.order, f"order {o.order}", o.program):
+                rows[(listed.address_norm, listed.entry_id)] = listed
     ordered = tuple(rows[k] for k in sorted(rows))
     entries = len({a.entry_id for a in ordered})
-    digest_input = "\n".join(f"{a.entry_id} {a.address_norm}" for a in ordered).encode()
+    digest_input = "\n".join(f"{a.entry_id} {a.address_norm} {a.program}" for a in ordered)
     parsed = ParsedList(now.date().isoformat(), entries, ordered)
-    result = store(conn, digest_input, parsed, Decimal(0), now, source=NBCTF.source)
-    return NbctfImport(files, result, len(ordered))
+    result = store(conn, digest_input.encode(), parsed, Decimal(0), now, source=NBCTF.source)
+    return NbctfImport(files, result, len({a.address_norm for a in ordered}))

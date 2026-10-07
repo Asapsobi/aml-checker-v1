@@ -24,7 +24,7 @@ VS-07 (P6) and VS-11 to VS-14 (later phases) are not P0 items. VS-15 was redone 
 | VS-17 | Measured: batching works, helps quiet addresses only | Pages hold ~1,000 logs | — |
 | VS-18 | Confirmed: 49 TRON addresses in free text | No structured field | — |
 | VS-19 | Confirmed: 3 TRON, 2 EVM addresses in free text | Public token URL, no login | — |
-| VS-20 | Pending: the owner's NBCTF files | — | — |
+| VS-20 | Confirmed with the official export: 38 orders, 694 addresses | New site with a CSV export; one address typed with Cyrillic letters; validity dates | Q-38 |
 | VS-21 | Confirmed with the owner's key: works, but no risk tags on any sanctioned or frozen address tried | Tags name only famous entities | — |
 
 ---
@@ -61,9 +61,42 @@ designations, trimmed).
 ("Known blockchain wallet addresses: T…;"). **3 TRON (1 not on OFAC: Grinex), 2 EVM.** Fixture:
 `tests/fixtures/lists/eu_sample.xml` (two real entities, trimmed).
 
-## VS-20 · NBCTF seizure-order annexes (P14)
-**Pending** the owner's downloaded files: the official site is bot-protected (connection refused from
-here; not worked round). The importer reads every cell, so it needs no column names.
+## VS-20 · NBCTF seizure orders (P14)
+**Checked:** 2026-10-07, downloaded with the owner's permission. The lists moved to
+**matal.mod.gov.il** (the old nbctf.mod.gov.il refused connections from here). Its export
+("ייצוא סנקציה") is a form, `POST /sanctions/export`, carrying the page's own anti-forgery token
+and cookie. No bot check was met, but a later visit timed out. The four list types are
+organisations, operatives, seizure orders and "צווי תפיסה - מטבעות קריפטו" (crypto seizure
+orders). One type gives a CSV (or XLSX); several give a zip of CSVs.
+**Format:** UTF-8 CSV with a BOM, one row per order. The columns are:
+- `Name en` ("FO 43/25") and `Order Type` ("FO (Forfeiture)", "ASO (Seizure)");
+- `Order Date` and `Validity Date` (ISO);
+- `Is Canceled`, `Is Correction Version` and `Is Hidden`;
+- the people and organisations named;
+- `Assets`: blocks of `Id: <uuid>` / `Name: <value>`, separated by `-------------`.
+
+Wallets appear only in `Assets`. No column links a wallet to a person, so none is named.
+**Found** (crypto orders, sha256 `0de2471f…f844`):
+- 38 orders (31 FO, 7 ASO); none cancelled, corrected or hidden.
+- 1,777 assets: 997 numbers (exchange accounts, phone numbers), 686 TRON, 15 `0x`, 52 Bitcoin and
+  28 on other chains.
+- 30 orders hold TRON or `0x` wallets: 701 listings, **694 different addresses**, every checksum valid.
+- One TRON address (FO 02/24) is typed with a Cyrillic "Н" and "с". Read as Latin, its checksum
+  holds.
+- One cell holds two wallets ("0x…, T…").
+- The other three lists hold no wallet.
+- Ten orders' validity dates have passed (five with wallets, 111 listings, the oldest 2024-02-22).
+  NBCTF still publishes them: Q-38.
+
+**Live:** the export was imported into a scratch folder (`lists import-nbctf`, CSV and the four-list
+zip: the same 694 addresses).
+- `check TB5UPBTt…` (ASO 06/26) → BLOCK, "Listed on the NBCTF list: order ASO 06/26 (entry
+  ASO 06/26, ASO (Seizure) of 2026-02-16, valid to 2028-02-16)". Tether has also frozen it since
+  2025-12-15.
+- That order's third address, `TP834zau…`, is named in its exposures ("NBCTF: order ASO 06/26").
+
+**Fixture:** `tests/fixtures/lists/nbctf_orders_sample.csv` holds five real orders. The people
+columns are emptied, and FO 19/23's assets are cut to two.
 
 ## VS-21 · Tronscan account tags (P14)
 **Checked:** 2026-10-05 with the owner's key (header `TRON-PRO-API-KEY`, never printed). Terms (PDF,

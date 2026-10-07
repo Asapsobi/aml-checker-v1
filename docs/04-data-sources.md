@@ -152,5 +152,5 @@ as a fixture) in `docs/verification-log.md`, and raises a question for any chang
 | VS-17 | HyperSync multi-address queries (batching): accepted, same results; 6 quiet addresses 1 query instead of 6, busy hubs no gain | P13 |
 | VS-18 | UK Sanctions List XML (FCDO): format, TRON addresses in free text, licence (OGL v3.0) | P14 |
 | VS-19 | EU Financial Sanctions Files XML: public URL, TRON addresses in free text, licence (Decision 2011/833/EU) | P14 |
-| VS-20 | NBCTF order annexes: file format and address columns (from the owner's downloaded files) | P14 |
+| VS-20 | NBCTF seizure orders: the official export (matal.mod.gov.il), its format and where wallets are | P14 |
 | VS-21 | Tronscan account-tag API: path, fields, rate limit, with the owner's key | P14 |

@@ -817,6 +817,11 @@
   they were last imported.
 - **Alternatives:** REVIEW only; skip NBCTF.
 - **Consequences:** Kept current by the owner's re-imports, not by `sync`.
+- **Update (2026-10-07, VS-20):** The lists moved to matal.mod.gov.il. Its export gives all
+  crypto seizure orders as one CSV (38 orders, 694 addresses), and no bot check was met.
+  `import-nbctf` reads the export one order per row: it skips cancelled orders, and an order's
+  newest import wins. Orders do carry a validity date: Q-38. The owner still downloads the
+  export by hand: fetching it in `sync` would first need the site's terms checked.
 
 ### D-086 · Freeze neighbours: suspected malicious, inferred
 - **Status:** Accepted
