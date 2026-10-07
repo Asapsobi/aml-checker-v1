@@ -1,0 +1,207 @@
+{
+ "address": "TMUS8vwpZJRR1E3qAmfkRiZ2nZwAx9D3zi",
+ "chain": "tron",
+ "check_id": "e5722da8-45be-4369-b8ae-9821c5ee72aa",
+ "checked_at": "2026-10-07T08:19:48.223577Z",
+ "contract": 2,
+ "detail_list": [
+  "Sanctioned entity: direct received 37.1%, direct sent 10.8%",
+  "Illicit activity: direct sent 34.7% (inferred)"
+ ],
+ "exposures": [
+  {
+   "address": "TVWfvLURTyojEPimot8DfRVha1py3WA7rS",
+   "category": "sanctioned",
+   "confidence": null,
+   "direction": "in",
+   "entity": "NBCTF: order ASO 07/26",
+   "estimated_usdt": null,
+   "exposure_type": "direct",
+   "hop": 1,
+   "inferred": false,
+   "path": [
+    "TMUS8vwpZJRR1E3qAmfkRiZ2nZwAx9D3zi",
+    "TVWfvLURTyojEPimot8DfRVha1py3WA7rS"
+   ],
+   "percent": "0.185969",
+   "risk_type": "sanctioned_entity",
+   "volume_usdt": "23000"
+  },
+  {
+   "address": "TKU8d7bSEej26MqLtQz6Muc6S8xUQkPXxQ",
+   "category": "suspected_malicious",
+   "confidence": "0.73",
+   "direction": "out",
+   "entity": "SUSPECTED_MALICIOUS",
+   "estimated_usdt": "42971.696035",
+   "exposure_type": "direct",
+   "hop": 1,
+   "inferred": true,
+   "path": [
+    "TMUS8vwpZJRR1E3qAmfkRiZ2nZwAx9D3zi",
+    "TKU8d7bSEej26MqLtQz6Muc6S8xUQkPXxQ"
+   ],
+   "percent": "0.347452",
+   "risk_type": "illicit_activity",
+   "volume_usdt": "42971.696035"
+  },
+  {
+   "address": "TVRNrvsEtV9mFkpovSGsXFkZFCA1QYTFEH",
+   "category": "sanctioned",
+   "confidence": null,
+   "direction": "in",
+   "entity": "NBCTF: order ASO 07/26",
+   "estimated_usdt": null,
+   "exposure_type": "direct",
+   "hop": 1,
+   "inferred": false,
+   "path": [
+    "TMUS8vwpZJRR1E3qAmfkRiZ2nZwAx9D3zi",
+    "TVRNrvsEtV9mFkpovSGsXFkZFCA1QYTFEH"
+   ],
+   "percent": "0.083282",
+   "risk_type": "sanctioned_entity",
+   "volume_usdt": "10300"
+  },
+  {
+   "address": "TDL3nhKuBZtL119XQzdGPdmF6ipiychsF7",
+   "category": "sanctioned",
+   "confidence": null,
+   "direction": "in",
+   "entity": "NBCTF: order ASO 07/26",
+   "estimated_usdt": null,
+   "exposure_type": "direct",
+   "hop": 1,
+   "inferred": false,
+   "path": [
+    "TMUS8vwpZJRR1E3qAmfkRiZ2nZwAx9D3zi",
+    "TDL3nhKuBZtL119XQzdGPdmF6ipiychsF7"
+   ],
+   "percent": "0.08033",
+   "risk_type": "sanctioned_entity",
+   "volume_usdt": "9935"
+  },
+  {
+   "address": "TDL3nhKuBZtL119XQzdGPdmF6ipiychsF7",
+   "category": "sanctioned",
+   "confidence": null,
+   "direction": "out",
+   "entity": "NBCTF: order ASO 07/26",
+   "estimated_usdt": null,
+   "exposure_type": "direct",
+   "hop": 1,
+   "inferred": false,
+   "path": [
+    "TMUS8vwpZJRR1E3qAmfkRiZ2nZwAx9D3zi",
+    "TDL3nhKuBZtL119XQzdGPdmF6ipiychsF7"
+   ],
+   "percent": "0.07611",
+   "risk_type": "sanctioned_entity",
+   "volume_usdt": "9413"
+  },
+  {
+   "address": "TKkMY4DbHfCfaEHG1c5b8KFuXRBm5EG73G",
+   "category": "sanctioned",
+   "confidence": null,
+   "direction": "out",
+   "entity": "NBCTF: order ASO 07/26",
+   "estimated_usdt": null,
+   "exposure_type": "direct",
+   "hop": 1,
+   "inferred": false,
+   "path": [
+    "TMUS8vwpZJRR1E3qAmfkRiZ2nZwAx9D3zi",
+    "TKkMY4DbHfCfaEHG1c5b8KFuXRBm5EG73G"
+   ],
+   "percent": "0.032342",
+   "risk_type": "sanctioned_entity",
+   "volume_usdt": "4000"
+  },
+  {
+   "address": "TMgJL38AJ2gxZCcrgY8CcXuSmUvpYKUvWM",
+   "category": "sanctioned",
+   "confidence": null,
+   "direction": "in",
+   "entity": "NBCTF: order ASO 07/26",
+   "estimated_usdt": null,
+   "exposure_type": "direct",
+   "hop": 1,
+   "inferred": false,
+   "path": [
+    "TMUS8vwpZJRR1E3qAmfkRiZ2nZwAx9D3zi",
+    "TMgJL38AJ2gxZCcrgY8CcXuSmUvpYKUvWM"
+   ],
+   "percent": "0.021427",
+   "risk_type": "sanctioned_entity",
+   "volume_usdt": "2650"
+  }
+ ],
+ "findings": [
+  {
+   "rule_id": "R-EXP-01",
+   "severity": "REVIEW",
+   "summary": "Dealt directly with a frozen and sanctioned address TDL3nhKuBZtL119XQzdGPdmF6ipiychsF7 (received 9,935.00, sent 9,413.00 USDT)"
+  },
+  {
+   "rule_id": "R-EXP-01",
+   "severity": "REVIEW",
+   "summary": "Dealt directly with a frozen and sanctioned address TKkMY4DbHfCfaEHG1c5b8KFuXRBm5EG73G (received 0.00, sent 4,000.00 USDT)"
+  },
+  {
+   "rule_id": "R-EXP-01",
+   "severity": "REVIEW",
+   "summary": "Dealt directly with a frozen and sanctioned address TMgJL38AJ2gxZCcrgY8CcXuSmUvpYKUvWM (received 2,650.00, sent 0.00 USDT)"
+  },
+  {
+   "rule_id": "R-EXP-01",
+   "severity": "REVIEW",
+   "summary": "Dealt directly with a frozen and sanctioned address TVRNrvsEtV9mFkpovSGsXFkZFCA1QYTFEH (received 10,300.00, sent 0.00 USDT)"
+  },
+  {
+   "rule_id": "R-EXP-01",
+   "severity": "REVIEW",
+   "summary": "Dealt directly with a frozen and sanctioned address TVWfvLURTyojEPimot8DfRVha1py3WA7rS (received 23,000.00, sent 0.00 USDT)"
+  },
+  {
+   "rule_id": "R-EXP-02",
+   "severity": "INFO",
+   "summary": "37.1% of USDT received (45,885.00 of 123,676.70) came from flagged counterparties"
+  },
+  {
+   "rule_id": "R-SAN-01",
+   "severity": "BLOCK",
+   "summary": "Listed on the NBCTF list: order ASO 07/26 (entry ASO 07/26, ASO (Seizure) of 2026-04-20, valid to 2028-04-20)"
+  }
+ ],
+ "score": {
+  "components": {
+   "B": "0",
+   "X": "98.6"
+  },
+  "decay": "0.4",
+  "hazard": {
+   "in": "0.371008",
+   "out": "0.260636"
+  },
+  "k": "8",
+  "level": "severe",
+  "lower_bound": false,
+  "score": 100,
+  "score_version": 2,
+  "shown": "100 \u00b7 severe"
+ },
+ "sources": [
+  {
+   "detail": "in: coverage 53.8%; out: coverage 68.1%; 16 address(es) read, 61 provider call(s), 21 s",
+   "evidence": {
+    "coverage": "0.537919",
+    "out": {
+     "coverage": "0.680937"
+    }
+   },
+   "source": "trace",
+   "status": "ok"
+  }
+ ],
+ "verdict": "BLOCK"
+}

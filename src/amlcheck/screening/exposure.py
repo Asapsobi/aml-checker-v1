@@ -134,10 +134,12 @@ def local_flags(
             ):
                 flags.setdefault(a, set()).add("sanctioned")
         if chain is Chain.TRON:
+            # Tether blacklisted its own USDT contract (2020) to lock USDT sent to it by mistake,
+            # and destroys it now and then: sending there is an error, not a risk (D-094).
             for a, event in conn.execute(
                 "SELECT address_norm, event_type FROM issuer_events e "  # noqa: S608 - placeholders only
                 "WHERE chain = 'tron' AND event_type IN ('AddedBlackList', 'RemovedBlackList') "
-                f"AND address_norm IN ({marks}) "
+                f"AND address_norm IN ({marks}) AND address_norm <> token_contract "
                 "AND NOT EXISTS (SELECT 1 FROM issuer_events x WHERE x.chain = e.chain "
                 "AND x.token_contract = e.token_contract AND x.address_norm = e.address_norm "
                 "AND x.event_type IN ('AddedBlackList', 'RemovedBlackList') "

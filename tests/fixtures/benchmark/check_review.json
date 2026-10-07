@@ -1,0 +1,99 @@
+{
+ "address": "TDpbgW7HJnNh7s7kHEqfBuWaeFqTZPBdNA",
+ "chain": "tron",
+ "check_id": "ff20e77d-d4e8-4cab-bef7-4b9b95c40748",
+ "checked_at": "2026-10-07T09:41:56.314918Z",
+ "contract": 2,
+ "detail_list": [
+  "Sanctioned entity: direct received 7.8%",
+  "Illicit activity: indirect received 1.6% (inferred)"
+ ],
+ "exposures": [
+  {
+   "address": "TMUS8vwpZJRR1E3qAmfkRiZ2nZwAx9D3zi",
+   "category": "sanctioned",
+   "confidence": null,
+   "direction": "in",
+   "entity": "NBCTF: order ASO 07/26",
+   "estimated_usdt": null,
+   "exposure_type": "direct",
+   "hop": 1,
+   "inferred": false,
+   "path": [
+    "TDpbgW7HJnNh7s7kHEqfBuWaeFqTZPBdNA",
+    "TMUS8vwpZJRR1E3qAmfkRiZ2nZwAx9D3zi"
+   ],
+   "percent": "0.077876",
+   "risk_type": "sanctioned_entity",
+   "volume_usdt": "15000"
+  },
+  {
+   "address": "TKFEGDZuwhvvRbCQ6RPhCfi7159nfZz5PQ",
+   "category": "suspected_malicious",
+   "confidence": "0.49",
+   "direction": "in",
+   "entity": "SUSPECTED_MALICIOUS",
+   "estimated_usdt": "1790.821146",
+   "exposure_type": "indirect",
+   "hop": 3,
+   "inferred": true,
+   "path": [
+    "TDpbgW7HJnNh7s7kHEqfBuWaeFqTZPBdNA",
+    "TYAPTr7w1NL2sSZLFTy2YZqUoWziCsNfgt",
+    "TT5A4jMtqyYYMwPr6tcbSzrrRBY1D5QmPF",
+    "TKFEGDZuwhvvRbCQ6RPhCfi7159nfZz5PQ"
+   ],
+   "percent": "0.015575",
+   "risk_type": "illicit_activity",
+   "volume_usdt": "3000"
+  }
+ ],
+ "findings": [
+  {
+   "rule_id": "R-EXP-01",
+   "severity": "REVIEW",
+   "summary": "Dealt directly with a sanctioned address TMUS8vwpZJRR1E3qAmfkRiZ2nZwAx9D3zi (received 15,000.00, sent 0.00 USDT)"
+  },
+  {
+   "rule_id": "R-EXP-02",
+   "severity": "INFO",
+   "summary": "7.8% of USDT received (15,000.00 of 192,613.00) came from flagged counterparties"
+  },
+  {
+   "rule_id": "R-SCR-01",
+   "severity": "REVIEW",
+   "summary": "Score 47 \u00b7 moderate reaches the review threshold 31"
+  }
+ ],
+ "score": {
+  "components": {
+   "B": "0",
+   "X": "47.1"
+  },
+  "decay": "0.4",
+  "hazard": {
+   "in": "0.079524",
+   "out": "0"
+  },
+  "k": "8",
+  "level": "moderate",
+  "lower_bound": false,
+  "score": 47,
+  "score_version": 2,
+  "shown": "47 \u00b7 moderate"
+ },
+ "sources": [
+  {
+   "detail": "in: coverage 50.9%; out: coverage 75.9%; 22 address(es) read, 89 provider call(s), 45 s",
+   "evidence": {
+    "coverage": "0.508891",
+    "out": {
+     "coverage": "0.758916"
+    }
+   },
+   "source": "trace",
+   "status": "ok"
+  }
+ ],
+ "verdict": "REVIEW"
+}

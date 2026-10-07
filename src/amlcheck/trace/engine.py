@@ -595,7 +595,7 @@ class TraceEngine:
             return "sanctioned", 2, None
         destroyed = self._conn.execute(
             "SELECT 1 FROM issuer_events WHERE chain = ? AND address_norm = ? "
-            "AND event_type = 'DestroyedBlackFunds' LIMIT 1",
+            "AND event_type = 'DestroyedBlackFunds' AND address_norm <> token_contract LIMIT 1",
             (chain.value, a),
         ).fetchone()
         if "frozen" in flags or destroyed:  # 3

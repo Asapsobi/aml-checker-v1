@@ -63,6 +63,19 @@ lower bound: a source was missing.
 The lines under the score say it in one line per risk type, e.g. `Sanctioned entity: indirect
 received 16.9%`. Findings marked **INFO** explain the score; they don't change the verdict.
 
+**Next to MistTrack.** On 10 wallets, amlcheck's level matched MistTrack's free check (MistTrack
+Light) on 9 ([benchmark](benchmark.md), P15):
+
+- MistTrack Light says only *Low* or *Risky*, and *Risky* means any risky funds at all. A `low`
+  score with REVIEW means the same: a small but real exposure. Look at it.
+- MistTrack has private labels that public data can't match. Where it shows large *direct* illicit
+  activity, amlcheck often shows the same money as *sanctioned* one or more hops away, or as
+  *suspected malicious* (inferred). The level usually still agrees.
+- amlcheck uses public lists that MistTrack Light doesn't show, such as Israel's NBCTF seizure
+  orders. It can BLOCK a wallet that MistTrack only calls Risky.
+- amlcheck's traces stop at exchanges, where funds mix; MistTrack follows money through them. So an
+  exchange's or an issuer's own wallets may be Risky there and `low` here.
+
 ### Findings
 
 REVIEW comes from R-EXP-01, R-FRZ-02, R-HEU-06 and R-SCR-01; BLOCK from R-SAN-01 and R-FRZ-01. The

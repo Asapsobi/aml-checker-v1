@@ -4,7 +4,7 @@
 address classification, risk scoring and a recorded decision trail. Local-first, built on RPC
 providers and indexers, no own nodes.
 
-> **Status:** P11 (calibration & 1.0) ready for review, release **v1.0.0**. Released: v0.1.0 – v0.10.0. Calibration is partly measured; see [docs/calibration.md](docs/calibration.md). The product is built from these docs with Claude Code,
+> **Status:** P15 (benchmark & 2.0) ready for review, release **v2.0.0**. Released: v0.1.0 – v1.0.0, v2.0.0a1, v2.0.0a2, v2.0.0b1. Next to MistTrack's free check, 9 of 10 wallets get the same level; see [docs/benchmark.md](docs/benchmark.md). The product is built from these docs with Claude Code,
 > phase by phase.
 
 ## Setup
@@ -34,6 +34,11 @@ commands on a fresh temporary data folder (sync, checks, investigate and trace, 
 batch, watchlist, monitor, exports with the hash chain re-verified, the API and the web UI) and prints
 PASS / FAIL per step. It needs the keys and the network, and never touches `~/.amlcheck`. Don't run
 other amlcheck commands at the same time: they share the TronGrid key's rate limit.
+
+**Benchmark against MistTrack.** `uv run python scripts/benchmark.py` keeps a set of wallets with
+what MistTrack's free check showed for each, and our live check (`import`, `record`, `reason`).
+`report` compares them and re-scores offline, so a change to `k`, `decay` or a weight can be tried
+without new checks ([methodology §14](docs/02-methodology.md), [results](docs/benchmark.md)).
 
 ## Commands
 
@@ -85,12 +90,13 @@ Development checks: `uv run pytest -q`, `uv run ruff check .`, `uv run ruff form
 | 03 | [Architecture](docs/03-architecture.md) | Builder | Stack, package layout, interfaces, flows, budgets, config, testing |
 | 04 | [Data sources](docs/04-data-sources.md) | Builder | Provider facts (checked Sept 2026) and the verification checklist |
 | 05 | [Data model](docs/05-data-model.md) | Builder | SQLite schema as migrations, retention |
-| 06 | [Acceptance tests](docs/06-acceptance-tests.md) | Builder, owner | AT-01 … AT-59: the definition of done |
-| 07 | [Roadmap](docs/07-roadmap.md) | Owner, management | Phases P0–P11, releases, exit criteria, timeline |
+| 06 | [Acceptance tests](docs/06-acceptance-tests.md) | Builder, owner | AT-01 … AT-73: the definition of done |
+| 07 | [Roadmap](docs/07-roadmap.md) | Owner, management | Phases P0–P15, releases, exit criteria, timeline |
 | 08 | [Backlog](docs/08-backlog.md) | Builder | Ticket-sized work per phase |
 | 09 | [Decisions](docs/09-decisions.md) | Owner | ADR log, seeded with the design's decisions |
 | 10 | [Open questions](docs/10-open-questions.md) | Owner | What the owner needs to answer, with proposed answers |
 | — | [Calibration](docs/calibration.md) | Owner | What the golden set measured, what it didn't yet, and the calibration notes |
+| — | [Benchmark](docs/benchmark.md) | Owner | Agreement with MistTrack on the owner's wallets: levels, mismatches and their reasons (§14) |
 | — | [Operator guide](docs/operator-guide.md) | Operator | The daily rhythm, reading a result, findings, cases, intelligence, troubleshooting |
 | — | [Scheduling](docs/scheduling.md) | Operator | Daily `sync` and `watch run`, `monitor run` every 10 minutes, with launchd, cron or a systemd timer |
 | — | [API](docs/api.md) | Integrator | The local API: auth, idempotency, endpoints, errors, the corridor mock |
