@@ -418,3 +418,68 @@ P13 PR (a paid HyperSync plan, batched multi-address queries, or fewer hops on B
 Fewer hops helps little: the time goes into reading a few busy (or old) first-hop counterparties
 one query at a time, not into depth. What would change it is reading many queued addresses in one
 HyperSync query (batching), or a faster plan. Live end-to-end on 2.0.0a2: **16 / 16 passed** (354 s).
+
+## P14 · TRON intelligence
+
+| ID | Test | Result |
+|---|---|---|
+| AT-69 | `test_lists.py::test_at69_uk_listing_blocks`, `::test_freshness_and_nbctf_not_required`, `::test_parse_uk`, `::test_parse_eu`, `::test_flags_and_names_across_lists`, `::test_a_shrunken_list_is_rejected` | Passed |
+| AT-71 | `test_nbctf.py::test_at71_import_and_block`, `::test_at71_official_export` (real rows, VS-20), `::test_an_orders_newest_import_wins`, `::test_the_export_zip_is_read`, `::test_look_alike_letters`, `::test_the_xlsx_export_is_refused` | Passed |
+| AT-72 | `test_neighbours.py::test_at72_neighbour_is_suspected_and_traced_through`, `::test_below_the_share_is_no_suspicion`, `::test_facts_behind_a_neighbour_are_still_found`, `::test_flagged_senders_are_followed_as_facts` | Passed |
+| AT-73 | — | Deferred with D-087 (VS-21: no risk tags) |
+
+**The lists on real data** (2026-10-07: `sync`, and the NBCTF export imported, in a scratch folder):
+
+| List | Addresses (TRON) | BLOCK only through this list |
+|---|---|---|
+| OFAC SDN | 1,050 (341) | — |
+| UK Sanctions List | 55 (49) | 4, with the EU list: on neither OFAC nor Tether's freeze list |
+| EU sanctions | 5 (3) | (counted with the UK) |
+| NBCTF seizure orders | 694 (679), in 30 of 38 orders | **103** (90 TRON, 13 `0x`); Tether had frozen 589 of the 679 TRON addresses |
+
+The look-alike reading recovered FO 02/24's address, typed with a Cyrillic "Н" and "с". OFAC lists the
+same wallet (47635, GAZA NOW), and so does the UK (CTD0004).
+
+**NBCTF live check:** `check TB5UPBTt…` (ASO 06/26) → BLOCK · 100. The finding reads "Listed on the
+NBCTF list: order ASO 06/26 (entry ASO 06/26, ASO (Seizure) of 2026-02-16, valid to 2028-02-16)";
+Tether has also frozen the address since 2025-12-15. The order's third wallet, `TP834zau…`, is
+named in its exposures ("NBCTF: order ASO 06/26"), direct and up to 3 hops in.
+
+**TRON tuning** (T-14.07, D-088; live, 2026-10-07, on the same synced data). Each run is a full
+check: cold on a copy emptied of cached chain data, then warm. Calls are both traces' TronGrid
+requests.
+
+| Setting | `TVvWhZyL…LeSsWP` | `TSArbmMU…VF2Rku` |
+|---|---|---|
+| Branch 5, 50 nodes, one read at a time (as P13) | 52 · moderate (sanctioned 29.4%, illicit 13.5% inferred) · 92 s · 343 calls | 42 · moderate (sanctioned 5.6% direct, 5.7% indirect) · 105 s · 393 calls |
+| Branch 8, 50 nodes | 50 cold, **46 warm** (sanctioned 15.6%) · 128 s · 383 calls | 42 · **177 s** · 408 calls |
+| Branch 5, 50 nodes, reads ahead (D-088) | 52, the same exposures · **45 s** · 343 calls | 42, the same · **51 s** · 393 calls |
+| **Branch 5, 100 nodes, reads ahead: the default now (D-090)** | **54** (sanctioned **47.6%**) · 94 s · 664 calls (384 in, 280 out) | **41** (adds illicit activity 2.2%, inferred) · 95 s · 655 calls (323 in, 332 out) |
+
+Warm, every setting: 2–8 s.
+
+Branch 8 finds less and costs more time. Reading ahead keeps the result and the request count of
+one read at a time, and halves the cold time. The owner chose 100 nodes (Q-39, D-090): much more
+distant risk within the budget, at 280–384 requests per direction (G8 restated to 400).
+
+**2.0.0a2 against 2.0.0b1** (T-14.08; live, 2026-10-07): both codes cold on copies of the same
+synced database. 2.0.0a2 ran from its tagged source; 2.0.0b1 read 50 nodes per direction, before
+D-090. At 100, `TVvWhZyL…` is 54 and `TSArbmMU…` 41 (the tuning table). The NBCTF wallets' traces
+ended within 23 nodes, so they are the same at 100.
+
+| Wallet | 2.0.0a2 (P13) | 2.0.0b1 (P14) |
+|---|---|---|
+| TRON `TMUS8vwp…` (NBCTF ASO 07/26 only: not frozen, on no other list) | REVIEW · 96 · severe (Tether-frozen: direct received 37.1%, sent 10.8%) · 27 s | **BLOCK** · 100: "Listed on the NBCTF list: order ASO 07/26"; the same counterparties now *sanctioned entity*, plus illicit activity 34.7% (inferred) · 16 s |
+| TRON `TDpbgW7H…` (received 15,000 USDT from `TMUS8vwp…`) | **NO_HITS · 0 · low**, no exposure · 33 s | **REVIEW · 47 · moderate**: sanctioned entity, direct received 7.8%; illicit activity 1.6% (inferred) · 16 s |
+| TRON `TVvWhZyL…` (Xinbi Guarantee) | REVIEW · 49 (sanctioned entity, indirect received 29.4%) · 81 s | REVIEW · 52 (the same, plus illicit activity 13.5% inferred) · 46 s |
+| TRON `TSArbmMU…` | REVIEW · 42 (sanctioned entity, direct 5.6%, indirect 5.7%) · 93 s | REVIEW · 42, the same · 51 s |
+
+The same TronGrid calls in both (343 and 393 on the busy wallets): reading ahead adds none. A
+wallet that received from an NBCTF-only seized address went from a clean result to REVIEW.
+`TVvWhZyL…` scored 60 on 2026-10-04 (P13 budget run); it has had new transfers since (203 → 214),
+and 2.0.0a2 gives it 49 on today's data.
+
+Live end-to-end on 2.0.0b1: **17 / 17 passed** (610 s). The new step imports the NBCTF sample, and
+ASO 06/26's address BLOCKs by name. The batch step took 182 s (P13: 16 s) because its BSC row ran
+to the 3-minute budget again. BSC's code path is unchanged in P14 (reads ahead are off on BSC), so
+this was most likely HyperSync's speed that day. The monitor step traced 2 real new senders (94 s).

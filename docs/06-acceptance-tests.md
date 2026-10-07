@@ -74,5 +74,9 @@
 | AT-66 | P12 | A BSC transfer of 78951.063947843887500723 USDT | Shown `78,951.06` in text, web and PDF; exact in JSON |
 | AT-67 | P13 | Trace fixtures with risk at hop 4 out and hop 5 in | Both found within budget; best-first order; partition sums to 1 per direction |
 | AT-68 | P13 | History of 3 years, cap reached at 2 years; then the cap reached inside 180 days | Check complete with "older history not read before …"; INCOMPLETE |
-| AT-69 | P14 | Address on a new list; an address derived as suspected | Exposure with the list's name; inferred exposure with confidence, never BLOCK |
+| AT-69 | P14 | An address on the UK (or EU) list; a stale UK list; NBCTF never imported | R-SAN-01 BLOCK naming the list and entry; stale → INCOMPLETE, still BLOCK; NBCTF `skipped`, not required |
 | AT-70 | P15 | **live** The owner's benchmark set | Level agreement reported; every mismatch has a reason; targets agreed with the owner met |
+| AT-71 | P14 | NBCTF files with TRON and EVM addresses in any cell, one with a bad checksum; the official export (real rows, VS-20) as CSV and as zip, with a look-alike-letter address, a passed validity date, a cancelled order, a re-import | Valid addresses imported as an `nbctf` snapshot with the order id; the bad one reported, not imported; a listed address BLOCKs, naming the order, its type and dates; the look-alike read as Latin; the passed date reported, still listed; a cancelled order not listed; an order's newest import wins |
+| AT-72 | P14 | Tracing in: a node that sent 30% of its outflow (≥ 1,000 USDT) to sanctioned or frozen addresses; one with 9%; one whose sender is sanctioned | First gives a `suspected_malicious` exposure (confidence 0.3, never BLOCK) and is traced through; second nothing; third: the sanctioned sender found as a fact |
+| AT-73 | P14 | ~~Tronscan tags (recorded answers) for a red-tagged and an exchange address~~ | Deferred with D-087 (VS-21) |
+

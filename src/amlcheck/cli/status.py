@@ -87,6 +87,7 @@ async def _health(rt: runtime.Runtime, conn: sqlite3.Connection) -> list[SourceH
         )
         return [
             await SanctionsSource(conn, rt.settings.freshness, clock=rt.clock).health(),
+            *[await s.health() for s in runtime.list_sources(rt, conn)],
             await TronFreezeSource(
                 TronFreezeIndex(tether, conn, clock=rt.clock), rt.settings.freshness, clock=rt.clock
             ).health(),

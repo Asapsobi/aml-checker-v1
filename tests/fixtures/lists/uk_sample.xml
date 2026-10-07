@@ -1,0 +1,347 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Designations xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+  <DateGenerated>02/10/2026</DateGenerated>
+  <Designation>
+    <LastUpdated>09/09/2026</LastUpdated>
+    <DateDesignated>26/03/2026</DateDesignated>
+    <UniqueID>GHR0190</UniqueID>
+    <Names>
+      <Name>
+        <Name6>XINBI COMPANY LIMITED</Name6>
+        <NameType>Primary Name</NameType>
+      </Name>
+    </Names>
+    <RegimeName>The Global Human Rights Sanctions Regulations 2020</RegimeName>
+    <IndividualEntityShip>Entity</IndividualEntityShip>
+    <DesignationSource>UK</DesignationSource>
+    <SanctionsImposed>Asset freeze|Director Disqualification Sanction</SanctionsImposed>
+    <SanctionsImposedIndicators>
+      <AssetFreeze>true</AssetFreeze>
+      <ArmsEmbargo>false</ArmsEmbargo>
+      <TargetedArmsEmbargo>false</TargetedArmsEmbargo>
+      <CharteringOfShips>false</CharteringOfShips>
+      <ClosureOfRepresentativeOffices>false</ClosureOfRepresentativeOffices>
+      <CrewServicingOfShipsAndAircraft>false</CrewServicingOfShipsAndAircraft>
+      <Deflag>false</Deflag>
+      <PreventionOfBusinessArrangements>false</PreventionOfBusinessArrangements>
+      <ProhibitionOfPortEntry>false</ProhibitionOfPortEntry>
+      <TravelBan>false</TravelBan>
+      <PreventionOfCharteringOfShips>false</PreventionOfCharteringOfShips>
+      <PreventionOfCharteringOfShipsAndAircraft>false</PreventionOfCharteringOfShipsAndAircraft>
+      <TechnicalAssistanceRelatedToAircraft>false</TechnicalAssistanceRelatedToAircraft>
+      <TrustServicesSanctions>false</TrustServicesSanctions>
+      <DirectorDisqualificationSanction>true</DirectorDisqualificationSanction>
+    </SanctionsImposedIndicators>
+    <OtherInformation>Xinbi is associated with the following crypto addresses:
+
+
+TW5tokvhEfrb77z98Rc8HqbkzQJ6sxYtGX; TBKpozurdWLrbKkxtDqkveeq1dSB8Axj3V; TWqcMjV7Wq2RHe2CSiKQHpkn6A7B2AWUPe; TG83Fk56S2mycAUMYHZyZp9wMg6DCf4bUn; TYkE8VwX1SGHM3Q2CA29nka5U2F2khKAj5; TEECjwHqVG8sDmM3VtscjuCaRe5p351MU7; TDU61o35UEe5hdB3R16c116DrPSV4kiyKz; TKRNCETxbiMmyyMraCkgdXKdLr1ZkmKxV5; TTWRf2MD6zJ26bS4uKCNrcp84aAr7AmTjm; TYvjt4ZKfsipHjA52nzgjUjDBF622SLCih; TXHX2NUvcgft4zs6MkkUtdNVERPTavHDWN; TWPma8xH48AEN93x2krdukV9e1j6sPsBeS;
+TK3n8pGHvDTcK53mpfeDAMzdwjb22qvFU3; TGSGw4aUeAMNCfD8WqLRLe8ErQiJ1vqghj; TBNjCi1d5Ns6ec5aMp28LpfKcX7xTpykAN; THH9JJNbLDN7qs1CyTxJQEjhC9y5FnZUhU; TQhT3QWAbFiy6GEYuBrbK97uP3XVmTpRD8; TXka5xc6mEkcoVXR7F2TFDKernyLt3XyW4; TH1yknksde3pBY3oWVhUxVTbWbLqdafqYT; TLHWeZcDmXk6idnaGwsQ9CEmK24KpoGgRM; TTmvr41Fa9LeWJQ8NKQ5t4wFUspgEA1mJF; THifikwE6RtxYNWdcP9CWUjXS8Gh1xBCoa; TR983hNyUNgrNSB1xncG9thZNhgYpbNvSh; TNwe3WoEX6XrQ5NPAeWPkvpTtdaf27XYxK; TGcewGsDLy7Fzc66kXXEB8Kh2b6u2XCvnV; TYq3iRujcBELXX89i9JY32UmLxcyZAJe7E; TRyQivSkQChryfnYnE1bUmJhnL3TvKUpvS; TGjYoJLhfAiD2BRV9hwCeuHhZ54D3gLKTd; TXT9atp8qBMXKbFYnRyWkM88UXYyobQNLP; TThRMUSidD4gQeCnu56cFfCmqS421Nmbu7; TAkpWPt2JZdiLSkG7ZX2VAQkZQsnGZ1nqh; TZ8zsUe9M9tkhrFtfE7vMMmEwgVEF3n2UN; TM9c5uR2UKwd5fMySgaoYSjphRyi3AjAtc; TTjHn8qNVxazB3UroiekGRPuM2w2GwvNbn; TWHwre81Mv4hvupNdHnsYX9FPocm29dQQQ; TT4WKPQscK7fkxrPj1E9PjZp1HTVBUpoTm; TYZKYK2fbvw3EAPES2daFvoV4DqPna43Jd; TZ42sU5kQ2n5rLZ6PhEGkmfLtmHjoi2vpr; TF7LUSoZQyDFxTFzCL11saBHAqMAyPh8dK; TSmcHwvTR27Ao4NN8HhPFCVcPU5aTEqLDt.</OtherInformation>
+    <UKStatementofReasons>
+The Secretary of State considers that there are reasonable grounds to suspect that Xinbi Company Limited (“Xinbi”) is an involved person within the meaning of the Global Human Rights Sanctions Regulations 2020 on the basis of the following grounds: (1) Xinbi is or has been involved in providing financial services or making available funds, economic resources, goods or technology, knowing or having reasonable cause to suspect that those financial services or funds will or may contribute to human rights abuses, and; (2) Xinbi is or has been involved in profiting financially or otherwise obtaining a benefit from human rights abuses. Xinbi has enabled and profited from the operation of scam centres in Southeast Asia. The treatment of individuals in these scam centres amounts to a serious abuse of the right not to be subjected to cruel, inhumane, or degrading treatment or punishment, and of the right to be free from slavery, not to be held in servitude or required to perform forced or compulsory labour.  
+</UKStatementofReasons>
+    <Websites>
+      <Website>Xinbi.com </Website>
+    </Websites>
+    <EntityDetails>
+      <Entity>
+        <Subsidiaries>
+          <Subsidiary>Xinbi Guarantee </Subsidiary>
+        </Subsidiaries>
+      </Entity>
+    </EntityDetails>
+  </Designation>
+  <Designation>
+    <LastUpdated>26/05/2026</LastUpdated>
+    <DateDesignated>26/05/2026</DateDesignated>
+    <UniqueID>RUS3602</UniqueID>
+    <Names>
+      <Name>
+        <Name6>EXMO EXCHANGE LIMITED</Name6>
+        <NameType>Primary Name</NameType>
+      </Name>
+      <Name>
+        <Name6>EXMO</Name6>
+        <NameType>Primary Name Variation</NameType>
+      </Name>
+      <Name>
+        <Name6>EXMO EXCHANGE</Name6>
+        <NameType>Primary Name Variation</NameType>
+      </Name>
+      <Name>
+        <Name6>EXMO EXCHANGE LTD</Name6>
+        <NameType>Primary Name Variation</NameType>
+      </Name>
+      <Name>
+        <Name6>EXMO GROUP</Name6>
+        <NameType>Primary Name Variation</NameType>
+      </Name>
+      <Name>
+        <Name6>EXMO PAYMENTS LTD.</Name6>
+        <NameType>Primary Name Variation</NameType>
+      </Name>
+      <Name>
+        <Name6>EXMO.COM</Name6>
+        <NameType>Primary Name Variation</NameType>
+      </Name>
+      <Name>
+        <Name6>EXMO.ME</Name6>
+        <NameType>Primary Name Variation</NameType>
+      </Name>
+    </Names>
+    <RegimeName>The Russia (Sanctions) (EU Exit) Regulations 2019</RegimeName>
+    <IndividualEntityShip>Entity</IndividualEntityShip>
+    <DesignationSource>UK</DesignationSource>
+    <SanctionsImposed>Asset freeze|Trust Services Sanctions|Director Disqualification Sanction|Internet Services Sanctions: see "Other Information" | Correspondent Banking Sanctions and processing payments</SanctionsImposed>
+    <SanctionsImposedIndicators>
+      <AssetFreeze>true</AssetFreeze>
+      <ArmsEmbargo>false</ArmsEmbargo>
+      <TargetedArmsEmbargo>false</TargetedArmsEmbargo>
+      <CharteringOfShips>false</CharteringOfShips>
+      <ClosureOfRepresentativeOffices>false</ClosureOfRepresentativeOffices>
+      <CrewServicingOfShipsAndAircraft>false</CrewServicingOfShipsAndAircraft>
+      <Deflag>false</Deflag>
+      <PreventionOfBusinessArrangements>false</PreventionOfBusinessArrangements>
+      <ProhibitionOfPortEntry>false</ProhibitionOfPortEntry>
+      <TravelBan>false</TravelBan>
+      <PreventionOfCharteringOfShips>false</PreventionOfCharteringOfShips>
+      <PreventionOfCharteringOfShipsAndAircraft>false</PreventionOfCharteringOfShipsAndAircraft>
+      <TechnicalAssistanceRelatedToAircraft>false</TechnicalAssistanceRelatedToAircraft>
+      <TrustServicesSanctions>true</TrustServicesSanctions>
+      <DirectorDisqualificationSanction>true</DirectorDisqualificationSanction>
+    </SanctionsImposedIndicators>
+    <OtherInformation>Internet Services Sanctions: When an individual or entity is designated for the purposes of this measure, social media services, internet access services and application stores must take reasonable steps to prevent users in the UK from accessing content, sites or applications provided by designated individuals or entities.
+
+Correspondent Banking Sanctions and processing payments:  Where this prohibition applies, UK credit or financial institutions are prohibited from establishing or continuing a correspondent banking relationship with a designated person, and from processing payments to, from or via a designated person. The measures will also apply to credit or financial institutions "owned or controlled" by the designated person (as set out in the regulations).
+
+EXMO EXCHANGE LIMITED is associated with the following crypto wallet addresses: 
+TJqUC56SDZ373JYRurzXtMcor2HQvN9BaU
+TVa1p4aTVoHuF4EDGthn57FbKNbu4DRJkQ 
+TCQqA58EmX6AnUZKPCogL2Q441B4ThbJGN </OtherInformation>
+    <UKStatementofReasons>
+The Secretary of State considers that there are reasonable grounds to suspect that EXMO EXCHANGE LIMITED is or has been involved in obtaining a benefit from or supporting the Government of Russia by providing financial services, or making available funds, economic resources or technology, to an involved person, who is carrying on business in a sector of strategic significance to the Government of Russia.
+The Secretary of State considers that there are reasonable grounds to suspect that EXMO EXCHANGE LIMITED is or has been involved in obtaining a benefit from or supporting the Government of Russia by carrying on business in a sector of strategic significance to the Government of Russia, namely the Russian financial services sector.
+</UKStatementofReasons>
+    <Addresses>
+      <Address>
+        <AddressLine1>2 Kingdom Street</AddressLine1>
+        <AddressLine6>LONDON</AddressLine6>
+        <AddressPostalCode>W2 6JP</AddressPostalCode>
+        <AddressCountry>United Kingdom</AddressCountry>
+      </Address>
+    </Addresses>
+    <PhoneNumbers>
+      <PhoneNumber>02080682555</PhoneNumber>
+    </PhoneNumbers>
+    <Websites>
+      <Website>https://exmo.com/</Website>
+    </Websites>
+    <EntityDetails>
+      <Entity>
+        <TypeOfEntities>
+          <TypeOfEntity>Limited Company</TypeOfEntity>
+        </TypeOfEntities>
+        <Subsidiaries>
+          <Subsidiary>EXMO POLAND SP Z.O.O.</Subsidiary>
+        </Subsidiaries>
+        <BusinessRegistrationNumbers>
+          <BusinessRegistrationNumber>UK Company number - 11655602
+EVA ID (IP Identification) - EEA90DD050C635EC8F637E8DB2F69969
+Legal Entity Identifier - 984500B899H9EED3B354 </BusinessRegistrationNumber>
+        </BusinessRegistrationNumbers>
+      </Entity>
+    </EntityDetails>
+  </Designation>
+  <Designation>
+    <LastUpdated>04/08/2026</LastUpdated>
+    <DateDesignated>29/06/2012</DateDesignated>
+    <UniqueID>AFG0001</UniqueID>
+    <OFSIGroupID>12703</OFSIGroupID>
+    <UNReferenceNumber>TAe.010</UNReferenceNumber>
+    <Names>
+      <Name>
+        <Name6>HAJI KHAIRULLAH HAJI SATTAR MONEY EXCHANGE</Name6>
+        <NameType>Primary Name</NameType>
+      </Name>
+      <Name>
+        <Name6>Haji Alim Hawala</Name6>
+        <NameType>Alias</NameType>
+      </Name>
+      <Name>
+        <Name6>Haji Hakim Hawala</Name6>
+        <NameType>Alias</NameType>
+      </Name>
+      <Name>
+        <Name6>Haji Khair Ullah Money Service</Name6>
+        <NameType>Alias</NameType>
+      </Name>
+      <Name>
+        <Name6>Haji Khairullah and Abdul Sattar and Company</Name6>
+        <NameType>Alias</NameType>
+      </Name>
+      <Name>
+        <Name6>Haji Khairullah Money Exchange</Name6>
+        <NameType>Alias</NameType>
+      </Name>
+      <Name>
+        <Name6>Haji Khairullah-Haji Sattar Sarafi</Name6>
+        <NameType>Alias</NameType>
+      </Name>
+      <Name>
+        <Name6>Haji Salam Hawala</Name6>
+        <NameType>Alias</NameType>
+      </Name>
+      <Name>
+        <Name6>Sarafi-yi Haji Khairullah Haji Satar Haji Esmatullah</Name6>
+        <NameType>Alias</NameType>
+      </Name>
+    </Names>
+    <NonLatinNames>
+      <NonLatinName>
+        <NameNonLatinScript>حاجی خيرالله و حاجی ستار صرافی</NameNonLatinScript>
+      </NonLatinName>
+    </NonLatinNames>
+    <RegimeName>The Afghanistan (Sanctions) (EU Exit) Regulations 2020</RegimeName>
+    <IndividualEntityShip>Entity</IndividualEntityShip>
+    <DesignationSource>UN</DesignationSource>
+    <SanctionsImposed>Asset freeze</SanctionsImposed>
+    <SanctionsImposedIndicators>
+      <AssetFreeze>true</AssetFreeze>
+      <ArmsEmbargo>false</ArmsEmbargo>
+      <TargetedArmsEmbargo>false</TargetedArmsEmbargo>
+      <CharteringOfShips>false</CharteringOfShips>
+      <ClosureOfRepresentativeOffices>false</ClosureOfRepresentativeOffices>
+      <CrewServicingOfShipsAndAircraft>false</CrewServicingOfShipsAndAircraft>
+      <Deflag>false</Deflag>
+      <PreventionOfBusinessArrangements>false</PreventionOfBusinessArrangements>
+      <ProhibitionOfPortEntry>false</ProhibitionOfPortEntry>
+      <TravelBan>false</TravelBan>
+      <PreventionOfCharteringOfShips>false</PreventionOfCharteringOfShips>
+      <PreventionOfCharteringOfShipsAndAircraft>false</PreventionOfCharteringOfShipsAndAircraft>
+      <TechnicalAssistanceRelatedToAircraft>false</TechnicalAssistanceRelatedToAircraft>
+      <TrustServicesSanctions>false</TrustServicesSanctions>
+      <DirectorDisqualificationSanction>false</DirectorDisqualificationSanction>
+    </SanctionsImposedIndicators>
+    <OtherInformation>Afghan Money Service Provider License Number: 044. Haji Khairullah Haji Sattar Money Exchange was used by Taliban leadership to transfer money to Taliban commanders to fund fighters and operations in Afghanistan as of 2011. Active in Kunar Province. Associated with Abdul Sattar Abdul Manan (TAi.162) and Khairullah Barakzai Khudai Nazar (TAi.163). INTERPOL-UN Security Council Special Notice web link:  https://www.interpol.int/en/How-we-work/Notices/View-UN-Notices-Individuals.</OtherInformation>
+    <UKStatementofReasons>
+</UKStatementofReasons>
+    <Addresses>
+      <Address>
+        <AddressLine1>Ansari Market, 2nd Floor</AddressLine1>
+        <AddressLine6>Nimroz Province</AddressLine6>
+        <AddressCountry>Afghanistan</AddressCountry>
+      </Address>
+      <Address>
+        <AddressLine1>Branch Office 10</AddressLine1>
+        <AddressLine2>Suite numbers 196-197, 3rd Floor</AddressLine2>
+        <AddressLine3>Khorasan Market</AddressLine3>
+        <AddressLine5>Herat City</AddressLine5>
+        <AddressLine6>Herat Province</AddressLine6>
+        <AddressCountry>Afghanistan</AddressCountry>
+      </Address>
+      <Address>
+        <AddressLine1>Branch Office 11</AddressLine1>
+        <AddressLine2>Sarafi Market</AddressLine2>
+        <AddressLine5>Zaranj District</AddressLine5>
+        <AddressLine6>Nimroz Province</AddressLine6>
+        <AddressCountry>Afghanistan</AddressCountry>
+      </Address>
+      <Address>
+        <AddressLine1>Branch Office 12</AddressLine1>
+        <AddressLine2>Sarafi Market</AddressLine2>
+        <AddressLine3>Wesh</AddressLine3>
+        <AddressLine5>Spin Boldak District</AddressLine5>
+        <AddressCountry>Afghanistan</AddressCountry>
+      </Address>
+      <Address>
+        <AddressLine1>Branch Office 13</AddressLine1>
+        <AddressLine2>Sarafi Market</AddressLine2>
+        <AddressLine6>Farah</AddressLine6>
+        <AddressCountry>Afghanistan</AddressCountry>
+      </Address>
+      <Address>
+        <AddressLine1>Branch Office 14</AddressLine1>
+        <AddressLine6>Dubai</AddressLine6>
+        <AddressCountry>United Arab Emirates</AddressCountry>
+      </Address>
+      <Address>
+        <AddressLine1>Branch Office 15</AddressLine1>
+        <AddressLine6>Zahedan</AddressLine6>
+        <AddressCountry>Iran</AddressCountry>
+      </Address>
+      <Address>
+        <AddressLine1>Branch Office 16</AddressLine1>
+        <AddressLine6>Zabul</AddressLine6>
+        <AddressCountry>Iran</AddressCountry>
+      </Address>
+      <Address>
+        <AddressLine1>Branch Office 6</AddressLine1>
+        <AddressLine2>Shop number 237</AddressLine2>
+        <AddressLine3>Shah Zada Market (also known as Sarai Shahzada)</AddressLine3>
+        <AddressLine4>Puli Khishti area</AddressLine4>
+        <AddressLine5>Police District 1</AddressLine5>
+        <AddressLine6>Kabul</AddressLine6>
+        <AddressCountry>Afghanistan</AddressCountry>
+      </Address>
+      <Address>
+        <AddressLine1>Branch Office 7</AddressLine1>
+        <AddressLine2>Shop numbers 21 and 22, 2nd Floor</AddressLine2>
+        <AddressLine3>Kandahar City Sarafi Market</AddressLine3>
+        <AddressLine5>Kandahar City</AddressLine5>
+        <AddressLine6>Kandahar Province</AddressLine6>
+        <AddressCountry>Afghanistan</AddressCountry>
+      </Address>
+      <Address>
+        <AddressLine1>Branch Office 8</AddressLine1>
+        <AddressLine2>Gereshk City</AddressLine2>
+        <AddressLine3>Nahr-e Saraj District</AddressLine3>
+        <AddressLine6>Helmand Province</AddressLine6>
+        <AddressCountry>Afghanistan</AddressCountry>
+      </Address>
+      <Address>
+        <AddressLine1>Branch Office 9</AddressLine1>
+        <AddressLine2>Lashkar Gah Bazaar</AddressLine2>
+        <AddressLine3>Lashkar Gah</AddressLine3>
+        <AddressLine4>Lashkar Gah District</AddressLine4>
+        <AddressLine6>Helmand Province</AddressLine6>
+        <AddressCountry>Afghanistan</AddressCountry>
+      </Address>
+      <Address>
+        <AddressLine1>Haji Ghulam Nabi Market, 2nd Floor</AddressLine1>
+        <AddressLine2>Lashkar Gah District</AddressLine2>
+        <AddressLine6>Helmand Province</AddressLine6>
+        <AddressCountry>Afghanistan</AddressCountry>
+      </Address>
+      <Address>
+        <AddressLine1>Khorasan Market</AddressLine1>
+        <AddressLine2>Shahre Naw</AddressLine2>
+        <AddressLine3>District 5</AddressLine3>
+        <AddressLine5>Herat City</AddressLine5>
+        <AddressLine6>Herat Province</AddressLine6>
+        <AddressCountry>Afghanistan</AddressCountry>
+      </Address>
+      <Address>
+        <AddressLine1>New Sarafi Market, 2nd Floor</AddressLine1>
+        <AddressLine5>Kandahar City</AddressLine5>
+        <AddressLine6>Kandahar Province</AddressLine6>
+        <AddressCountry>Afghanistan</AddressCountry>
+      </Address>
+      <Address>
+        <AddressLine1>Safi Market</AddressLine1>
+        <AddressLine5>Kandahar City</AddressLine5>
+        <AddressLine6>Kandahar Province</AddressLine6>
+        <AddressCountry>Afghanistan</AddressCountry>
+      </Address>
+    </Addresses>
+    <PhoneNumbers>
+      <PhoneNumber>-103495</PhoneNumber>
+      <PhoneNumber>-101823</PhoneNumber>
+      <PhoneNumber>-222831</PhoneNumber>
+      <PhoneNumber>0202-104748</PhoneNumber>
+      <PhoneNumber>-59763</PhoneNumber>
+    </PhoneNumbers>
+    <EmailAddresses>
+      <EmailAddress>helmand_exchange_msp@yahoo.com</EmailAddress>
+    </EmailAddresses>
+  </Designation>
+</Designations>

@@ -167,7 +167,13 @@ class Trace(_Section):
     coverage_share: Share = Decimal("0.8")
     min_attributed_usdt: Annotated[Decimal, Field(ge=0)] = Decimal("100")
     hop_window_days: PosInt = 30
-    max_nodes: PosInt = 50  # per direction (§12.2)
+    max_nodes: PosInt = 100  # per direction (§12.2); TRON (D-090, owner's choice)
+    bsc_max_nodes: PosInt = 50  # BSC: its reads are slow on HyperSync's free plan (D-082)
+    #: Queued items whose reads run at once, per direction (D-088): the order and the result are
+    #: the same as one at a time, only sooner; the provider's limiter paces them. BSC: one at a
+    #: time, since HyperSync's free budget is spent by the query, not by the second.
+    parallel_reads: PosInt = 4
+    bsc_parallel_reads: PosInt = 1
     time_budget_seconds: PosInt = (
         180  # both directions together; running out isn't a failure (D-080)
     )
@@ -248,6 +254,28 @@ class Bsc(_Section):
     rpc_requests_per_second: PosFloat = 2.0
 
 
+class Intel(_Section):
+    """Methodology §13.2 (D-086): freeze neighbours, inferred while tracing."""
+
+    neighbour_share: Share = Decimal("0.2")
+    neighbour_min_usdt: PosDec = Decimal("1000")
+
+
+class Lists(_Section):
+    """Methodology §13.1: sanctions lists beside OFAC (D-084, D-085). UK and EU are downloaded by
+    `sync` and required; NBCTF is imported from the owner's files and not required."""
+
+    uk: bool = True
+    eu: bool = True
+    nbctf: bool = True
+    uk_url: str = "https://sanctionslist.fcdo.gov.uk/docs/UK-Sanctions-List.xml"
+    # The Commission's public download needs its published access parameter; lists.py adds it.
+    eu_url: str = (
+        "https://webgate.ec.europa.eu/fsd/fsf/public/files/xmlFullSanctionsList_1_1/content"
+    )
+    min_kept_share: Share = Decimal("0.8")  # as OFAC: > 20% fewer addresses → rejected
+
+
 class Settings(_Section):
     freshness: Freshness = Freshness()
     network: Network = Network()
@@ -262,6 +290,8 @@ class Settings(_Section):
     web: Web = Web()
     operator: Operator = Operator()
     ofac: Ofac = Ofac()
+    lists: Lists = Lists()
+    intel: Intel = Intel()
     tron: Tron = Tron()
     bsc: Bsc = Bsc()
 
@@ -290,12 +320,14 @@ class Secrets:
     trongrid_api_key: str | None = None
     hypersync_token: str | None = None
     api_token: str | None = None
+    tronscan_api_key: str | None = None  # P14 (D-087): Tronscan account tags
 
     def __repr__(self) -> str:
         shown = {
             "trongrid_api_key": bool(self.trongrid_api_key),
             "hypersync_token": bool(self.hypersync_token),
             "api_token": bool(self.api_token),
+            "tronscan_api_key": bool(self.tronscan_api_key),
         }
         return f"Secrets({shown})"
 
@@ -304,6 +336,7 @@ SECRET_VARS = {
     "trongrid_api_key": "AMLCHECK_TRONGRID_API_KEY",
     "hypersync_token": "AMLCHECK_HYPERSYNC_TOKEN",
     "api_token": "AMLCHECK_API_TOKEN",
+    "tronscan_api_key": "AMLCHECK_TRONSCAN_API_KEY",
 }
 
 
@@ -363,4 +396,5 @@ def load_secrets(
         trongrid_api_key=get(SECRET_VARS["trongrid_api_key"]),
         hypersync_token=get(SECRET_VARS["hypersync_token"]),
         api_token=get(SECRET_VARS["api_token"]),
+        tronscan_api_key=get(SECRET_VARS["tronscan_api_key"]),
     )

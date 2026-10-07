@@ -432,6 +432,7 @@ Order matters: it breaks ties in terminal test 4.
 | 15 | `exchange_regulated` | 0.0 | operator, import | no | |
 | 16 | `payment_processor` | 0.0 | operator, import | no | |
 | 17 | `own_or_trusted` | 0.0 | operator, import | no | `labels.csv` tag `allowlist`, own wallets |
+| 18 | `suspected_malicious` | 0.6 | inferred | no | a freeze neighbour (§13.2); `category_version` 2 |
 | — | `layering` | 0.5 | inferred | no (R-TRC-05) | annotation only (§6.1) |
 
 Entity kinds are the categories 3–17 that the operator may assign.
@@ -646,7 +647,8 @@ own 90-day window (§5).
 | directions | in | **in and out**, at the same time, one shared deadline | Outgoing risk counts (D-075) |
 | `max_hops` | 3 | **5** on TRON | D-075 |
 | `bsc_max_hops` | 3 | **3** on BSC | HyperSync's free plan can't reach 5 in 3 minutes (D-082) |
-| `max_nodes` | 40 | **50 per direction** | Bounds requests; reaching it is `untraced:budget` (§7.7) |
+| `max_nodes` | 40 | **100 per direction on TRON** (D-090); 50 on BSC (`bsc_max_nodes`) | Bounds requests; reaching it is `untraced:budget` (§7.7) |
+| `parallel_reads` | 1 | **4** on TRON, 1 on BSC (`bsc_parallel_reads`) | Reads run ahead; order and result unchanged (D-088) |
 | `time_budget_seconds` | 300, a failure | **180 for both directions**, not a failure | D-079, D-080 |
 | `min_attributed_usdt` | 100, on the proportional estimate | 100, on the **path volume** | D-081 |
 
@@ -661,6 +663,13 @@ The money closest to the target and largest comes first, so the node and time bu
 an exposure can matter most. The partition still sums to 1: every unit of flow ends in exactly one
 bucket (§7.8).
 
+**Reads ahead** (D-088). While one item is taken, the reads of the next queued items (up to
+`parallel_reads` in all) run at once, paced by the provider's limiter. Only items that will need a
+read get one: not past `max_hops`, not ended by a local test, within the node budget. Items are still
+taken one at a time in the order above, and each uses its read's answer. So the trace, and the number
+of requests, are those of reading one at a time; it only comes sooner. A read ahead that fails is
+read again by its step, which reports a failure as before.
+
 **Pruning (§7.4) criterion (c)** becomes: the sender's path bottleneck `min(parent bottleneck, a_j)`
 ≥ `min_attributed_usdt`. A large payment through a busy middle address is followed even when its
 proportional share is tiny: that is the case D-078 found.
@@ -672,4 +681,52 @@ followed, R-TRC-04 says when it is low, and the check stays decidable. A read th
 
 R-TRC-01 to R-TRC-05 keep reading the inbound trace. Outbound risk is in the exposures (§11.1), with
 `direction` `out`.
+
+---
+
+## 13. TRON intelligence (P14)
+
+> TRC20 first (D-083). New sources of who an address is; how they score is §11.
+
+### 13.1 Lists that BLOCK
+
+| List | Source | Addresses | Refresh | Required |
+|---|---|---|---|---|
+| OFAC SDN (`ofac_sdn`) | §2.2 | `Digital Currency Address` ids | `sync`, 48 h | yes |
+| UK Sanctions List (`uk_sanctions`) | FCDO XML, OGL v3.0 (VS-18) | TRON and EVM addresses in each designation's text | `sync`, 48 h | yes |
+| EU Financial Sanctions (`eu_sanctions`) | Commission FSF XML, Decision 2011/833/EU (VS-19) | addresses in each entity's text | `sync`, 48 h | yes |
+| NBCTF seizure orders (`nbctf`) | the official export (matal.mod.gov.il, CSV), or order files, downloaded by the owner (VS-20) | each order's `Assets`; any cell of an order file | `lists import-nbctf` | no |
+
+An address from free text is kept only when it passes its checksum (TRON base58check; `0x` with 40
+hex characters). A listing on any of them is R-SAN-01, BLOCK, naming the list (D-084, D-085). For
+exposures (§11.1) every list is `sanctioned`; the entity names the list (`UK sanctions: XINBI COMPANY
+LIMITED`), OFAC first when several list it.
+
+A TRON address typed with look-alike Cyrillic or Greek letters is read as Latin only when its
+checksum then holds (NBCTF FO 02/24); `0x` addresses have no checksum to confirm a reading, so never.
+In the NBCTF export each row is an order, and the finding shows its type and dates
+(`ASO (Seizure) of 2026-02-16, valid to 2028-02-16`). A cancelled order is not listed. An order
+imported again with wallets, or cancelled, replaces what was listed for it; one the new files leave
+out stays (`--replace` starts over). An order whose validity date has passed stays listed while NBCTF
+publishes it (Q-38).
+
+### 13.2 Freeze neighbours (`suspected_malicious`, inferred)
+
+When a trace reads an address at hop ≥ 1, after test 9 its window's flows **in the direction the
+trace does not follow** are compared with local flags (§3.3). Tracing in: `share = USDT it sent to
+sanctioned or frozen addresses / all it sent`; tracing out: what it received from them. (In the
+followed direction the trace reaches those addresses itself and counts them as facts.) If
+`share ≥ [intel] neighbour_share` (0.2) and that amount ≥ `[intel] neighbour_min_usdt` (1,000), the
+node is marked `SUSPECTED_MALICIOUS` with confidence `min(1, share)` and **the trace goes on through
+it**: it is not an end, so facts behind it (a sanctioned sender) are still found and win. It gives an
+inferred exposure `suspected_malicious` at its hop (§11.1: path volume up to it; capped with the
+exposures behind it at the first-hop edge). §11.2: risk type `illicit_activity`, weight 0.6 ×
+confidence. Not stored: it is judged again whenever the address is read. Never BLOCK.
+
+### 13.3 Tronscan tags (when the owner's key is set, D-087)
+
+**Deferred** (D-087). VS-21 found no risk tag on any sanctioned or frozen address tried, and the API
+takes one call per address a check reaches (100+ per check). The design, if revisited: look up only
+addresses a check reaches, cached for `[intel] tag_days` (7); red tags → `scam`, `stolen_funds` or
+`high_risk`; exchange tags → a named entity.
 

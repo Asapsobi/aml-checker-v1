@@ -93,7 +93,13 @@ branch = 5
 coverage_share = 0.8
 min_attributed_usdt = 100
 hop_window_days = 30
-max_nodes = 50
+# Addresses read per direction: 100 on TRON (D-090), 50 on BSC.
+max_nodes = 100
+bsc_max_nodes = 50
+# Queued addresses read at once per direction (D-088): the same result as one at a time, sooner.
+# BSC reads one at a time: HyperSync's free budget is spent per query.
+parallel_reads = 4
+bsc_parallel_reads = 1
 time_budget_seconds = 180
 hub_transfers = 1000
 min_flagged_usdt = 1000
@@ -133,6 +139,23 @@ name = ""
 sdn_url = "https://sanctionslistservice.ofac.treas.gov/api/PublicationPreview/exports/SDN_XML.ZIP"
 changes_url = "https://sanctionslistservice.ofac.treas.gov/changes/latest"
 min_kept_share = 0.8
+
+# Methodology §13.1 (D-084, D-085): sanctions lists beside OFAC. UK and EU are downloaded by
+# `amlcheck sync` and required; NBCTF is imported from your files (`lists import-nbctf`).
+[lists]
+uk = true
+eu = true
+nbctf = true
+uk_url = "https://sanctionslist.fcdo.gov.uk/docs/UK-Sanctions-List.xml"
+eu_url = "https://webgate.ec.europa.eu/fsd/fsf/public/files/xmlFullSanctionsList_1_1/content"
+min_kept_share = 0.8
+
+# Methodology §13.2 (D-086): a traced address that sent (tracing in) or received (tracing out)
+# this share of its flow, and at least this much, to or from sanctioned or frozen addresses is a
+# suspected neighbour: an inferred exposure at its hop, never BLOCK; the trace goes on through it.
+[intel]
+neighbour_share = 0.2
+neighbour_min_usdt = 1000
 
 # Data sources §3, §6. TronGrid limits are per key and unpublished: set them here.
 [tron]

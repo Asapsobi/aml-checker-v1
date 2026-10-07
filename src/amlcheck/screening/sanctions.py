@@ -176,29 +176,31 @@ def store(
     conn: sqlite3.Connection,
     data: bytes,
     parsed: ParsedList,
-    settings: Ofac,
+    min_kept_share: Decimal,
     now: datetime,
+    *,
+    source: str = SOURCE,
 ) -> SyncResult:
-    """Accept the snapshot unless it lost too many addresses (F3.4)."""
+    """Accept the snapshot unless it lost too many addresses (F3.4). Any list (§13.1)."""
     digest = hashlib.sha256(data).hexdigest()
     count = len(parsed.addresses)
     prev = conn.execute(
         "SELECT address_count FROM list_snapshots WHERE source = ? ORDER BY id DESC LIMIT 1",
-        (SOURCE,),
+        (source,),
     ).fetchone()
     prev_count = int(prev[0]) if prev else None
-    if prev_count is not None and Decimal(count) < Decimal(prev_count) * settings.min_kept_share:
+    if prev_count is not None and Decimal(count) < Decimal(prev_count) * min_kept_share:
         reason = (
             f"new list has {count} addresses, {prev_count} before: more than "
-            f"{(1 - settings.min_kept_share) * 100:.0f}% fewer; rejected, previous snapshot kept"
+            f"{(1 - min_kept_share) * 100:.0f}% fewer; rejected, previous snapshot kept"
         )
-        log.warning("OFAC snapshot rejected: %s", reason)
+        log.warning("%s snapshot rejected: %s", "OFAC" if source == SOURCE else source, reason)
         return SyncResult(False, count, prev_count, parsed.published_at, digest, reason)
     with transaction(conn):
         cur = conn.execute(
             "INSERT INTO list_snapshots (source, fetched_at, published_at, sha256, entry_count, "
             "address_count) VALUES (?, ?, ?, ?, ?, ?)",
-            (SOURCE, to_db(now), parsed.published_at, digest, parsed.entry_count, count),
+            (source, to_db(now), parsed.published_at, digest, parsed.entry_count, count),
         )
         snapshot_id = cur.lastrowid
         conn.executemany(
@@ -222,7 +224,7 @@ def store(
         conn.execute(
             "DELETE FROM sanctioned_addresses WHERE snapshot_id IN (SELECT id FROM list_snapshots "
             "WHERE source = ? ORDER BY id DESC LIMIT -1 OFFSET ?)",
-            (SOURCE, KEEP_SNAPSHOTS_WITH_ADDRESSES),
+            (source, KEEP_SNAPSHOTS_WITH_ADDRESSES),
         )
     return SyncResult(True, count, prev_count, parsed.published_at, digest)
 
@@ -231,7 +233,7 @@ async def sync(
     http: Http, conn: sqlite3.Connection, settings: Ofac, clock: Clock = utcnow
 ) -> SyncResult:
     data = await download(http, settings)
-    return store(conn, data, parse_sdn(data), settings, clock())
+    return store(conn, data, parse_sdn(data), settings.min_kept_share, clock())
 
 
 @dataclass(frozen=True)
@@ -244,23 +246,35 @@ class _Snapshot:
 
 
 class SanctionsSource:
-    source = SOURCE
-    label = LABEL
-    required = True
+    """One sanctions list as a check source: OFAC by default, or another list (§13.1). A list
+    that isn't required (NBCTF, imported by hand) has no freshness: `skipped` until imported."""
+
     timeout: float | None = None
 
     def __init__(
-        self, conn: sqlite3.Connection, freshness: Freshness, *, clock: Clock = utcnow
+        self,
+        conn: sqlite3.Connection,
+        freshness: Freshness,
+        *,
+        clock: Clock = utcnow,
+        source: str = SOURCE,
+        label: str = LABEL,
+        list_name: str = "OFAC SDN",
+        required: bool = True,
     ) -> None:
         self._conn = conn
         self._max_age = timedelta(hours=freshness.sanctions_max_age_hours)
         self._clock = clock
+        self.source = source
+        self.label = label
+        self.required = required
+        self._name = list_name
 
     def _latest(self) -> _Snapshot | None:
         row = self._conn.execute(
             "SELECT id, fetched_at, published_at, sha256, address_count FROM list_snapshots "
             "WHERE source = ? ORDER BY id DESC LIMIT 1",
-            (SOURCE,),
+            (self.source,),
         ).fetchone()
         if row is None:
             return None
@@ -268,14 +282,17 @@ class SanctionsSource:
 
     def _freshness(self, snap: _Snapshot | None, now: datetime) -> tuple[SourceStatus, str]:
         if snap is None:
+            if not self.required:
+                return SourceStatus.SKIPPED, "not imported; `amlcheck lists import-nbctf FILES`"
             return SourceStatus.STALE, "never downloaded; run `amlcheck sync`"
         age = now - snap.fetched_at
         hours = age.total_seconds() / 3600
+        verb = "downloaded" if self.required else "imported"
         detail = (
-            f"list of {snap.published_at or 'unknown date'}, downloaded {hours:.0f} h ago "
+            f"list of {snap.published_at or 'unknown date'}, {verb} {hours:.0f} h ago "
             f"({snap.address_count} addresses)"
         )
-        if age > self._max_age:
+        if self.required and age > self._max_age:
             return SourceStatus.STALE, detail + "; run `amlcheck sync`"
         return SourceStatus.OK, detail
 
@@ -315,7 +332,7 @@ class SanctionsSource:
                     e["currency_labels"] = labels[entry_id]
                 first = next(iter(entries.values()))
                 summary = (
-                    f"Listed on the OFAC SDN list: {first['entity_name'] or 'unnamed entry'} "
+                    f"Listed on the {self._name} list: {first['entity_name'] or 'unnamed entry'} "
                     f"(entry {first['entry_id']}, {first['program'] or 'no program'})"
                 )
                 if len(entries) > 1:
@@ -325,11 +342,11 @@ class SanctionsSource:
                 findings = (
                     finding(
                         "R-SAN-01",
-                        SOURCE,
+                        self.source,
                         summary,
                         now,
                         {
-                            "list": "OFAC SDN",
+                            "list": self._name,
                             "entries": list(entries.values()),
                             "snapshot": {
                                 "id": snap.id,
@@ -341,9 +358,9 @@ class SanctionsSource:
                     ),
                 )
         return SourceResult(
-            source=SOURCE,
-            label=LABEL,
-            required=True,
+            source=self.source,
+            label=self.label,
+            required=self.required,
             status=status,
             observed_at=now,
             findings=findings,
@@ -354,4 +371,6 @@ class SanctionsSource:
     async def health(self) -> SourceHealth:
         snap = self._latest()
         status, detail = self._freshness(snap, self._clock())
-        return SourceHealth(SOURCE, LABEL, status, snap.fetched_at if snap else None, detail)
+        return SourceHealth(
+            self.source, self.label, status, snap.fetched_at if snap else None, detail
+        )

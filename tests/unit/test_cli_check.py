@@ -9,9 +9,10 @@ import respx
 from typer.testing import CliRunner
 
 from amlcheck.cli import app, runtime
-from amlcheck.config import Ofac
+from amlcheck.config import Lists, Ofac
 from amlcheck.core.models import Chain, SourceStatus
 from amlcheck.net.http import Mode
+from amlcheck.screening.lists import EU_PUBLIC_ACCESS
 from tests.unit.test_engine import Fake
 
 runner = CliRunner()
@@ -117,7 +118,9 @@ def test_bsc_check_with_real_sources(home: Path) -> None:
     assert by["exposure"]["status"] == "error"  # no HyperSync token in this test
     assert "AMLCHECK_HYPERSYNC_TOKEN" in by["exposure"]["detail"]
     assert by["trace"]["status"] == "stale"  # every check traces (D-079); it can't read either
-    assert [f["rule_id"] for f in out["findings"]] == ["R-SYS-01"] * 3
+    assert (by["uk_sanctions"]["status"], by["eu_sanctions"]["status"]) == ("stale", "stale")
+    assert by["nbctf"]["status"] == "skipped"  # imported by hand, not required (D-085)
+    assert [f["rule_id"] for f in out["findings"]] == ["R-SYS-01"] * 5
 
 
 def test_audit_list_and_verify(home: Path, monkeypatch: pytest.MonkeyPatch) -> None:
@@ -149,6 +152,9 @@ def test_status_shows_sources_and_audit(home: Path) -> None:
     info = json.loads(r.output)
     assert {s["source"]: s["status"] for s in info["sources"]} == {
         "ofac_sdn": "stale",
+        "uk_sanctions": "stale",
+        "eu_sanctions": "stale",
+        "nbctf": "skipped",
         "tron_freeze": "stale",
         "bsc_freeze": "skipped",
     }
@@ -160,6 +166,10 @@ def test_sync_end_to_end_with_fixtures(home: Path) -> None:
     respx.get(Ofac().sdn_url).respond(
         200, content=(FIX / "ofac" / "sdn_sample.xml").read_bytes()
     )  # plain XML also accepted
+    respx.get(Lists().uk_url).respond(200, content=(FIX / "lists" / "uk_sample.xml").read_bytes())
+    respx.get(Lists().eu_url + EU_PUBLIC_ACCESS).respond(
+        200, content=(FIX / "lists" / "eu_sample.xml").read_bytes()
+    )
     tg = FIX / "trongrid"
     respx.post("https://api.trongrid.io/wallet/triggerconstantcontract").respond(
         json=json.loads((tg / "constant_deprecated_false.json").read_text())
@@ -182,9 +192,11 @@ def test_sync_end_to_end_with_fixtures(home: Path) -> None:
     assert "OFAC SDN list: " in r.output
     assert "addresses (list of 2026-09-30)" in r.output
     assert "Tether TRON freeze index: 3 new events" in r.output
+    assert "UK Sanctions List: 43 TRON/BSC addresses (list of 2026-10-02)" in r.output
+    assert "EU sanctions list: 5 TRON/BSC addresses (list of 2026-09-22)" in r.output
     info = json.loads(runner.invoke(app, ["status", "--json"]).output)
     statuses = {s["source"]: s["status"] for s in info["sources"]}
-    assert statuses["ofac_sdn"] == "ok"
+    assert statuses["ofac_sdn"] == statuses["uk_sanctions"] == statuses["eu_sanctions"] == "ok"
 
 
 # D-079: every check traces unless --no-trace says otherwise.

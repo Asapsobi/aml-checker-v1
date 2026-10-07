@@ -1,0 +1,50 @@
+{
+ "blueTag": "",
+ "greyTag": "",
+ "redTag": "",
+ "publicTag": "Tether Treasury",
+ "chainTags": {
+  "Assets": [
+   {
+    "tagNameKey": "n_tag_high_balance",
+    "tagDescKey": "n_tag_high_balance_tip",
+    "tagName": "High Balance",
+    "tagDesc": "Total assets over $10k"
+   },
+   {
+    "tagNameKey": "n_tag_whale",
+    "tagDescKey": "n_tag_whale_tip",
+    "tagName": "Whale",
+    "tagDesc": "Total assets over $1m"
+   }
+  ],
+  "Activity": [
+   {
+    "tagNameKey": "n_tag_large_trader",
+    "tagDescKey": "n_tag_large_trader_tip",
+    "tagName": "Large Trader",
+    "tagDesc": "Have made large transactions over $10k"
+   },
+   {
+    "tagNameKey": "n_tag_high_activity",
+    "tagDescKey": "n_tag_high_activity_tip",
+    "tagName": "High Activity",
+    "tagDesc": "Over 100 transactions in the last 6 months"
+   }
+  ],
+  "DeFi": [],
+  "NFT": [],
+  "Governance": [
+   {
+    "tagNameKey": "n_tag_trx_governance",
+    "tagDescKey": "n_tag_trx_governance_tip",
+    "tagName": "TRX Governance",
+    "tagDesc": "Participating in TRX staking"
+   }
+  ]
+ },
+ "refreshTimeInfo": {
+  "type": "realtime",
+  "lastUpdateTime": 1791193095
+ }
+}

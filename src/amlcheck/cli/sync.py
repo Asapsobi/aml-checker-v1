@@ -1,4 +1,5 @@
-"""`amlcheck sync`: download the OFAC list and refresh the TRON freeze index (PRD F3, F4.1).
+"""`amlcheck sync`: download the sanctions lists (OFAC, UK, EU) and refresh the TRON freeze index
+(PRD F3, F4.1, methodology §13.1).
 
 Run it at least daily: a sanctions list older than 48 h makes every check INCOMPLETE (AT-15).
 Runs in background mode, so a TronGrid suspension is waited out rather than failing (D-036).
@@ -14,12 +15,12 @@ import typer
 
 from amlcheck.cli import runtime
 from amlcheck.net.http import Http, Mode, SourceError
-from amlcheck.screening import sanctions
+from amlcheck.screening import lists, sanctions
 from amlcheck.screening.tron_freeze import TronFreezeIndex
 
 
 def sync() -> None:
-    """Download the OFAC SDN list and refresh the Tether TRON freeze index."""
+    """Download the sanctions lists (OFAC, UK, EU) and refresh the Tether TRON freeze index."""
     rt = runtime.load()
     conn = runtime.open_database(rt)
     try:
@@ -49,6 +50,29 @@ async def _sync(rt: runtime.Runtime, conn: sqlite3.Connection) -> bool:
         except SourceError as e:
             typer.echo(f"error: {e}", err=True)
             ok = False
+        for spec, url, on in (
+            (lists.UK, rt.settings.lists.uk_url, rt.settings.lists.uk),
+            (lists.EU, rt.settings.lists.eu_url, rt.settings.lists.eu),
+        ):
+            if not on:
+                continue
+            typer.echo(f"{spec.label}: downloading…")
+            try:
+                r = await lists.sync_list(
+                    http, conn, spec, url, rt.settings.lists.min_kept_share, rt.clock()
+                )
+            except SourceError as e:
+                typer.echo(f"error: {e}", err=True)
+                ok = False
+                continue
+            if r.accepted:
+                typer.echo(
+                    f"{spec.label}: {r.address_count} TRON/BSC addresses (list of "
+                    f"{r.published_at or 'unknown date'})"
+                )
+            else:
+                typer.echo(f"{spec.label}: {r.reason}", err=True)
+                ok = False
         typer.echo("Tether TRON freeze index: refreshing…")
         index = TronFreezeIndex(
             runtime.make_tether(rt, http, runtime.trongrid_limiter(rt)), conn, clock=rt.clock

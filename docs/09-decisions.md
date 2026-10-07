@@ -780,3 +780,128 @@
   paid HyperSync plan; accept low BSC coverage.
 - **Consequences:** BSC traces reach risk up to 3 hops (decayed to 36% there); more of a busy BSC
   wallet's money is followed in one check. Setting it back to 5 is one config line.
+
+### D-083 · TRC20 first; BSC stays as it is (owner's choice)
+- **Status:** Accepted
+- **Date:** 2026-10-05 · **Phase:** P14
+- **Context:** After P13, BSC deep traces are limited by HyperSync's free plan. VS-17 measured batched
+  multi-address reads: 6 quiet addresses in 1 query instead of 6, but no gain on busy hubs. The owner
+  stopped work on BSC: "just focus on highest performance on trc20", meaning catching more risk.
+- **Decision:** BSC keeps what it has (3 hops, D-082); no batching. P14 and P15 work on TRON:
+  intelligence and deeper TRON coverage.
+- **Alternatives:** Batched BSC reads (VS-17 recorded for later); a paid HyperSync plan.
+- **Consequences:** BSC results stay less complete than TRON's; the docs say so.
+
+### D-084 · UK and EU sanctions lists, BLOCK like OFAC (owner's choice)
+- **Status:** Accepted
+- **Date:** 2026-10-05 · **Phase:** P14
+- **Context:** VS-18 and VS-19: the UK Sanctions List (FCDO XML, Open Government Licence v3.0) names
+  49 TRON addresses (5 not on OFAC), mostly Xinbi Guarantee. The EU Financial Sanctions Files (XML,
+  Commission Decision 2011/833/EU) name 3 TRON addresses (1 not on OFAC; Grinex). Addresses appear
+  only in free text.
+- **Decision:** Both are list sources like OFAC: downloaded by `sync`, snapshots kept, a listing is
+  R-SAN-01 BLOCK with the list's name, required with the same 48-hour freshness. Addresses are taken
+  from each entry's text and kept only when their checksum holds.
+- **Alternatives:** REVIEW only; OpenSanctions (needs a paid business licence).
+- **Consequences:** `sync` downloads three lists; a stale one makes checks INCOMPLETE.
+
+### D-085 · NBCTF seizure orders, imported from the owner's downloads, BLOCK (owner's choice)
+- **Status:** Accepted
+- **Date:** 2026-10-05 · **Phase:** P14
+- **Context:** Israel's NBCTF publishes about 26 crypto seizure orders (about 690 addresses, many TRON
+  USDT) as Excel annexes on a bot-protected site, which we don't get round. OpenSanctions republishes
+  them under CC BY-NC 4.0, which needs a paid licence for a business.
+- **Decision:** The owner downloads the order files in a browser; `amlcheck lists import-nbctf
+  FILES…` reads every TRON and EVM address in them (checksum-validated) into an `nbctf` snapshot.
+  A listing is R-SAN-01 BLOCK, named "NBCTF". Not required: orders don't expire; `status` shows when
+  they were last imported.
+- **Alternatives:** REVIEW only; skip NBCTF.
+- **Consequences:** Kept current by the owner's re-imports, not by `sync`.
+- **Update (2026-10-07, VS-20):** The lists moved to matal.mod.gov.il. Its export gives all
+  crypto seizure orders as one CSV (38 orders, 694 addresses), and no bot check was met.
+  `import-nbctf` reads the export one order per row: it skips cancelled orders, and an order's
+  newest import wins. Orders do carry a validity date: Q-38. The owner still downloads the
+  export by hand: fetching it in `sync` would first need the site's terms checked.
+
+### D-086 · Freeze neighbours: suspected malicious, inferred
+- **Status:** Accepted
+- **Date:** 2026-10-05 · **Phase:** P14
+- **Context:** MistTrack shows "Suspected Malicious Address". Tether has frozen about 7,700 TRON
+  addresses; wallets that fed or emptied them are the closest public equivalent. The hard constraint
+  limits intelligence to our counterparties and what their traces reach.
+- **Decision:** When a trace reads an address (hop ≥ 1), we look at its flows in that window in the
+  direction the trace does not follow (tracing in: what it sent; tracing out: what it received;
+  the followed direction reaches flagged addresses as facts by itself): if at least `[intel]
+  neighbour_share` (20%) went to or came from sanctioned or frozen addresses, and that is at least
+  `[intel] neighbour_min_usdt` (1,000 USDT), the node is marked suspected and gives an inferred
+  `suspected_malicious` exposure at its hop: risk type illicit_activity, weight 0.6 × confidence
+  (confidence = the share, at most 1), never BLOCK. The trace goes on through it, so facts behind
+  it are still found (a first version ended the path there and hid sanctioned senders: the TRON
+  tuning run showed sanctioned exposure falling while the inferred share rose). Not stored.
+- **Alternatives:** A global scan of all frozen addresses' counterparties (outside the hard
+  constraint, and about 25,000 requests).
+- **Consequences:** More of MistTrack's "suspected" cases found, with a confidence shown.
+
+### D-087 · Tronscan tags, through the official API with the owner's key
+- **Status:** Deferred (VS-21: no risk tags on any sanctioned or frozen address tried)
+- **Date:** 2026-10-05 · **Phase:** P14
+- **Context:** Tronscan's Terms of Service (2022-01-04) forbid scraping and "automated means or
+  interface not provided by us"; its own API is such an interface and needs a key. The API returns
+  account tags (exchange, project, risk).
+- **Decision:** Look up tags only for addresses our checks reach (shown counterparties and trace
+  nodes), cached, within the key's rate limit. Red (risk) tags become labels (`scam`, `stolen_funds`
+  or `high_risk` by tag), exchange tags name entities. The terms are recorded as the licence.
+- **Alternatives:** Skip Tronscan.
+- **Consequences:** Verified live (VS-21) before code relies on it.
+
+### D-088 · TRON traces read ahead; branch and node budget unchanged (measured)
+- **Status:** Accepted
+- **Date:** 2026-10-07 · **Phase:** P14
+- **Context:** T-14.07 asked for deeper TRON coverage within a check's 3 minutes. Measured live on two
+  wallets, cold and warm, on the same synced data:
+  - Branch 8 found less sanctioned exposure than branch 5 (15.6% against 29.4% on `TVvWhZyL…`).
+    It was slower (128 s and 177 s against 92 s and 105 s) and gave a different result warm than cold.
+  - 70 nodes per direction ran out of time cold (2026-10-05).
+  - The trace waited on one read at a time: about 3.7 TronGrid requests a second, against the 10
+    the limiter allows.
+- **Decision:** Keep `branch` 5 and `max_nodes` 50, and read ahead: `[trace] parallel_reads` = 4.
+  - While one queued item is taken, the reads of the next three run at once, paced by the
+    process-wide limiter. The step uses the answer, so nothing is read twice.
+  - Items are still taken one at a time in the same order: the trace is the same, only sooner.
+  - BSC keeps one at a time (`bsc_parallel_reads` = 1): HyperSync's free budget is spent per query.
+- **Alternatives:**
+  - Branch 8.
+  - More nodes per direction: it finds more distant risk but goes over PRD G8 (Q-39).
+  - Items taken in rounds: faster still, but the order would depend on the round size.
+- **Consequences:**
+  - The same scores and the same number of requests.
+  - A cold TRON check takes about half the time (`TVvWhZyL…` 45 s against 92 s), so busy wallets
+    run out of time less often.
+  - A failed read ahead is left to the step, which reads again: a passing error costs a read, not
+    the trace.
+- **Update:** since D-090 (owner's choice), TRON reads 100 addresses per direction.
+
+### D-089 · NBCTF orders past their validity date keep BLOCKing (owner's choice, Q-38)
+- **Status:** Accepted
+- **Date:** 2026-10-07 · **Phase:** P14
+- **Context:** VS-20 found ten orders whose validity date has passed, five of them with wallets
+  (111 listings, the oldest 2024-02-22). NBCTF still publishes them.
+- **Decision:** An order stays listed, and BLOCKs, while NBCTF publishes it, whatever its validity
+  date. The finding shows "valid to …", and the import says when the date has passed.
+- **Alternatives:** REVIEW once the date has passed.
+- **Consequences:** A seized or forfeited wallet stays tied to terror financing after its order's
+  date. An order NBCTF cancels, or stops publishing and the owner re-imports without it using
+  `--replace`, is no longer listed.
+
+### D-090 · TRON traces read 100 addresses per direction (owner's choice, Q-39)
+- **Status:** Accepted
+- **Date:** 2026-10-07 · **Phase:** P14
+- **Context:** With reads ahead (D-088), 100 addresses per direction fit in a TRON check, and they
+  find much more distant risk (`TVvWhZyL…`: sanctioned 29.4% → 47.6%). The cost is about twice the
+  requests, over PRD G8's 200 per trace.
+- **Decision:** `[trace] max_nodes` = 100, on TRON. BSC keeps 50 (`bsc_max_nodes`): its reads are
+  slow on HyperSync's free plan (D-082). G8 is restated: on TRON, 400 requests per direction.
+- **Alternatives:** Keep 50 (within G8).
+- **Consequences:** A cold TRON check takes about 1.5 minutes on a busy wallet, seconds when
+  repeated. It uses about twice the TronGrid requests, monitor runs included: the owner keeps an eye
+  on the key's daily quota.

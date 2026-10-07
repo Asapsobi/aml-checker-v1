@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<export xmlns="http://eu.europa.ec/fpi/fsd/export" generationDate="2026-09-22T20:01:34.799+02:00" globalFileId="185564">
+    <sanctionEntity designationDate="2025-02-24" designationDetails="" unitedNationId="" euReferenceNumber="EU.12747.39" logicalId="172907">
+        <regulation regulationType="amendment" organisationType="council" publicationDate="2025-02-24" entryIntoForceDate="2025-02-24" numberTitle="2025/389 (OJ L24022025)" programme="UKR" logicalId="208642">
+            <publicationUrl>https://eur-lex.europa.eu/legal-content/EN/TXT/PDF/?uri=OJ:L_202500389</publicationUrl>
+        </regulation>
+        <subjectType code="enterprise" classificationCode="E"/>
+        <nameAlias firstName="" middleName="" lastName="" wholeName="Garantex" function="Type of entity: Crypto-currency exchange" title="" nameLanguage="EN" strong="true" regulationLanguage="en" logicalId="172909">
+            <remark>Place of registration: Moscow, Russian Federation
+Known Garantex blockchain wallet addresses:
+ETH: 0x002471b8A185f9980708d0eAEC5B289714F56f8d
+BTC: bc1qwtz3zv95x2flu4w26kgfepf529z50r2sqc5zml
+bc1qwxqxd25yk2dtw2ml04vxj9atq3huv4rdytf6vt
+3My1ffQr5qQzmq4aBFgRqwRYqfB5zPAt8t
+BSC: 0x3051Ca7cB7f6C599fA2f27385AD75010cf0f2bbF
+TRX: TA1hsikRfsgGiW9nEBpT4tEXEySTNYLr2d</remark>
+            <regulationSummary regulationType="amendment" publicationDate="2025-02-24" numberTitle="2025/389 (OJ L24022025)" publicationUrl="https://eur-lex.europa.eu/legal-content/EN/TXT/PDF/?uri=OJ:L_202500389"/>
+        </nameAlias>
+        <address city="Moscow" street="Presnenskaya embankment 12" poBox="" zipCode="" region="" place="" asAtListingTime="false" countryIso2Code="RU" countryDescription="RUSSIAN FEDERATION" regulationLanguage="en" logicalId="172908">
+            <remark>Principal place of business: Russian Federation</remark>
+            <regulationSummary regulationType="amendment" publicationDate="2025-02-24" numberTitle="2025/389 (OJ L24022025)" publicationUrl="https://eur-lex.europa.eu/legal-content/EN/TXT/PDF/?uri=OJ:L_202500389"/>
+        </address>
+    </sanctionEntity>
+    <sanctionEntity designationDate="2025-10-23" designationDetails="" unitedNationId="" euReferenceNumber="EU.13770.38" logicalId="179375">
+        <regulation regulationType="amendment" organisationType="council" publicationDate="2025-10-23" entryIntoForceDate="2025-10-23" numberTitle="2025/2035 (OJ L202502035)" programme="UKR" logicalId="217678">
+            <publicationUrl>https://eur-lex.europa.eu/legal-content/EN/TXT/PDF/?uri=OJ:L_202502035</publicationUrl>
+        </regulation>
+        <subjectType code="enterprise" classificationCode="E"/>
+        <nameAlias firstName="" middleName="" lastName="" wholeName="Grinex" function="Grinex is a crypto-currency exchange registered in Kyrgyzstan. Grinex is a major platform for trading the stablecoin A7A5, which is collateralised by PSB Bank" title="" nameLanguage="EN" strong="true" regulationLanguage="en" logicalId="179383">
+            <remark>Type of entity: Limited Liability Company. 
+Associated entities: PSB Bank.</remark>
+            <regulationSummary regulationType="amendment" publicationDate="2025-10-23" numberTitle="2025/2035 (OJ L202502035)" publicationUrl="https://eur-lex.europa.eu/legal-content/EN/TXT/PDF/?uri=OJ:L_202502035"/>
+        </nameAlias>
+        <nameAlias firstName="" middleName="" lastName="" wholeName="Гринекс" function="" title="" nameLanguage="RU" strong="true" regulationLanguage="en" logicalId="179382">
+            <regulationSummary regulationType="amendment" publicationDate="2025-10-23" numberTitle="2025/2035 (OJ L202502035)" publicationUrl="https://eur-lex.europa.eu/legal-content/EN/TXT/PDF/?uri=OJ:L_202502035"/>
+        </nameAlias>
+        <address city="" street="" poBox="" zipCode="" region="" place="" asAtListingTime="false" countryIso2Code="00" countryDescription="UNKNOWN" regulationLanguage="en" logicalId="179378">
+            <remark>Known blockchain wallet addresses
+TNZxGWCwvsHr6JxQxzoeDXV5
+97Yf7Zb7nV</remark>
+            <regulationSummary regulationType="amendment" publicationDate="2025-10-23" numberTitle="2025/2035 (OJ L202502035)" publicationUrl="https://eur-lex.europa.eu/legal-content/EN/TXT/PDF/?uri=OJ:L_202502035"/>
+        </address>
+        <address city="Bishkek" street="microdistrict Jal-29,  building 14/1, 35" poBox="" zipCode="" region="Leninsky  district" place="" asAtListingTime="false" countryIso2Code="KG" countryDescription="KYRGYZSTAN" regulationLanguage="en" logicalId="179379">
+            <regulationSummary regulationType="amendment" publicationDate="2025-10-23" numberTitle="2025/2035 (OJ L202502035)" publicationUrl="https://eur-lex.europa.eu/legal-content/EN/TXT/PDF/?uri=OJ:L_202502035"/>
+        </address>
+        <address city="" street="" poBox="" zipCode="" region="" place="" asAtListingTime="false" countryIso2Code="00" countryDescription="UNKNOWN" regulationLanguage="en" logicalId="179376">
+            <remark>Known blockchain wallet . addresses:
+TEcuHDQthTmULe8fFLUccBPpjfXaTmJuuD</remark>
+            <regulationSummary regulationType="amendment" publicationDate="2025-10-23" numberTitle="2025/2035 (OJ L202502035)" publicationUrl="https://eur-lex.europa.eu/legal-content/EN/TXT/PDF/?uri=OJ:L_202502035"/>
+        </address>
+        <address city="" street="" poBox="" zipCode="" region="" place="" asAtListingTime="false" countryIso2Code="00" countryDescription="UNKNOWN" regulationLanguage="en" logicalId="179377">
+            <remark>Known blockchain wallet addresses:
+TC8axQvzJEVR3NKN6mZnJtGy7537GEmh38;</remark>
+            <regulationSummary regulationType="amendment" publicationDate="2025-10-23" numberTitle="2025/2035 (OJ L202502035)" publicationUrl="https://eur-lex.europa.eu/legal-content/EN/TXT/PDF/?uri=OJ:L_202502035"/>
+        </address>
+        <identification diplomatic="false" knownExpired="false" knownFalse="false" reportedLost="false" revokedByIssuer="false" issuedBy="" latinNumber="" nameOnDocument="" number="02312202410120" region="" identificationTypeCode="taxid" identificationTypeDescription="Tax identification number" countryIso2Code="KG" countryDescription="KYRGYZSTAN" regulationLanguage="en" logicalId="179380">
+            <regulationSummary regulationType="amendment" publicationDate="2025-10-23" numberTitle="2025/2035 (OJ L202502035)" publicationUrl="https://eur-lex.europa.eu/legal-content/EN/TXT/PDF/?uri=OJ:L_202502035"/>
+        </identification>
+        <identification diplomatic="false" knownExpired="false" knownFalse="false" reportedLost="false" revokedByIssuer="false" issueDate="2024-12-27" issuedBy="" latinNumber="" nameOnDocument="" number="311748-3301-OOO" region="" identificationTypeCode="regnumber" identificationTypeDescription="Registration Number" countryIso2Code="KG" countryDescription="KYRGYZSTAN" regulationLanguage="en" logicalId="179381">
+            <regulationSummary regulationType="amendment" publicationDate="2025-10-23" numberTitle="2025/2035 (OJ L202502035)" publicationUrl="https://eur-lex.europa.eu/legal-content/EN/TXT/PDF/?uri=OJ:L_202502035"/>
+        </identification>
+    </sanctionEntity>
+    <sanctionEntity designationDetails="" unitedNationId="" euReferenceNumber="EU.27.28" logicalId="13">
+        <remark>UNSC RESOLUTION 1483</remark>
+        <regulation regulationType="regulation" organisationType="commission" publicationDate="2003-07-08" entryIntoForceDate="2003-07-07" numberTitle="1210/2003 (OJ L169)" programme="IRQ" logicalId="348">
+            <publicationUrl>http://eur-lex.europa.eu/LexUriServ/LexUriServ.do?uri=OJ:L:2003:169:0006:0023:EN:PDF</publicationUrl>
+        </regulation>
+        <subjectType code="person" classificationCode="P"/>
+        <nameAlias firstName="Saddam" middleName="" lastName="Hussein Al-Tikriti" wholeName="Saddam Hussein Al-Tikriti" function="" gender="M" title="" nameLanguage="" strong="true" regulationLanguage="en" logicalId="17">
+            <regulationSummary regulationType="regulation" publicationDate="2003-07-08" numberTitle="1210/2003 (OJ L169)" publicationUrl="http://eur-lex.europa.eu/LexUriServ/LexUriServ.do?uri=OJ:L:2003:169:0006:0023:EN:PDF"/>
+        </nameAlias>
+        <nameAlias firstName="" middleName="" lastName="" wholeName="Abu Ali" function="" title="" nameLanguage="" strong="true" regulationLanguage="en" logicalId="19">
+            <regulationSummary regulationType="regulation" publicationDate="2003-07-08" numberTitle="1210/2003 (OJ L169)" publicationUrl="http://eur-lex.europa.eu/LexUriServ/LexUriServ.do?uri=OJ:L:2003:169:0006:0023:EN:PDF"/>
+        </nameAlias>
+        <nameAlias firstName="" middleName="" lastName="" wholeName="Abou Ali" function="" title="" nameLanguage="FR" strong="true" regulationLanguage="en" logicalId="380">
+            <regulationSummary regulationType="regulation" publicationDate="2003-07-08" numberTitle="1210/2003 (OJ L169)" publicationUrl="http://eur-lex.europa.eu/LexUriServ/LexUriServ.do?uri=OJ:L:2003:169:0006:0023:EN:PDF"/>
+        </nameAlias>
+        <citizenship region="" countryIso2Code="IQ" countryDescription="IRAQ" regulationLanguage="en" logicalId="1">
+            <regulationSummary regulationType="regulation" publicationDate="2003-07-08" numberTitle="1210/2003 (OJ L169)" publicationUrl="http://eur-lex.europa.eu/LexUriServ/LexUriServ.do?uri=OJ:L:2003:169:0006:0023:EN:PDF"/>
+        </citizenship>
+        <birthdate circa="false" calendarType="GREGORIAN" city="al-Awja, near Tikrit" zipCode="" birthdate="1937-04-28" dayOfMonth="28" monthOfYear="4" year="1937" region="" place="" countryIso2Code="IQ" countryDescription="IRAQ" regulationLanguage="en" logicalId="14">
+            <regulationSummary regulationType="regulation" publicationDate="2003-07-08" numberTitle="1210/2003 (OJ L169)" publicationUrl="http://eur-lex.europa.eu/LexUriServ/LexUriServ.do?uri=OJ:L:2003:169:0006:0023:EN:PDF"/>
+        </birthdate>
+    </sanctionEntity>
+</export>

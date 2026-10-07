@@ -21,8 +21,99 @@ VS-07 (P6) and VS-11 to VS-14 (later phases) are not P0 items. VS-15 was redone 
 | VS-09 | Dropped (D-033) | — | — |
 | VS-10 | Confirmed (both chains) | `create_time` absent on contract-created contracts | — |
 | VS-16 | Measured (7 TRON, 4 BSC addresses) | TRON cheap; a full BSC read is slow, an exchange-sized one never finishes | — |
+| VS-17 | Measured: batching works, helps quiet addresses only | Pages hold ~1,000 logs | — |
+| VS-18 | Confirmed: 49 TRON addresses in free text | No structured field | — |
+| VS-19 | Confirmed: 3 TRON, 2 EVM addresses in free text | Public token URL, no login | — |
+| VS-20 | Confirmed with the official export: 38 orders, 694 addresses | New site with a CSV export; one address typed with Cyrillic letters; validity dates | Q-38 |
+| VS-21 | Confirmed with the owner's key: works, but no risk tags on any sanctioned or frozen address tried | Tags name only famous entities | — |
 
 ---
+
+## VS-17 · HyperSync multi-address queries (P13)
+**Checked:** 2026-10-05, with amlcheck's HyperSync client, one window (2026-09-01 to 2026-10-03,
+6.5M blocks), each address alone then all six as one OR of topic values.
+
+| Six addresses | One per query | Batched | Same transfers |
+|---|---|---|---|
+| Busy (589 to 16,562 transfers each) | 34 queries, 93 s | 30 queries, 150 s | yes |
+| Quiet (5 to 847 each) | 6 queries, 13.2 s | **1 query, 5.8 s** | yes |
+
+**Found:** HyperSync accepts many addresses in one query and returns the same transfers. A page holds
+about 1,000 logs, so cost follows transfer volume: batching helps quiet addresses, not busy ones.
+**What this changes:** not built (D-083); recorded for when BSC work resumes.
+
+## VS-18 · UK Sanctions List (P14)
+**Checked:** 2026-10-05. `https://sanctionslist.fcdo.gov.uk/docs/UK-Sanctions-List.xml`, 200, 21.9 MB,
+generated 02/10/2026; also a CSV. The single UK list since 2026-01-28 (OFSI's consolidated list
+closed). Licence: Open Government Licence v3.0 (attribution).
+**Found:** `<Designation>` with `UniqueID` (e.g. `GHR0190`), `Names/Name/Name6` and `NameType`,
+`RegimeName`, `OtherInformation`, `UKStatementofReasons`. Crypto addresses only in free text
+("Xinbi is associated with the following crypto addresses: T…; T…"). **49 TRON addresses, all
+checksum-valid, 5 not on OFAC; 6 EVM.** Fixture: `tests/fixtures/lists/uk_sample.xml` (two real
+designations, trimmed).
+
+## VS-19 · EU Financial Sanctions Files (P14)
+**Checked:** 2026-10-05. `https://webgate.ec.europa.eu/fsd/fsf/public/files/xmlFullSanctionsList_1_1/content?token=dG9rZW4tMjAxNw`,
+200, 25.8 MB, `generationDate` 2026-09-22, no login. Licence: Commission Decision 2011/833/EU
+(reuse for any purpose, free).
+**Found:** `<sanctionEntity euReferenceNumber=… logicalId=…>` with `nameAlias wholeName=…`,
+`regulation programme=…`, `address`/`identification` children whose `<remark>` text holds wallets
+("Known blockchain wallet addresses: T…;"). **3 TRON (1 not on OFAC: Grinex), 2 EVM.** Fixture:
+`tests/fixtures/lists/eu_sample.xml` (two real entities, trimmed).
+
+## VS-20 · NBCTF seizure orders (P14)
+**Checked:** 2026-10-07, downloaded with the owner's permission. The lists moved to
+**matal.mod.gov.il** (the old nbctf.mod.gov.il refused connections from here). Its export
+("ייצוא סנקציה") is a form, `POST /sanctions/export`, carrying the page's own anti-forgery token
+and cookie. No bot check was met, but a later visit timed out. The four list types are
+organisations, operatives, seizure orders and "צווי תפיסה - מטבעות קריפטו" (crypto seizure
+orders). One type gives a CSV (or XLSX); several give a zip of CSVs.
+**Format:** UTF-8 CSV with a BOM, one row per order. The columns are:
+- `Name en` ("FO 43/25") and `Order Type` ("FO (Forfeiture)", "ASO (Seizure)");
+- `Order Date` and `Validity Date` (ISO);
+- `Is Canceled`, `Is Correction Version` and `Is Hidden`;
+- the people and organisations named;
+- `Assets`: blocks of `Id: <uuid>` / `Name: <value>`, separated by `-------------`.
+
+Wallets appear only in `Assets`. No column links a wallet to a person, so none is named.
+The XLSX export has other columns. The owner's header-only file of 2026-10-05 has no order name
+and misspells "Descriprtions". It can't be read order by order, so the importer refuses it and
+asks for the CSV.
+**Found** (crypto orders, sha256 `0de2471f…f844`):
+- 38 orders (31 FO, 7 ASO); none cancelled, corrected or hidden.
+- 1,777 assets: 997 numbers (exchange accounts, phone numbers), 686 TRON, 15 `0x`, 52 Bitcoin and
+  28 on other chains.
+- 30 orders hold TRON or `0x` wallets: 701 listings, **694 different addresses**, every checksum valid.
+- One TRON address (FO 02/24) is typed with a Cyrillic "Н" and "с". Read as Latin, its checksum
+  holds.
+- One cell holds two wallets ("0x…, T…").
+- The other three lists hold no wallet.
+- Ten orders' validity dates have passed (five with wallets, 111 listings, the oldest 2024-02-22).
+  NBCTF still publishes them: Q-38.
+
+**Live:** the export was imported into a scratch folder (`lists import-nbctf`, CSV and the four-list
+zip: the same 694 addresses).
+- `check TB5UPBTt…` (ASO 06/26) → BLOCK, "Listed on the NBCTF list: order ASO 06/26 (entry
+  ASO 06/26, ASO (Seizure) of 2026-02-16, valid to 2028-02-16)". Tether has also frozen it since
+  2025-12-15.
+- That order's third address, `TP834zau…`, is named in its exposures ("NBCTF: order ASO 06/26").
+
+**Fixture:** `tests/fixtures/lists/nbctf_orders_sample.csv` holds five real orders. The people
+columns are emptied, and FO 19/23's assets are cut to two.
+
+## VS-21 · Tronscan account tags (P14)
+**Checked:** 2026-10-05 with the owner's key (header `TRON-PRO-API-KEY`, never printed). Terms (PDF,
+2022-01-04) forbid scraping and "automated means or interface not provided by us"; the API is theirs.
+Docs (docs.tronscan.org, Deep Analysis → Get Account Tags): `GET /api/account/tag?address=` →
+`redTag` ("risk identifier"), `publicTag`, `blueTag`, `greyTag`, `chainTags` (behaviour: Assets,
+Activity, DeFi, NFT, Governance), `refreshTimeInfo`. `/api/accountv2` carries the same four tags
+among balances (3–38 KB). No rate-limit headers.
+**Found** (14 addresses): Tether Treasury `TKHuVq…` → `publicTag` "Tether Treasury". **No `redTag`
+on any risky address tried**: the OFAC/CHEIL CREDIT BANK address, a Xinbi wallet (OFAC and UK), five
+Tether-frozen addresses, six busy unnamed services. `chainTags` describe size and activity ("High
+Balance", "Whale", "Large Trader"), not risk. Fixtures: `tests/fixtures/tronscan/` (two answers).
+**What this changes:** D-087 is not built: one call per address reached (100+ per check) for almost
+no risk signal. Revisit if a sample of the owner's real counterparties shows useful public tags.
 
 ## VS-16 · Cost of a full-history read (P13)
 **Checked:** 2026-10-04, with amlcheck's own readers (`TransferCache` over TronGrid and HyperSync),

@@ -90,10 +90,11 @@ async def test_at39_read_failure_keeps_partial(conn: sqlite3.Connection) -> None
     assert partial.partition["untraced:unfinished"] == D0("0.1")
 
 
-# AT-40: max_nodes = 2 on the example → remaining weight in untraced:budget; not a failure.
+# AT-40: bsc_max_nodes = 2 on the example (a BSC world) → remaining weight in untraced:budget;
+# not a failure.
 async def test_at40_node_budget(conn: sqlite3.Connection) -> None:
     fake = Fake(example())
-    eng, store = engine(conn, fake, Settings(trace=Trace(max_nodes=2)))
+    eng, store = engine(conn, fake, Settings(trace=Trace(bsc_max_nodes=2)))
     setup_example(conn, store)
     t = await eng.run(detect(T))
     assert t.complete

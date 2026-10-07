@@ -7,15 +7,15 @@
 
 | When | What | How |
 |---|---|---|
-| Automatically, twice a day | Refresh the OFAC list and the Tether TRON freeze index | `amlcheck sync` on a timer ([scheduling](scheduling.md)) |
+| Automatically, twice a day | Refresh the OFAC, UK and EU lists and the Tether TRON freeze index | `amlcheck sync` on a timer ([scheduling](scheduling.md)) |
 | Automatically, every 10 minutes | Screen new senders to your own wallets, up to 10 a run, each traced (a run still going makes the next one wait its turn) | `amlcheck monitor run` (exit 6 = look at it) |
 | Automatically, once a day | Re-screen the watchlist | `amlcheck watch run` (exit 6 = a verdict changed) |
 | Before every payout | Screen the counterparty | `amlcheck check <address> --amount N --client NAME` (or the web UI, or the API) |
 | When a result is REVIEW, BLOCK or INCOMPLETE | Decide, and record why | A case: `amlcheck case open <address>`, then `case decide` |
 | Now and then | Check the audit trail | `amlcheck audit verify`; keep the two head hashes it prints somewhere else |
 
-Before anything else each morning, `amlcheck status`: the OFAC list must be younger than 48 hours and
-the freeze index current, or every check comes back INCOMPLETE.
+Before anything else each morning, `amlcheck status`: the OFAC, UK and EU lists must be younger than
+48 hours and the freeze index current, or every check comes back INCOMPLETE.
 
 ## Screening a counterparty
 
@@ -26,8 +26,8 @@ amlcheck check TXyz… --amount 25000 --client acme --note "invoice 1042"
 - Paste addresses; never type them. A wrong character makes a valid but different address.
 - TRON addresses start with `T`; `0x…` addresses are BNB Smart Chain (BEP20) in this version.
 - Every check traces where the money came from **and** where it went, up to 5 hops, within 3 minutes
-  (TRON usually 1–2 minutes cold, seconds when repeated; BSC often the full 3 minutes on HyperSync's
-  free plan). `--no-trace` gives a quick check without it.
+  (TRON about 1.5 minutes cold on a busy wallet, seconds when repeated; BSC often the full
+  3 minutes on HyperSync's free plan). `--no-trace` gives a quick check without it.
 - `amlcheck investigate` is the same check with the full breakdown of both traces.
 - Every check is recorded in the audit log **before** it is shown.
 
@@ -70,7 +70,7 @@ others are INFO: they explain the score (D-072; `[rules] severity` can change th
 
 | Rule | Means | Look at |
 |---|---|---|
-| R-SAN-01 | On a sanctions list (OFAC) | The list entry named in the finding |
+| R-SAN-01 | On a sanctions list: OFAC, UK, EU or NBCTF (P14) | The list and entry named in the finding |
 | R-FRZ-01 / 02 | Frozen by Tether now / frozen before and released | When; why it was released |
 | R-EXP-01 | Dealt directly with a sanctioned or frozen address | The counterparty table: amounts and dates |
 | R-EXP-02 | 5% or more of what it received came from flagged addresses | Which ones, how much |
@@ -86,6 +86,12 @@ others are INFO: they explain the score (D-072; `[rules] severity` can change th
 | R-TRC-05 | 10% or more passed through inferred suspicious patterns (low priority) | Collectors, layering |
 | R-SYS-01 | A required source failed or is stale | Makes the check INCOMPLETE |
 | R-SCR-01 | The score is 31 or more (moderate or worse) | The exposures and the lines under the score |
+
+**Suspected malicious** (P14) is an inference about an address the trace reached: tracing where
+money came from, it sent at least 20% of its money (and 1,000 USDT or more) to sanctioned or
+Tether-frozen wallets; tracing where money went, it received that much from them. It counts in the
+score at its confidence and never BLOCKs on its own. Like MistTrack's "suspected malicious", it is a
+reason to look, not a fact.
 
 **Inferences are not facts.** Types like COLLECTOR or DEPOSIT, and everything marked "inferred", come
 from the address's own transfers and are never a reason to BLOCK on their own.
@@ -128,6 +134,7 @@ amlcheck case decide <case> approved --note "known OTC client; source of funds m
 | A licensed third-party pack | `amlcheck intel import-pack file.csv --name … --licence "…"` |
 | Name an exchange's entity (its deposits then resolve locally in traces) | `amlcheck intel entity name <id> Binance --kind exchange_regulated` |
 | Watch an address daily | `amlcheck watch add <address> --client acme` |
+| Israel's NBCTF seizure orders, monthly or when NBCTF announces new ones: export "צווי תפיסה - מטבעות קריפטו" as CSV on matal.mod.gov.il | `amlcheck lists import-nbctf <file>.csv` |
 
 ## When something goes wrong
 
@@ -145,3 +152,6 @@ amlcheck case decide <case> approved --note "known OTC client; source of funds m
 - BEP20 USDT cannot be frozen by its issuer: the freeze check is skipped there, never "clean".
 - Sources are public lists and chain data only; no commercial AML provider is consulted (D-033).
 - NO_HITS is never a clearance; a decision is always yours.
+- A TRON check reads up to 100 addresses each way (D-090): several hundred TronGrid requests cold,
+  far fewer when repeated. Monitor runs trace every new sender, so keep your TronGrid plan's daily
+  quota in mind.

@@ -38,7 +38,8 @@ def test_defaults_match_methodology() -> None:
     assert s.classifier.ttl_days == 14
     assert s.trace.max_hops == 5  # §12.2
     assert s.trace.bsc_max_hops == 3  # D-082
-    assert s.trace.max_nodes == 50
+    assert s.trace.max_nodes == 100  # TRON, D-090
+    assert s.trace.bsc_max_nodes == 50
     assert s.trace.time_budget_seconds == 180
     assert s.trace.coverage_share == Decimal("0.8")
     assert s.score.review_at == 31  # D-072
@@ -137,7 +138,8 @@ def test_secrets_repr_hides_values(tmp_path: Path) -> None:
     assert s.trongrid_api_key == "sekret-123"
     assert "sekret" not in repr(s)
     assert repr(Secrets()) == (
-        "Secrets({'trongrid_api_key': False, 'hypersync_token': False, 'api_token': False})"
+        "Secrets({'trongrid_api_key': False, 'hypersync_token': False, 'api_token': False, "
+        "'tronscan_api_key': False})"
     )
 
 

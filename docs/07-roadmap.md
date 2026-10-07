@@ -22,7 +22,7 @@
 | **P11** Calibration & 1.0 | Golden set, thresholds tuned, budgets measured | v1.0.0 | 1 week | Signed-off v1.0 |
 | **P12** Risk policy v2 | MistTrack-style exposures, levels, decay; v2 contract | v2.0.0a1 | 1–1.5 weeks | Results read like a pro platform's |
 | **P13** Two-way deep exposure | In + out, 5 hops best-first, all history | v2.0.0a2 | 1–1.5 weeks | Far and outgoing risk found |
-| **P14** Intelligence v2 | UK/EU/NBCTF lists, official addresses, derived suspects, explorer tags | v2.0.0b1 | 1.5 weeks | More risk entities named |
+| **P14** TRON intelligence | TRC20 first (D-083): UK/EU/NBCTF lists, freeze neighbours, Tronscan tags, deeper TRON coverage | v2.0.0b1 | 1.5 weeks | More risk named on TRON |
 | **P15** Benchmark & 2.0 | Agreement with MistTrack measured on the owner's wallets; tuning | v2.0.0 | 1 week | Signed-off v2.0 |
 
 \*Claude Code doing the work, owner reviewing each PR. A sizing guide, not a commitment.

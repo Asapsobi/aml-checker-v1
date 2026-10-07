@@ -36,7 +36,7 @@ def data() -> bytes:
 
 
 def loaded(conn: sqlite3.Connection, data: bytes, at: datetime = NOW) -> None:
-    assert store(conn, data, parse_sdn(data), Ofac(), at).accepted
+    assert store(conn, data, parse_sdn(data), Ofac().min_kept_share, at).accepted
 
 
 def source(conn: sqlite3.Connection, now: datetime = NOW) -> SanctionsSource:
@@ -159,7 +159,7 @@ def test_at21_shrunk_list_rejected(
     keep = int(len(full.addresses) * 0.7)
     shrunk = full.__class__(full.published_at, full.entry_count, full.addresses[:keep])
     with caplog.at_level("WARNING", logger="amlcheck.sanctions"):
-        r = store(conn, b"other", shrunk, Ofac(), NOW + timedelta(days=1))
+        r = store(conn, b"other", shrunk, Ofac().min_kept_share, NOW + timedelta(days=1))
     assert not r.accepted
     assert "rejected" in (r.reason or "")
     assert "OFAC snapshot rejected" in caplog.text
@@ -167,7 +167,7 @@ def test_at21_shrunk_list_rejected(
     ok = full.__class__(
         full.published_at, full.entry_count, full.addresses[: int(len(full.addresses) * 0.81)]
     )
-    assert store(conn, b"ok", ok, Ofac(), NOW + timedelta(days=2)).accepted
+    assert store(conn, b"ok", ok, Ofac().min_kept_share, NOW + timedelta(days=2)).accepted
 
 
 def test_old_snapshots_keep_rows_but_not_addresses(conn: sqlite3.Connection, data: bytes) -> None:

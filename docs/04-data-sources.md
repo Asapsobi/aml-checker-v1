@@ -149,3 +149,8 @@ as a fixture) in `docs/verification-log.md`, and raises a question for any chang
 | VS-14 | Licence of any label pack before import | P4 |
 | VS-15 | Issuer freezes on TRC20 and BEP20: TRON event history and sync time; BEP20 USDT emits no freeze events (narrowed by D-039) | P2 |
 | VS-16 | Cost of a full-history read (TronGrid pages; HyperSync queries from block 0) for quiet, ordinary and busy wallets, up to 20,000 transfers | P13 |
+| VS-17 | HyperSync multi-address queries (batching): accepted, same results; 6 quiet addresses 1 query instead of 6, busy hubs no gain | P13 |
+| VS-18 | UK Sanctions List XML (FCDO): format, TRON addresses in free text, licence (OGL v3.0) | P14 |
+| VS-19 | EU Financial Sanctions Files XML: public URL, TRON addresses in free text, licence (Decision 2011/833/EU) | P14 |
+| VS-20 | NBCTF seizure orders: the official export (matal.mod.gov.il), its format and where wallets are | P14 |
+| VS-21 | Tronscan account-tag API: path, fields, rate limit, with the owner's key | P14 |

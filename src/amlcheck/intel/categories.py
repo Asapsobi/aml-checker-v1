@@ -9,7 +9,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from decimal import Decimal
 
-CATEGORY_VERSION = 1
+CATEGORY_VERSION = 2  # P14: suspected_malicious (methodology §13.2)
 
 PROVENANCES = frozenset({"list", "operator", "import", "inferred"})
 _HUMAN = frozenset({"operator", "import"})
@@ -51,6 +51,8 @@ CATEGORIES: tuple[Category, ...] = (
     Category("exchange_regulated", 15, Decimal("0.0"), _HUMAN, False),
     Category("payment_processor", 16, Decimal("0.0"), _HUMAN, False),
     Category("own_or_trusted", 17, Decimal("0.0"), _HUMAN, False),
+    # P14 (D-086): a freeze neighbour, inferred from a trace read; last, so no tie order moves.
+    Category("suspected_malicious", 18, Decimal("0.6"), frozenset({"inferred"}), False),
 )
 BY_NAME = {c.name: c for c in CATEGORIES}
 

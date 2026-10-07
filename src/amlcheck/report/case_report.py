@@ -51,6 +51,7 @@ from amlcheck.intel.names import counterparty_text, label_text
 from amlcheck.intel.store import IntelStore
 from amlcheck.profile.adapter import LABEL as CLASSIFIER_LABEL
 from amlcheck.profile.adapter import SOURCE as CLASSIFIER
+from amlcheck.screening import lists
 from amlcheck.screening.bsc_freeze import LABEL as BSC_FREEZE_LABEL
 from amlcheck.screening.bsc_freeze import SOURCE as BSC_FREEZE
 from amlcheck.screening.exposure import LABEL as EXPOSURE_LABEL
@@ -73,6 +74,7 @@ LABELS = {
     LOOKALIKE: LOOKALIKE_LABEL,
     CLASSIFIER: CLASSIFIER_LABEL,
     TRACE: TRACE_LABEL,
+    **{spec.source: spec.label for spec in (lists.UK, lists.EU, lists.NBCTF)},
     "engine": "amlcheck",
 }
 _SPELL = {"≥": ">=", "≤": "<=", "←": "<-", "→": "->", "✓": "ok"}
