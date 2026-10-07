@@ -110,6 +110,7 @@ class _State:
     paths: list[TracePath] = field(default_factory=list)
     read: set[str] = field(default_factory=set)
     cache_hits: int = 0
+    floor: Decimal = Decimal(0)  # the path volume a sender needs to be followed (D-081, D-096)
 
 
 def flows(address: str, transfers: Iterable[Transfer], direction: Direction) -> dict[str, _Flow]:
@@ -281,6 +282,8 @@ class TraceEngine:
         st.nodes.append(Node(target.norm, 0, Decimal(1), None, True, None))
         if not in_t:
             return trace(in_t=in_t, coverage=None)
+        # D-096: a small wallet's trace follows anything of at least 1% of its own flow.
+        st.floor = min(self._t.min_attributed_usdt, self._t.min_attributed_share * in_t)
 
         # Best first (D-081): the largest discounted path volume is expanded next.
         queue: list[tuple[Decimal, str, tuple[str, ...], int, _Item]] = []
@@ -375,6 +378,27 @@ class TraceEngine:
         coverage = sum((v for k, v in st.buckets.items() if k not in UNTRACED), Decimal(0))
         return trace(in_t=in_t, coverage=coverage)
 
+    def _behind(
+        self, chain: Chain, address: str, transfers: list[Transfer], direction: Direction
+    ) -> tuple[tuple[str, Decimal], ...]:
+        """D-097: the share of a busy service's own money, in the trace's direction, that came from
+        (tracing in) or went to (tracing out) sanctioned or frozen addresses, by category. Over
+        the transfers its window read gave, which for a hub is a sample: the newest ones."""
+        if not self._t.service_pass_through:
+            return ()
+        theirs = flows(address, transfers, direction)
+        total = sum((f.amount for f in theirs.values()), Decimal(0))
+        if not total:
+            return ()
+        flags = local_flags(self._conn, chain, theirs)
+        flagged: dict[str, Decimal] = defaultdict(Decimal)
+        for a, f in theirs.items():
+            marks = flags.get(a, set())
+            category = next((c for c in ("sanctioned", "frozen") if c in marks), None)
+            if category is not None:
+                flagged[category] += f.amount
+        return tuple(sorted((c, v / total) for c, v in flagged.items()))
+
     def _parallel(self, chain: Chain) -> int:
         """Reads in flight at once per direction (D-088); one at a time on BSC by default."""
         return self._t.bsc_parallel_reads if chain is Chain.BSC else self._t.parallel_reads
@@ -444,11 +468,16 @@ class TraceEngine:
         )
         if not complete:  # test 8: too many transfers in the window → a hub
             category = self._entity_kind(chain, item.address) or "service_unattributed"
-            return self._end(item, category, 8, NodeClass("HUB", Decimal("0.95")), True, in_t, st)
+            behind = self._behind(chain, item.address, transfers, direction)
+            hub = NodeClass("HUB", Decimal("0.95"))
+            return self._end(item, category, 8, hub, True, in_t, st, behind)
         read_terminal = await self._classify(item, chain, transfers)
         if read_terminal is not None:
             category, cls = read_terminal
-            return self._end(item, category, 9, cls, True, in_t, st)
+            behind = (
+                self._behind(chain, item.address, transfers, direction) if cls.type == "HUB" else ()
+            )
+            return self._end(item, category, 9, cls, True, in_t, st, behind)
         # §13.2 (D-086): a freeze neighbour is noted on the node, not an end: the trace goes on
         # through it, so facts behind it (a sanctioned sender) are still found.
         suspect = self._neighbour(chain, item.address, transfers, direction)
@@ -516,7 +545,7 @@ class TraceEngine:
             parent_bottleneck=parent_bottleneck,
             branch=self._t.branch,
             coverage_share=self._t.coverage_share,
-            min_attributed=self._t.min_attributed_usdt,
+            min_attributed=st.floor,
         )
         st.buckets["untraced:pruned"] += pruned
         days = timedelta(days=self._t.hop_window_days)
@@ -553,6 +582,7 @@ class TraceEngine:
         read: bool,
         in_t: Decimal,
         st: _State,
+        behind: tuple[tuple[str, Decimal], ...] = (),
     ) -> list[_Item]:
         st.buckets[category] += item.weight
         st.nodes.append(
@@ -567,6 +597,7 @@ class TraceEngine:
                 cls,
                 path=item.path,
                 bottleneck=item.bottleneck,
+                behind=behind,
             )
         )
         if category not in UNTRACED:

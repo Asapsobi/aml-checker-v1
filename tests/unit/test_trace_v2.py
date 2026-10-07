@@ -12,10 +12,11 @@ from amlcheck.config import Settings, Trace
 from amlcheck.core.address import detect
 from amlcheck.core.clock import fixed
 from amlcheck.core.engine import screen
-from amlcheck.core.risk import Exposure
+from amlcheck.core.risk import BEHIND, Exposure, from_trace
 from amlcheck.storage.db import open_db
 from amlcheck.trace.adapter import TraceSource
 from amlcheck.trace.jobs import TraceJobs
+from amlcheck.trace.model import Trace as Trace_
 from tests.unit.trace_world import NOW, Fake, T, addr, engine, sanction, tr
 
 D0 = Decimal
@@ -118,3 +119,66 @@ def test_should_trace(
         settings = Settings(trace=Trace(every_check=every))
 
     assert runtime.should_trace(Rt(), asked, amount) is expected  # type: ignore[arg-type]
+
+
+# D-096: the 100 USDT floor scales down for a small wallet, to 1% of its own flow. Coverage share 1
+# keeps every sender in play, so only the floor decides.
+async def test_a_small_wallets_trace_follows_small_amounts(conn: sqlite3.Connection) -> None:
+    a, b, c = addr("sa"), addr("sb"), addr("sc")
+    xs = [tr(5, a, T, "8.39"), tr(6, b, T, "4.91"), tr(20, c, a, "8")]
+    sanction(conn, c)
+    eng, _ = engine(conn, Fake(xs), Settings(trace=Trace(coverage_share=D0(1))))
+    t = await eng.run(detect(T))
+    assert "untraced:pruned" not in t.partition  # the old floor pruned all 13.30 USDT
+    assert abs(t.partition["sanctioned"] - D0("8.39") / D0("13.30")) < D0("1e-12")  # C, behind A
+
+
+async def test_a_big_wallet_keeps_the_100_usdt_floor(conn: sqlite3.Connection) -> None:
+    a, b, c = addr("ba"), addr("bb"), addr("bc")
+    xs = [tr(5, a, T, 1_000_000), tr(6, b, T, 50), tr(20, c, b, 50)]
+    sanction(conn, c)
+    eng, _ = engine(conn, Fake(xs), Settings(trace=Trace(coverage_share=D0(1))))
+    t = await eng.run(detect(T))
+    assert "sanctioned" not in t.partition  # B's 50 USDT is under min(100, 1% of 1,000,050)
+    assert t.partition["untraced:pruned"] == D0(50) / D0(1_000_050)
+
+
+def busy_service_world() -> tuple[list[Transfer], str, str]:
+    """T got 1,000 USDT from a busy service. Its window holds 5 transfers, so with
+    `hub_transfers` = 3 it is a hub; the newest 3 hold 100 from a sanctioned address and 300 from
+    an ordinary one: 25% of what the sample shows came in from sanctioned money."""
+    hub, bad = addr("hub"), addr("hbad")
+    xs = [tr(5, hub, T, 1000), tr(6, bad, hub, 100)]
+    xs += [tr(6 + n / 10, addr(f"ok{n}"), hub, 300, n) for n in range(1, 4)]
+    return xs, hub, bad
+
+
+# D-097: a busy service the trace stops at passes on what sits behind it, inferred, one hop on.
+async def test_what_sits_behind_a_busy_service(conn: sqlite3.Connection) -> None:
+    xs, hub, bad = busy_service_world()
+    sanction(conn, bad)
+    eng, _ = engine(conn, Fake(xs), Settings(trace=Trace(hub_transfers=3)))
+    t = await eng.run(detect(T))
+    (node,) = [n for n in t.nodes if n.address == hub]
+    assert (node.terminal, node.test, node.behind) == (
+        "service_unattributed",
+        8,
+        (("sanctioned", D0("0.25")),),
+    )
+    (e,) = from_trace(t, lambda x, c: x)
+    assert (e.hop, e.address, e.category, e.entity) == (2, hub, "sanctioned", BEHIND)
+    assert (e.volume, e.percent, e.confidence, e.inferred) == (D0(250), D0("0.25"), D0("0.5"), True)
+    assert e.risk_type == "sanctioned_entity"
+    assert t.partition == {"service_unattributed": D0(1)}  # the partition doesn't change
+    assert Trace_.from_json(t.to_json()).nodes == t.nodes  # `behind` is kept
+
+
+async def test_the_pass_through_can_be_turned_off(conn: sqlite3.Connection) -> None:
+    xs, hub, bad = busy_service_world()
+    sanction(conn, bad)
+    off = Settings(trace=Trace(hub_transfers=3, service_pass_through=D0(0)))
+    eng, _ = engine(conn, Fake(xs), off)
+    t = await eng.run(detect(T))
+    assert [n.behind for n in t.nodes if n.address == hub] == [()]
+    assert from_trace(t, lambda x, c: x) == []
+    assert "behind" not in str(t.to_json())  # a trace without it reads and hashes as before

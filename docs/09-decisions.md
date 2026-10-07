@@ -980,3 +980,40 @@
   `k` = 4, `decay` = 0.6 and `sanctioned` = 0.5 each broke 1 or 2 wallets that agree now.
 - **Alternatives:** The closest fit (rejected by D-092).
 - **Consequences:** Score version 2 and risk version 2 are unchanged in 2.0.0.
+
+### D-096 · A small wallet's trace follows small amounts
+- **Status:** Accepted
+- **Date:** 2026-10-07 · **Phase:** 2.0.1 (MVP test)
+- **Context:** In the owner's MVP test, a 26 USDT wallet was NO_HITS with nothing traced, while
+  MistTrack Light showed 11.11% indirect sanctioned exposure. The trace prunes a sender whose path
+  volume is under `min_attributed_usdt`, 100 USDT (D-081). Every payment of this wallet was under
+  that, so 100% of its money was `untraced:pruned`, in both directions.
+- **Decision:** The floor is `min(min_attributed_usdt, min_attributed_share × the target's flow)`,
+  with `[trace] min_attributed_share` = 0.01. A big wallet keeps 100 USDT; a small one follows
+  anything of at least 1% of its own flow (0.27 USDT for that wallet).
+- **Alternatives:** A lower fixed floor, which would chase dust on busy wallets.
+- **Consequences:** Small wallets are traced. That wallet's money now reaches two busy services,
+  where traces stop by design, so it stays low. That remaining difference is one of method
+  (benchmark). Busy wallets cost the same as before.
+
+### D-097 · What sits behind a busy service is passed on, inferred (owner's choice)
+- **Status:** Accepted
+- **Date:** 2026-10-07 · **Phase:** 2.0.1 (MVP test)
+- **Context:** MistTrack follows money through exchanges and other busy services, and reports what
+  lies behind them. A 26 USDT wallet of the owner's MVP test got "Sanctioned Entity, indirect
+  11.11%" there. Our traces stop at a busy service, because many users' funds mix there. Asked, the
+  owner chose to pass it through.
+- **Decision:**
+  - When a trace stops at a busy service, measure the share of the service's own money, in the
+    trace's direction, from or to sanctioned or frozen addresses. Use the transfers its window read
+    gave: for a hub, a sample of the newest `hub_transfers`.
+  - Pass it to the wallet as an inferred exposure one hop beyond the service, named "behind a busy
+    service". The volume is the path volume to the service × that share; the weight is
+    `[trace] service_pass_through` (0.5; 0 turns it off).
+  - It never makes a finding or a BLOCK, and the partition doesn't change. Trace version 3.
+- **Alternatives:** Stop at services, as before.
+- **Consequences:**
+  - A wallet that dealt with a busy service whose recent counterparties are listed or frozen now
+    shows a small inferred exposure, as MistTrack does. It costs no extra read.
+  - For the owner's wallet, the two services' samples (1,000+ transfers each) held no listed or
+    frozen address. So MistTrack's 11.11% there comes from its own labels.

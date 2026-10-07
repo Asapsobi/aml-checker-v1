@@ -160,7 +160,11 @@ def test_every_check_is_traced(web: TestClient, world: World) -> None:
     web.post("/check", data={"address": TRON, "amount": "10000", "token": TOKEN})
     web.post("/check", data={"address": TRON, "amount": "50", "trace": "1", "token": TOKEN})
     web.post("/check", data={"address": TRON, "amount": "50", "token": TOKEN})
-    assert world.traced == [True, True, True]  # D-079
+    web.post("/check", data={"address": TRON, "amount": "50000", "quick": "1", "token": TOKEN})
+    assert world.traced == [True, True, True, False]  # D-079; a quick check skips it (2.0.1)
+    form = web.get("/").text
+    assert "Quick check: skip the trace" in form
+    assert "always on from" not in form  # the v1 label, gone
 
 
 def test_history_and_counterparties(web: TestClient, world: World) -> None:

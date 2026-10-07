@@ -650,7 +650,7 @@ own 90-day window (§5).
 | `max_nodes` | 40 | **100 per direction on TRON** (D-090); 50 on BSC (`bsc_max_nodes`) | Bounds requests; reaching it is `untraced:budget` (§7.7) |
 | `parallel_reads` | 1 | **4** on TRON, 1 on BSC (`bsc_parallel_reads`) | Reads run ahead; order and result unchanged (D-088) |
 | `time_budget_seconds` | 300, a failure | **180 for both directions**, not a failure | D-079, D-080 |
-| `min_attributed_usdt` | 100, on the proportional estimate | 100, on the **path volume** | D-081 |
+| `min_attributed_usdt` | 100, on the proportional estimate | 100, on the **path volume**; for a small wallet at most `min_attributed_share` (1%) of its own flow | D-081, D-096 |
 
 **Order: best first** (D-081). Items wait in one queue per direction and the one with the largest
 *discounted path volume* is expanded next:
@@ -669,6 +669,15 @@ read get one: not past `max_hops`, not ended by a local test, within the node bu
 taken one at a time in the order above, and each uses its read's answer. So the trace, and the number
 of requests, are those of reading one at a time; it only comes sooner. A read ahead that fails is
 read again by its step, which reports a failure as before.
+
+**Behind a busy service** (D-097). A trace stops at a busy service: a hub (test 8) or a HUB from the
+classifier (test 9), where many users' funds mix. The transfers its window read gave are already in
+hand; for a hub they are a sample, the newest `hub_transfers`. From them comes the share of the
+service's own money, in the trace's direction, that came from (tracing in) or went to (tracing out)
+sanctioned or frozen addresses. The wallet gets an inferred exposure one hop beyond the service: the
+path volume to the service × that share, at weight `[trace] service_pass_through` (0.5; 0 turns it
+off), named "behind a busy service". It needs no extra read, changes no partition and never makes a
+finding or a BLOCK.
 
 **Pruning (§7.4) criterion (c)** becomes: the sender's path bottleneck `min(parent bottleneck, a_j)`
 ≥ `min_attributed_usdt`. A large payment through a busy middle address is followed even when its

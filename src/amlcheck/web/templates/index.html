@@ -15,9 +15,9 @@
     <label>Client <input name="client" value="{{ form.client or '' }}"></label>
   </div>
   <label>Note <input name="note" value="{{ form.note or '' }}" class="wide"></label>
-  <label class="check"><input type="checkbox" name="trace" value="1" {% if form.trace %}checked{% endif %}> Trace the source of funds (always on from 10,000 USDT)</label>
+  <label class="check"><input type="checkbox" name="quick" value="1" {% if form.quick %}checked{% endif %}> Quick check: skip the trace</label>
   <button type="submit">Check</button>
-  <p class="muted small">The check runs now and is recorded in the audit log before it is shown. A trace can take a few minutes.</p>
+  <p class="muted small">The check runs now and is recorded in the audit log before it is shown. It follows the money both ways, which can take a few minutes; a quick check skips that.</p>
 </form>
 <h2>Recent checks</h2>
 {{ checks_table(recent) }}
