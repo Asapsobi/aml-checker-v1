@@ -730,3 +730,43 @@ takes one call per address a check reaches (100+ per check). The design, if revi
 addresses a check reaches, cached for `[intel] tag_days` (7); red tags → `scam`, `stolen_funds` or
 `high_risk`; exchange tags → a named entity.
 
+
+---
+
+## 14. Benchmark against MistTrack (P15)
+
+> How far a result can be trusted next to MistTrack's (D-091, D-092). There is no MistTrack API
+> (D-033): the owner looks wallets up on MistTrack's site.
+
+### 14.1 The set
+
+| Field | From | Stored |
+|---|---|---|
+| Address, chain | The owner's wallets where the two disagreed, plus 10 from our runs | Yes |
+| Expected level | The owner's MistTrack lookup: `low`, `moderate`, `high` or `severe` | Yes, with its source and date |
+| MistTrack's score, labels and risk types | — | **Never** (D-091) |
+| Our check | `scripts/benchmark.py record`: a live check, traced | Verdict, rule IDs, score and its parts, every exposure, coverage, version |
+| Reason | Written for every mismatch | Yes |
+
+The set lives in `tests/benchmark/benchmark.json`.
+
+### 14.2 Agreement
+
+| Measure | Meaning |
+|---|---|
+| Same level | Our level (§11.4) is the expected one. A BLOCK is `severe` |
+| Within one | At most one level apart, in the order low, moderate, high, severe |
+| Missed | Expected `high` or `severe`, ours `low` |
+| Over | Expected `low`, ours `high` or `severe` |
+
+An INCOMPLETE check counts with its lower bound and is marked. **AT-70 passes** when at least 70% are
+at the same level, every wallet is within one level, and no wallet is missed unless its reason is
+information we can't have (a label only MistTrack holds).
+
+### 14.3 Re-scoring and tuning
+
+`report` re-scores the recorded exposures offline, with the current settings or with candidate `k`,
+`decay` or category weights (§11.2, §11.3). With the settings they were recorded under, the recorded
+scores come out exactly, which checks the record. A candidate is adopted only if it fixes at least
+2 mismatches and breaks none (D-092). Each adopted change is its own decision. A wallet is never
+re-recorded to make it agree.

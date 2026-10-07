@@ -483,3 +483,5 @@ Live end-to-end on 2.0.0b1: **17 / 17 passed** (610 s). The new step imports the
 ASO 06/26's address BLOCKs by name. The batch step took 182 s (P13: 16 s) because its BSC row ran
 to the 3-minute budget again. BSC's code path is unchanged in P14 (reads ahead are off on BSC), so
 this was most likely HyperSync's speed that day. The monitor step traced 2 real new senders (94 s).
+Again after D-090 (100 nodes per direction on TRON): **17 / 17 passed** (729 s); `investigate` gives
+`TVvWhZyL…` REVIEW · 54 · moderate with 10 indirect exposures.

@@ -905,3 +905,30 @@
 - **Consequences:** A cold TRON check takes about 1.5 minutes on a busy wallet, seconds when
   repeated. It uses about twice the TronGrid requests, monitor runs included: the owner keeps an eye
   on the key's daily quota.
+
+### D-091 · The benchmark set and its targets (owner's choice, Q-37)
+- **Status:** Accepted
+- **Date:** 2026-10-07 · **Phase:** P15
+- **Context:** P15 measures how often amlcheck agrees with MistTrack. There is no MistTrack API and
+  none is used (D-033): the owner looks wallets up on MistTrack's site.
+- **Decision:**
+  - The set is the owner's wallets where the two disagreed, plus 10 wallets from our runs.
+  - For each, only the owner's MistTrack level is stored, with its source and date. MistTrack's
+    score, labels and risk types are never stored.
+  - Our side is a live, traced check, recorded with every exposure.
+  - AT-70 passes at ≥ 70% same level, every wallet within one level, and no wallet that MistTrack
+    rates high or severe rated low by us, unless the reason is information we can't have.
+- **Alternatives:** ≥ 85% same level; a report with no pass line.
+- **Consequences:** The comparison is level against level. Nothing of MistTrack's becomes
+  intelligence in amlcheck.
+
+### D-092 · Tune for patterns only (owner's choice)
+- **Status:** Accepted
+- **Date:** 2026-10-07 · **Phase:** P15
+- **Context:** The set holds 10 to 30 wallets: fitting each one would overfit.
+- **Decision:** A change to `k`, `decay` or a category weight is adopted only if, re-scored offline
+  on the recorded set, it fixes at least 2 mismatches and breaks none. Each adopted change is its own
+  decision. `k` and `decay` are settings, so a change keeps score version 2. A weight change raises
+  `RISK_VERSION`.
+- **Alternatives:** The closest fit.
+- **Consequences:** Some mismatches stay, each with its reason.
