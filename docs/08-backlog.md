@@ -205,7 +205,7 @@
 
 | ID | Ticket | Size | Needs | Done when |
 |---|---|---|---|---|
-| T-15.01 | Benchmark (§14, D-091): `scripts/benchmark.py` import, record, report with offline re-scoring; the set from the owner's wallets and 10 of ours (Q-37) | M | P14 | AT-70 |
-| T-15.02 | Tune `k`, `decay` and weights; decisions recorded | M | T-15.01 | AT-70 |
+| T-15.01 | Benchmark (§14, D-093): `scripts/benchmark.py` import, record, report with offline re-scoring; 10 wallets looked up on MistTrack Light (Q-37) | M | P14 | AT-70 |
+| T-15.02 | Tune `k`, `decay` and weights; decisions recorded (D-095: no candidate qualifies, the defaults stay) | M | T-15.01 | AT-70 |
 | T-15.03 | Operator guide v2; README; release `2.0.0` | S | T-15.02 | Owner sign-off |
 

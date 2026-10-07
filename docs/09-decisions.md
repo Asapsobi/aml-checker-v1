@@ -968,3 +968,15 @@
 - **Alternatives:** Keep the REVIEW; label the contract `allowlist` in the owner's tags.
 - **Consequences:** A wallet that once sent USDT to the contract by mistake no longer gets REVIEW
   for it. Every other frozen address counts as before.
+
+### D-095 · The score settings stay after the benchmark (D-092)
+- **Status:** Accepted
+- **Date:** 2026-10-07 · **Phase:** P15
+- **Context:** On the benchmark set (D-093), 9 of 10 wallets have MistTrack Light's level. The one
+  mismatch is Tether's treasury, whose only exposure is 0.0001% of its volume: no setting reaches it.
+  Six candidates were re-scored offline: `k` 4 and 12, `decay` 0.2 and 0.6, `frozen` weight 1.0,
+  `sanctioned` weight 0.5.
+- **Decision:** `k` = 8, `decay` = 0.4 and the category weights stay. No candidate fixed a mismatch;
+  `k` = 4, `decay` = 0.6 and `sanctioned` = 0.5 each broke 1 or 2 wallets that agree now.
+- **Alternatives:** The closest fit (rejected by D-092).
+- **Consequences:** Score version 2 and risk version 2 are unchanged in 2.0.0.

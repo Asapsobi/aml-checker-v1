@@ -485,3 +485,45 @@ to the 3-minute budget again. BSC's code path is unchanged in P14 (reads ahead a
 this was most likely HyperSync's speed that day. The monitor step traced 2 real new senders (94 s).
 Again after D-090 (100 nodes per direction on TRON): **17 / 17 passed** (729 s); `investigate` gives
 `TVvWhZyL…` REVIEW · 54 · moderate with 10 indirect exposures.
+
+## P15 · Benchmark & 2.0
+
+| ID | Test | Result |
+|---|---|---|
+| AT-70 | `scripts/benchmark.py report` on `tests/benchmark/benchmark.json` (10 live records, 2026-10-07); `test_benchmark.py`, `test_usdt_contract.py` | **Passed**: 9 of 10 at the same level (90%, target 80%); the mismatch and its gap explained; every record gives back its score |
+
+**The benchmark** ([benchmark.md](benchmark.md), D-093). Claude looked up 10 wallets on MistTrack Light,
+MistTrack's free wallet risk assessment, on 2026-10-07. MistTrack's 0–100 score is paid. Each wallet
+was then checked live with its trace.
+
+| | amlcheck low | moderate | high | severe |
+|---|---|---|---|---|
+| MistTrack low | 2 | 0 | 0 | 0 |
+| MistTrack risky | 1 | 3 | 1 | 3 |
+
+**What it showed:**
+- **A false positive, fixed (D-094).** Tether blacklisted its own USDT contract to lock USDT sent to
+  it by mistake. A busy wallet that once sent 401 USDT there got R-EXP-01. Exposures and traces now
+  ignore the contract's own freeze events, and the re-recorded check no longer flags it.
+- **The one mismatch is a difference of method.** MistTrack calls Tether's treasury Risky for
+  5.76% indirect sanctioned money that it follows through exchanges. Our traces stop at exchanges,
+  where funds mix, so the score is 0. The check is still REVIEW for one transfer with a frozen
+  wallet.
+- **Same level, a different picture.** MistTrack shows large *direct* illicit activity for three
+  wallets (52%, 44%, 22%), from private labels on their counterparties. amlcheck shows the same
+  money as sanctioned (Xinbi Guarantee) one or more hops away, or as suspected malicious
+  (inferred). Public data can't match private labels. The levels agree.
+- **A list MistTrack Light doesn't show.** It doesn't flag the wallet under NBCTF order ASO 07/26;
+  amlcheck BLOCKs it.
+
+**Tuning** (T-15.02, D-092). Six candidates were re-scored offline. None qualifies, so the defaults
+stay (D-095).
+
+| Candidate | Same level | Fixed | Broken |
+|---|---|---|---|
+| `k` 12 | 9 / 10 | — | — |
+| `k` 4 | 7 / 10 | — | `TDpbgW7H…`, `TSArbmMU…` |
+| `decay` 0.2 | 9 / 10 | — | — |
+| `decay` 0.6 | 8 / 10 | — | `TVvWhZyL…` |
+| `frozen` weight 1.0 | 9 / 10 | — | — |
+| `sanctioned` weight 0.5 | 7 / 10 | — | `TDpbgW7H…`, `TSArbmMU…` |

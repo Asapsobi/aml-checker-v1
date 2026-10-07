@@ -1,4 +1,1784 @@
 {
- "benchmark_version": 1,
- "wallets": []
+ "benchmark_version": 2,
+ "wallets": [
+  {
+   "address": "0x0c1e52495a1d1ed21f00f389284d0eb4e0ee1576",
+   "cause": null,
+   "chain": "bsc",
+   "note": "from our runs",
+   "reason": null,
+   "recorded": {
+    "at": "2026-10-07T10:53:28.823802Z",
+    "check_id": "f585b668-7266-4cbc-8412-45b4f140ee95",
+    "config_hash": "456cbb83717c17930a65d8e0fa65216d99b1b56b1da0b995d6d9b56e24f54a71",
+    "coverage_in": "0.155113",
+    "coverage_out": "0.491814",
+    "decay": "0.4",
+    "exposures": [],
+    "k": "8",
+    "level": "low",
+    "rules": [
+     "R-HEU-01",
+     "R-HEU-02",
+     "R-TRC-04"
+    ],
+    "score": 15,
+    "verdict": "NO_HITS",
+    "version": "2.0.0b1"
+   },
+   "risks": [],
+   "source": "MistTrack Light, 2026-10-07",
+   "theirs": "low"
+  },
+  {
+   "address": "TA3941uFAvmVibSkQ6fMJXxmaSNovX86mz",
+   "cause": null,
+   "chain": "tron",
+   "note": "from our runs",
+   "reason": null,
+   "recorded": {
+    "at": "2026-10-07T10:56:06.484754Z",
+    "check_id": "df79ae43-7f42-4aa5-ae00-47eed993e11c",
+    "config_hash": "456cbb83717c17930a65d8e0fa65216d99b1b56b1da0b995d6d9b56e24f54a71",
+    "coverage_in": "0.950607",
+    "coverage_out": null,
+    "decay": "0.4",
+    "exposures": [
+     {
+      "address": "TAg7Tc5tQT8F2igqtfsNHvTdPHXBgDxabe",
+      "category": "frozen",
+      "confidence": null,
+      "direction": "in",
+      "entity": "Tether-frozen",
+      "estimated_usdt": null,
+      "exposure_type": "direct",
+      "hop": 1,
+      "inferred": false,
+      "path": [
+       "TA3941uFAvmVibSkQ6fMJXxmaSNovX86mz",
+       "TAg7Tc5tQT8F2igqtfsNHvTdPHXBgDxabe"
+      ],
+      "percent": "0.596433",
+      "risk_type": "frozen",
+      "volume_usdt": "180526"
+     }
+    ],
+    "k": "8",
+    "level": "severe",
+    "rules": [
+     "R-EXP-01",
+     "R-EXP-02",
+     "R-FRZ-01",
+     "R-SAN-01"
+    ],
+    "score": 100,
+    "verdict": "BLOCK",
+    "version": "2.0.0b1"
+   },
+   "risks": [
+    {
+     "exposure": "direct",
+     "risk_type": "Illicit Activity",
+     "share": "100"
+    }
+   ],
+   "source": "MistTrack Light, 2026-10-07",
+   "theirs": "risky"
+  },
+  {
+   "address": "TB5UPBTtXYwwmSviWBkQcFM64o6R1CDXUY",
+   "cause": null,
+   "chain": "tron",
+   "note": "from our runs",
+   "reason": null,
+   "recorded": {
+    "at": "2026-10-07T10:56:09.009764Z",
+    "check_id": "cfc78548-af81-4a53-acbc-43645dba3224",
+    "config_hash": "456cbb83717c17930a65d8e0fa65216d99b1b56b1da0b995d6d9b56e24f54a71",
+    "coverage_in": "0.290477",
+    "coverage_out": "0.364084",
+    "decay": "0.4",
+    "exposures": [
+     {
+      "address": "TP834zaucGKtAVjJPc9QQQkz5ses87KEf8",
+      "category": "sanctioned",
+      "confidence": null,
+      "direction": "out",
+      "entity": "NBCTF: order ASO 06/26",
+      "estimated_usdt": null,
+      "exposure_type": "direct",
+      "hop": 1,
+      "inferred": false,
+      "path": [
+       "TB5UPBTtXYwwmSviWBkQcFM64o6R1CDXUY",
+       "TP834zaucGKtAVjJPc9QQQkz5ses87KEf8"
+      ],
+      "percent": "0.191412",
+      "risk_type": "sanctioned_entity",
+      "volume_usdt": "542755"
+     },
+     {
+      "address": "TPjV5GhMM3e5woPgGoWavKgCyKop6tsVy7",
+      "category": "suspected_malicious",
+      "confidence": "1",
+      "direction": "out",
+      "entity": "SUSPECTED_MALICIOUS",
+      "estimated_usdt": "381000",
+      "exposure_type": "direct",
+      "hop": 1,
+      "inferred": true,
+      "path": [
+       "TB5UPBTtXYwwmSviWBkQcFM64o6R1CDXUY",
+       "TPjV5GhMM3e5woPgGoWavKgCyKop6tsVy7"
+      ],
+      "percent": "0.078639",
+      "risk_type": "illicit_activity",
+      "volume_usdt": "222981.5668202764976958525346"
+     },
+     {
+      "address": "TP834zaucGKtAVjJPc9QQQkz5ses87KEf8",
+      "category": "sanctioned",
+      "confidence": null,
+      "direction": "in",
+      "entity": "NBCTF: order ASO 06/26",
+      "estimated_usdt": "7854.87183",
+      "exposure_type": "indirect",
+      "hop": 2,
+      "inferred": false,
+      "path": [
+       "TB5UPBTtXYwwmSviWBkQcFM64o6R1CDXUY",
+       "TPZzGrhwetLFYUYzBAaYRe6QeYVqyfuW8K",
+       "TP834zaucGKtAVjJPc9QQQkz5ses87KEf8"
+      ],
+      "percent": "0.034956",
+      "risk_type": "sanctioned_entity",
+      "volume_usdt": "100000"
+     },
+     {
+      "address": "TDduLTxUF4Vf5HTRU5tRdMgFmTyV65Zd91",
+      "category": "frozen",
+      "confidence": null,
+      "direction": "out",
+      "entity": "Tether-frozen",
+      "estimated_usdt": "2268.461188",
+      "exposure_type": "indirect",
+      "hop": 4,
+      "inferred": false,
+      "path": [
+       "TB5UPBTtXYwwmSviWBkQcFM64o6R1CDXUY",
+       "TWkaZR9DPkFninJjdSRtjJtCfeo7TfRUv6",
+       "TMjfXyPnMNDGMoTFrxzs4cgM96rNdZ3Gm5",
+       "TA1Vkoc3GdUG26Awd75Cj74rPAETLiJ6dA",
+       "TDduLTxUF4Vf5HTRU5tRdMgFmTyV65Zd91"
+      ],
+      "percent": "0.072735",
+      "risk_type": "frozen",
+      "volume_usdt": "206241.796292"
+     },
+     {
+      "address": "TP834zaucGKtAVjJPc9QQQkz5ses87KEf8",
+      "category": "sanctioned",
+      "confidence": null,
+      "direction": "in",
+      "entity": "NBCTF: order ASO 06/26",
+      "estimated_usdt": "5026.579879",
+      "exposure_type": "indirect",
+      "hop": 3,
+      "inferred": false,
+      "path": [
+       "TB5UPBTtXYwwmSviWBkQcFM64o6R1CDXUY",
+       "TUHtsWkT15883ggHMGS138dVoNJJvMYxiE",
+       "TPZzGrhwetLFYUYzBAaYRe6QeYVqyfuW8K",
+       "TP834zaucGKtAVjJPc9QQQkz5ses87KEf8"
+      ],
+      "percent": "0.036651",
+      "risk_type": "sanctioned_entity",
+      "volume_usdt": "104846.68128"
+     },
+     {
+      "address": "TP834zaucGKtAVjJPc9QQQkz5ses87KEf8",
+      "category": "sanctioned",
+      "confidence": null,
+      "direction": "in",
+      "entity": "NBCTF: order ASO 06/26",
+      "estimated_usdt": "2095.037311",
+      "exposure_type": "indirect",
+      "hop": 3,
+      "inferred": false,
+      "path": [
+       "TB5UPBTtXYwwmSviWBkQcFM64o6R1CDXUY",
+       "TUHtsWkT15883ggHMGS138dVoNJJvMYxiE",
+       "TUvdesUnuCDrUqG5HX5ZHeMV5rtKXP47Bi",
+       "TP834zaucGKtAVjJPc9QQQkz5ses87KEf8"
+      ],
+      "percent": "0.035877",
+      "risk_type": "sanctioned_entity",
+      "volume_usdt": "102633.31872"
+     },
+     {
+      "address": "TDduLTxUF4Vf5HTRU5tRdMgFmTyV65Zd91",
+      "category": "frozen",
+      "confidence": null,
+      "direction": "out",
+      "entity": "Tether-frozen",
+      "estimated_usdt": "1107.611926",
+      "exposure_type": "indirect",
+      "hop": 4,
+      "inferred": false,
+      "path": [
+       "TB5UPBTtXYwwmSviWBkQcFM64o6R1CDXUY",
+       "TRneCpa4beE2ctMu1Z1JCdX92BtJU4u5Xr",
+       "TMjfXyPnMNDGMoTFrxzs4cgM96rNdZ3Gm5",
+       "TA1Vkoc3GdUG26Awd75Cj74rPAETLiJ6dA",
+       "TDduLTxUF4Vf5HTRU5tRdMgFmTyV65Zd91"
+      ],
+      "percent": "0.064841",
+      "risk_type": "frozen",
+      "volume_usdt": "183858.333333"
+     },
+     {
+      "address": "TDduLTxUF4Vf5HTRU5tRdMgFmTyV65Zd91",
+      "category": "frozen",
+      "confidence": null,
+      "direction": "out",
+      "entity": "Tether-frozen",
+      "estimated_usdt": "208.47488",
+      "exposure_type": "indirect",
+      "hop": 5,
+      "inferred": false,
+      "path": [
+       "TB5UPBTtXYwwmSviWBkQcFM64o6R1CDXUY",
+       "TWkaZR9DPkFninJjdSRtjJtCfeo7TfRUv6",
+       "TRczSMnBcW19LPSbXp19BrMYVk626r4eJy",
+       "TEjaLFZtpfuTCgT3MSy5qdfHbCfuNqEJzP",
+       "TJTq5EkkokqK52aEF8PvRBs2nRYaR5XNWt",
+       "TDduLTxUF4Vf5HTRU5tRdMgFmTyV65Zd91"
+      ],
+      "percent": "0.080332",
+      "risk_type": "frozen",
+      "volume_usdt": "227784.611123"
+     },
+     {
+      "address": "TDduLTxUF4Vf5HTRU5tRdMgFmTyV65Zd91",
+      "category": "frozen",
+      "confidence": null,
+      "direction": "out",
+      "entity": "Tether-frozen",
+      "estimated_usdt": "105.35161",
+      "exposure_type": "indirect",
+      "hop": 5,
+      "inferred": false,
+      "path": [
+       "TB5UPBTtXYwwmSviWBkQcFM64o6R1CDXUY",
+       "TWkaZR9DPkFninJjdSRtjJtCfeo7TfRUv6",
+       "TMjfXyPnMNDGMoTFrxzs4cgM96rNdZ3Gm5",
+       "TA1Vkoc3GdUG26Awd75Cj74rPAETLiJ6dA",
+       "TPKjqjAfWCmakChQ8wMV3EZMuEqo7wU7Ue",
+       "TDduLTxUF4Vf5HTRU5tRdMgFmTyV65Zd91"
+      ],
+      "percent": "0.072735",
+      "risk_type": "frozen",
+      "volume_usdt": "206241.796292"
+     },
+     {
+      "address": "TDduLTxUF4Vf5HTRU5tRdMgFmTyV65Zd91",
+      "category": "frozen",
+      "confidence": null,
+      "direction": "out",
+      "entity": "Tether-frozen",
+      "estimated_usdt": "141.488432",
+      "exposure_type": "indirect",
+      "hop": 5,
+      "inferred": false,
+      "path": [
+       "TB5UPBTtXYwwmSviWBkQcFM64o6R1CDXUY",
+       "TWkaZR9DPkFninJjdSRtjJtCfeo7TfRUv6",
+       "TMjfXyPnMNDGMoTFrxzs4cgM96rNdZ3Gm5",
+       "TJNxcF6j8GQnALVausw7zUMhLF3AjwWQjv",
+       "TA1Vkoc3GdUG26Awd75Cj74rPAETLiJ6dA",
+       "TDduLTxUF4Vf5HTRU5tRdMgFmTyV65Zd91"
+      ],
+      "percent": "0.072735",
+      "risk_type": "frozen",
+      "volume_usdt": "206241.796292"
+     },
+     {
+      "address": "TDduLTxUF4Vf5HTRU5tRdMgFmTyV65Zd91",
+      "category": "frozen",
+      "confidence": null,
+      "direction": "out",
+      "entity": "Tether-frozen",
+      "estimated_usdt": "51.439584",
+      "exposure_type": "indirect",
+      "hop": 5,
+      "inferred": false,
+      "path": [
+       "TB5UPBTtXYwwmSviWBkQcFM64o6R1CDXUY",
+       "TRneCpa4beE2ctMu1Z1JCdX92BtJU4u5Xr",
+       "TMjfXyPnMNDGMoTFrxzs4cgM96rNdZ3Gm5",
+       "TA1Vkoc3GdUG26Awd75Cj74rPAETLiJ6dA",
+       "TPKjqjAfWCmakChQ8wMV3EZMuEqo7wU7Ue",
+       "TDduLTxUF4Vf5HTRU5tRdMgFmTyV65Zd91"
+      ],
+      "percent": "0.064841",
+      "risk_type": "frozen",
+      "volume_usdt": "183858.333333"
+     },
+     {
+      "address": "TDduLTxUF4Vf5HTRU5tRdMgFmTyV65Zd91",
+      "category": "frozen",
+      "confidence": null,
+      "direction": "out",
+      "entity": "Tether-frozen",
+      "estimated_usdt": "69.083957",
+      "exposure_type": "indirect",
+      "hop": 5,
+      "inferred": false,
+      "path": [
+       "TB5UPBTtXYwwmSviWBkQcFM64o6R1CDXUY",
+       "TRneCpa4beE2ctMu1Z1JCdX92BtJU4u5Xr",
+       "TMjfXyPnMNDGMoTFrxzs4cgM96rNdZ3Gm5",
+       "TJNxcF6j8GQnALVausw7zUMhLF3AjwWQjv",
+       "TA1Vkoc3GdUG26Awd75Cj74rPAETLiJ6dA",
+       "TDduLTxUF4Vf5HTRU5tRdMgFmTyV65Zd91"
+      ],
+      "percent": "0.064841",
+      "risk_type": "frozen",
+      "volume_usdt": "183858.333333"
+     },
+     {
+      "address": "TDduLTxUF4Vf5HTRU5tRdMgFmTyV65Zd91",
+      "category": "frozen",
+      "confidence": null,
+      "direction": "out",
+      "entity": "Tether-frozen",
+      "estimated_usdt": "391.357329",
+      "exposure_type": "indirect",
+      "hop": 5,
+      "inferred": false,
+      "path": [
+       "TB5UPBTtXYwwmSviWBkQcFM64o6R1CDXUY",
+       "TPjV5GhMM3e5woPgGoWavKgCyKop6tsVy7",
+       "TRczSMnBcW19LPSbXp19BrMYVk626r4eJy",
+       "TEjaLFZtpfuTCgT3MSy5qdfHbCfuNqEJzP",
+       "TJTq5EkkokqK52aEF8PvRBs2nRYaR5XNWt",
+       "TDduLTxUF4Vf5HTRU5tRdMgFmTyV65Zd91"
+      ],
+      "percent": "0.055728",
+      "risk_type": "frozen",
+      "volume_usdt": "158018.43318"
+     },
+     {
+      "address": "TTVqPB3KaD7WpbUPr2pxvXL7V45iRTYi93",
+      "category": "sanctioned",
+      "confidence": null,
+      "direction": "in",
+      "entity": "NBCTF: order ASO 02/26",
+      "estimated_usdt": null,
+      "exposure_type": "direct",
+      "hop": 1,
+      "inferred": false,
+      "path": [
+       "TB5UPBTtXYwwmSviWBkQcFM64o6R1CDXUY",
+       "TTVqPB3KaD7WpbUPr2pxvXL7V45iRTYi93"
+      ],
+      "percent": "0.00437",
+      "risk_type": "sanctioned_entity",
+      "volume_usdt": "12500"
+     },
+     {
+      "address": "TFcLDs8SWxc4WoaJvk5pXuJd6wuZkG2ZiN",
+      "category": "frozen",
+      "confidence": null,
+      "direction": "in",
+      "entity": "Tether-frozen",
+      "estimated_usdt": "843.859154",
+      "exposure_type": "indirect",
+      "hop": 5,
+      "inferred": false,
+      "path": [
+       "TB5UPBTtXYwwmSviWBkQcFM64o6R1CDXUY",
+       "TPZzGrhwetLFYUYzBAaYRe6QeYVqyfuW8K",
+       "TNBANbPmg5RzPSc6PQKfj7SaaByQeUSCTD",
+       "TGt8XDF2UdddgfA673HJEMxWGi1CwuV4PH",
+       "TVbAAh7sjudfxWqJVbcPfyApGQjBKjwZaE",
+       "TFcLDs8SWxc4WoaJvk5pXuJd6wuZkG2ZiN"
+      ],
+      "percent": "0.034956",
+      "risk_type": "frozen",
+      "volume_usdt": "100000"
+     }
+    ],
+    "k": "8",
+    "level": "severe",
+    "rules": [
+     "R-EXP-01",
+     "R-FRZ-01",
+     "R-SAN-01",
+     "R-TRC-01",
+     "R-TRC-02",
+     "R-TRC-04"
+    ],
+    "score": 100,
+    "verdict": "BLOCK",
+    "version": "2.0.0b1"
+   },
+   "risks": [
+    {
+     "exposure": "direct",
+     "risk_type": "Illicit Activity",
+     "share": "100"
+    }
+   ],
+   "source": "MistTrack Light, 2026-10-07",
+   "theirs": "risky"
+  },
+  {
+   "address": "TDpbgW7HJnNh7s7kHEqfBuWaeFqTZPBdNA",
+   "cause": null,
+   "chain": "tron",
+   "note": "from our runs",
+   "reason": null,
+   "recorded": {
+    "at": "2026-10-07T10:56:11.376430Z",
+    "check_id": "421fab70-1ec1-4f9b-8bcf-c5925b443283",
+    "config_hash": "456cbb83717c17930a65d8e0fa65216d99b1b56b1da0b995d6d9b56e24f54a71",
+    "coverage_in": "0.508891",
+    "coverage_out": "0.758916",
+    "decay": "0.4",
+    "exposures": [
+     {
+      "address": "TMUS8vwpZJRR1E3qAmfkRiZ2nZwAx9D3zi",
+      "category": "sanctioned",
+      "confidence": null,
+      "direction": "in",
+      "entity": "NBCTF: order ASO 07/26",
+      "estimated_usdt": null,
+      "exposure_type": "direct",
+      "hop": 1,
+      "inferred": false,
+      "path": [
+       "TDpbgW7HJnNh7s7kHEqfBuWaeFqTZPBdNA",
+       "TMUS8vwpZJRR1E3qAmfkRiZ2nZwAx9D3zi"
+      ],
+      "percent": "0.077876",
+      "risk_type": "sanctioned_entity",
+      "volume_usdt": "15000"
+     },
+     {
+      "address": "TKFEGDZuwhvvRbCQ6RPhCfi7159nfZz5PQ",
+      "category": "suspected_malicious",
+      "confidence": "0.49",
+      "direction": "in",
+      "entity": "SUSPECTED_MALICIOUS",
+      "estimated_usdt": "1790.821146",
+      "exposure_type": "indirect",
+      "hop": 3,
+      "inferred": true,
+      "path": [
+       "TDpbgW7HJnNh7s7kHEqfBuWaeFqTZPBdNA",
+       "TYAPTr7w1NL2sSZLFTy2YZqUoWziCsNfgt",
+       "TT5A4jMtqyYYMwPr6tcbSzrrRBY1D5QmPF",
+       "TKFEGDZuwhvvRbCQ6RPhCfi7159nfZz5PQ"
+      ],
+      "percent": "0.015575",
+      "risk_type": "illicit_activity",
+      "volume_usdt": "3000"
+     }
+    ],
+    "k": "8",
+    "level": "moderate",
+    "rules": [
+     "R-EXP-01",
+     "R-EXP-02",
+     "R-SCR-01"
+    ],
+    "score": 47,
+    "verdict": "REVIEW",
+    "version": "2.0.0b1"
+   },
+   "risks": [
+    {
+     "exposure": "indirect",
+     "risk_type": "Sanctioned Entity",
+     "share": "14.86"
+    },
+    {
+     "exposure": "indirect",
+     "risk_type": "Illicit Activity",
+     "share": "9.51"
+    }
+   ],
+   "source": "MistTrack Light, 2026-10-07",
+   "theirs": "risky"
+  },
+  {
+   "address": "TKHuVq1oKVruCGLvqVexFs6dawKv6fQgFs",
+   "cause": "method",
+   "chain": "tron",
+   "note": "from our runs",
+   "reason": "Tether's treasury issues to and redeems from exchanges. Our traces stop at exchanges, where funds mix, so none of its money reaches a sanctioned address in our trace; MistTrack Light follows money through them (5.76% indirect sanctioned) and calls any risky funds Risky. We still give REVIEW: one transfer with a Tether-frozen wallet, 0.0001% of its volume, so the score is 0.",
+   "recorded": {
+    "at": "2026-10-07T10:56:13.929757Z",
+    "check_id": "ace2b7e7-0c36-42f7-9880-1369de250470",
+    "config_hash": "456cbb83717c17930a65d8e0fa65216d99b1b56b1da0b995d6d9b56e24f54a71",
+    "coverage_in": "0.742952",
+    "coverage_out": "0.611966",
+    "decay": "0.4",
+    "exposures": [
+     {
+      "address": "TQLK3z7kEGiACUCAXX6zNx7hHvMnEF4cw8",
+      "category": "frozen",
+      "confidence": null,
+      "direction": "out",
+      "entity": "Tether-frozen",
+      "estimated_usdt": null,
+      "exposure_type": "direct",
+      "hop": 1,
+      "inferred": false,
+      "path": [
+       "TKHuVq1oKVruCGLvqVexFs6dawKv6fQgFs",
+       "TQLK3z7kEGiACUCAXX6zNx7hHvMnEF4cw8"
+      ],
+      "percent": "0.000001",
+      "risk_type": "frozen",
+      "volume_usdt": "247015"
+     }
+    ],
+    "k": "8",
+    "level": "low",
+    "rules": [
+     "R-EXP-01"
+    ],
+    "score": 0,
+    "verdict": "REVIEW",
+    "version": "2.0.0b1"
+   },
+   "risks": [
+    {
+     "exposure": "indirect",
+     "risk_type": "Sanctioned Entity",
+     "share": "5.76"
+    },
+    {
+     "exposure": "direct",
+     "risk_type": "Risky Exchange",
+     "share": "0"
+    },
+    {
+     "exposure": "direct",
+     "risk_type": "Mixer",
+     "share": "0"
+    },
+    {
+     "exposure": "indirect",
+     "risk_type": "Illicit Activity",
+     "share": "0"
+    },
+    {
+     "exposure": "direct",
+     "risk_type": "Illicit Activity",
+     "share": "0"
+    }
+   ],
+   "source": "MistTrack Light, 2026-10-07",
+   "theirs": "risky"
+  },
+  {
+   "address": "TMUS8vwpZJRR1E3qAmfkRiZ2nZwAx9D3zi",
+   "cause": null,
+   "chain": "tron",
+   "note": "from our runs",
+   "reason": null,
+   "recorded": {
+    "at": "2026-10-07T10:56:16.276230Z",
+    "check_id": "c1fa97fc-2462-464c-b4bd-470c80ba4bb6",
+    "config_hash": "456cbb83717c17930a65d8e0fa65216d99b1b56b1da0b995d6d9b56e24f54a71",
+    "coverage_in": "0.537919",
+    "coverage_out": "0.680937",
+    "decay": "0.4",
+    "exposures": [
+     {
+      "address": "TVWfvLURTyojEPimot8DfRVha1py3WA7rS",
+      "category": "sanctioned",
+      "confidence": null,
+      "direction": "in",
+      "entity": "NBCTF: order ASO 07/26",
+      "estimated_usdt": null,
+      "exposure_type": "direct",
+      "hop": 1,
+      "inferred": false,
+      "path": [
+       "TMUS8vwpZJRR1E3qAmfkRiZ2nZwAx9D3zi",
+       "TVWfvLURTyojEPimot8DfRVha1py3WA7rS"
+      ],
+      "percent": "0.185969",
+      "risk_type": "sanctioned_entity",
+      "volume_usdt": "23000"
+     },
+     {
+      "address": "TKU8d7bSEej26MqLtQz6Muc6S8xUQkPXxQ",
+      "category": "suspected_malicious",
+      "confidence": "0.73",
+      "direction": "out",
+      "entity": "SUSPECTED_MALICIOUS",
+      "estimated_usdt": "42971.696035",
+      "exposure_type": "direct",
+      "hop": 1,
+      "inferred": true,
+      "path": [
+       "TMUS8vwpZJRR1E3qAmfkRiZ2nZwAx9D3zi",
+       "TKU8d7bSEej26MqLtQz6Muc6S8xUQkPXxQ"
+      ],
+      "percent": "0.347452",
+      "risk_type": "illicit_activity",
+      "volume_usdt": "42971.696035"
+     },
+     {
+      "address": "TVRNrvsEtV9mFkpovSGsXFkZFCA1QYTFEH",
+      "category": "sanctioned",
+      "confidence": null,
+      "direction": "in",
+      "entity": "NBCTF: order ASO 07/26",
+      "estimated_usdt": null,
+      "exposure_type": "direct",
+      "hop": 1,
+      "inferred": false,
+      "path": [
+       "TMUS8vwpZJRR1E3qAmfkRiZ2nZwAx9D3zi",
+       "TVRNrvsEtV9mFkpovSGsXFkZFCA1QYTFEH"
+      ],
+      "percent": "0.083282",
+      "risk_type": "sanctioned_entity",
+      "volume_usdt": "10300"
+     },
+     {
+      "address": "TDL3nhKuBZtL119XQzdGPdmF6ipiychsF7",
+      "category": "sanctioned",
+      "confidence": null,
+      "direction": "in",
+      "entity": "NBCTF: order ASO 07/26",
+      "estimated_usdt": null,
+      "exposure_type": "direct",
+      "hop": 1,
+      "inferred": false,
+      "path": [
+       "TMUS8vwpZJRR1E3qAmfkRiZ2nZwAx9D3zi",
+       "TDL3nhKuBZtL119XQzdGPdmF6ipiychsF7"
+      ],
+      "percent": "0.08033",
+      "risk_type": "sanctioned_entity",
+      "volume_usdt": "9935"
+     },
+     {
+      "address": "TDL3nhKuBZtL119XQzdGPdmF6ipiychsF7",
+      "category": "sanctioned",
+      "confidence": null,
+      "direction": "out",
+      "entity": "NBCTF: order ASO 07/26",
+      "estimated_usdt": null,
+      "exposure_type": "direct",
+      "hop": 1,
+      "inferred": false,
+      "path": [
+       "TMUS8vwpZJRR1E3qAmfkRiZ2nZwAx9D3zi",
+       "TDL3nhKuBZtL119XQzdGPdmF6ipiychsF7"
+      ],
+      "percent": "0.07611",
+      "risk_type": "sanctioned_entity",
+      "volume_usdt": "9413"
+     },
+     {
+      "address": "TKkMY4DbHfCfaEHG1c5b8KFuXRBm5EG73G",
+      "category": "sanctioned",
+      "confidence": null,
+      "direction": "out",
+      "entity": "NBCTF: order ASO 07/26",
+      "estimated_usdt": null,
+      "exposure_type": "direct",
+      "hop": 1,
+      "inferred": false,
+      "path": [
+       "TMUS8vwpZJRR1E3qAmfkRiZ2nZwAx9D3zi",
+       "TKkMY4DbHfCfaEHG1c5b8KFuXRBm5EG73G"
+      ],
+      "percent": "0.032342",
+      "risk_type": "sanctioned_entity",
+      "volume_usdt": "4000"
+     },
+     {
+      "address": "TMgJL38AJ2gxZCcrgY8CcXuSmUvpYKUvWM",
+      "category": "sanctioned",
+      "confidence": null,
+      "direction": "in",
+      "entity": "NBCTF: order ASO 07/26",
+      "estimated_usdt": null,
+      "exposure_type": "direct",
+      "hop": 1,
+      "inferred": false,
+      "path": [
+       "TMUS8vwpZJRR1E3qAmfkRiZ2nZwAx9D3zi",
+       "TMgJL38AJ2gxZCcrgY8CcXuSmUvpYKUvWM"
+      ],
+      "percent": "0.021427",
+      "risk_type": "sanctioned_entity",
+      "volume_usdt": "2650"
+     }
+    ],
+    "k": "8",
+    "level": "severe",
+    "rules": [
+     "R-EXP-01",
+     "R-EXP-02",
+     "R-SAN-01"
+    ],
+    "score": 100,
+    "verdict": "BLOCK",
+    "version": "2.0.0b1"
+   },
+   "risks": [
+    {
+     "exposure": "direct",
+     "risk_type": "Illicit Activity",
+     "share": "22.27"
+    },
+    {
+     "exposure": "indirect",
+     "risk_type": "Sanctioned Entity",
+     "share": "4.62"
+    },
+    {
+     "exposure": "indirect",
+     "risk_type": "Illicit Activity",
+     "share": "4.52"
+    },
+    {
+     "exposure": "direct",
+     "risk_type": "Risky Exchange",
+     "share": "0.16"
+    }
+   ],
+   "source": "MistTrack Light, 2026-10-07",
+   "theirs": "risky"
+  },
+  {
+   "address": "TSArbmMUf5ZYpEU1ChC6BPhpT7bgVF2Rku",
+   "cause": null,
+   "chain": "tron",
+   "note": "from our runs",
+   "reason": null,
+   "recorded": {
+    "at": "2026-10-07T10:56:18.274407Z",
+    "check_id": "114f7739-bc50-4c72-8a2a-787b37f666fd",
+    "config_hash": "456cbb83717c17930a65d8e0fa65216d99b1b56b1da0b995d6d9b56e24f54a71",
+    "coverage_in": "0.310127",
+    "coverage_out": "0.155938",
+    "decay": "0.4",
+    "exposures": [
+     {
+      "address": "TNwe3WoEX6XrQ5NPAeWPkvpTtdaf27XYxK",
+      "category": "sanctioned",
+      "confidence": null,
+      "direction": "in",
+      "entity": "OFAC SDN: XINBI GUARANTEE",
+      "estimated_usdt": null,
+      "exposure_type": "direct",
+      "hop": 1,
+      "inferred": false,
+      "path": [
+       "TSArbmMUf5ZYpEU1ChC6BPhpT7bgVF2Rku",
+       "TNwe3WoEX6XrQ5NPAeWPkvpTtdaf27XYxK"
+      ],
+      "percent": "0.056108",
+      "risk_type": "sanctioned_entity",
+      "volume_usdt": "61452"
+     },
+     {
+      "address": "TNwe3WoEX6XrQ5NPAeWPkvpTtdaf27XYxK",
+      "category": "sanctioned",
+      "confidence": null,
+      "direction": "in",
+      "entity": "OFAC SDN: XINBI GUARANTEE",
+      "estimated_usdt": "450.741833",
+      "exposure_type": "indirect",
+      "hop": 4,
+      "inferred": false,
+      "path": [
+       "TSArbmMUf5ZYpEU1ChC6BPhpT7bgVF2Rku",
+       "TPvQdTGeda4a4waByEh9PSsVFbk5ZWyLyr",
+       "TCc1BAEnXCJNcnKKnDPPK3w1dh9QJRBxG7",
+       "TQqG37vceUqS5ZKHkARS6zDcKGb9ATHByk",
+       "TNwe3WoEX6XrQ5NPAeWPkvpTtdaf27XYxK"
+      ],
+      "percent": "0.028642",
+      "risk_type": "sanctioned_entity",
+      "volume_usdt": "31370"
+     },
+     {
+      "address": "TNwe3WoEX6XrQ5NPAeWPkvpTtdaf27XYxK",
+      "category": "sanctioned",
+      "confidence": null,
+      "direction": "in",
+      "entity": "OFAC SDN: XINBI GUARANTEE",
+      "estimated_usdt": "72.006169",
+      "exposure_type": "indirect",
+      "hop": 5,
+      "inferred": false,
+      "path": [
+       "TSArbmMUf5ZYpEU1ChC6BPhpT7bgVF2Rku",
+       "TPvQdTGeda4a4waByEh9PSsVFbk5ZWyLyr",
+       "TCc1BAEnXCJNcnKKnDPPK3w1dh9QJRBxG7",
+       "TQqG37vceUqS5ZKHkARS6zDcKGb9ATHByk",
+       "TWe1ArU3TkgEGovmyQN4XeF2JTQTonP5fV",
+       "TNwe3WoEX6XrQ5NPAeWPkvpTtdaf27XYxK"
+      ],
+      "percent": "0.028642",
+      "risk_type": "sanctioned_entity",
+      "volume_usdt": "31370"
+     },
+     {
+      "address": "TSejKphDPcPb5p5Q5UVzxUHobdrn2Ttae3",
+      "category": "suspected_malicious",
+      "confidence": "0.23",
+      "direction": "in",
+      "entity": "SUSPECTED_MALICIOUS",
+      "estimated_usdt": "3741.168443",
+      "exposure_type": "indirect",
+      "hop": 4,
+      "inferred": true,
+      "path": [
+       "TSArbmMUf5ZYpEU1ChC6BPhpT7bgVF2Rku",
+       "TG9NNsigZUTTHombi27cnCXYd7twju8x8F",
+       "TBem54QXZ6uavurfsFjrUXVWK5fTVHWiFd",
+       "TBmp8uPs2YfkNRAiVNHKte4YpAogtLiQAk",
+       "TSejKphDPcPb5p5Q5UVzxUHobdrn2Ttae3"
+      ],
+      "percent": "0.022029",
+      "risk_type": "illicit_activity",
+      "volume_usdt": "24127"
+     }
+    ],
+    "k": "8",
+    "level": "moderate",
+    "rules": [
+     "R-EXP-01",
+     "R-EXP-02",
+     "R-SCR-01",
+     "R-TRC-01",
+     "R-TRC-04"
+    ],
+    "score": 41,
+    "verdict": "REVIEW",
+    "version": "2.0.0b1"
+   },
+   "risks": [
+    {
+     "exposure": "direct",
+     "risk_type": "Illicit Activity",
+     "share": "44.09"
+    },
+    {
+     "exposure": "indirect",
+     "risk_type": "Illicit Activity",
+     "share": "12.67"
+    },
+    {
+     "exposure": "indirect",
+     "risk_type": "Sanctioned Entity",
+     "share": "8.6"
+    },
+    {
+     "exposure": "direct",
+     "risk_type": "Risky Exchange",
+     "share": "0.84"
+    }
+   ],
+   "source": "MistTrack Light, 2026-10-07",
+   "theirs": "risky"
+  },
+  {
+   "address": "TU4vEruvZwLLkSfV9bNw12EJTPvNr7Pvaa",
+   "cause": null,
+   "chain": "tron",
+   "note": "from our runs",
+   "reason": null,
+   "recorded": {
+    "at": "2026-10-07T10:56:20.436043Z",
+    "check_id": "55885333-6a85-4203-88eb-15569b7f235b",
+    "config_hash": "456cbb83717c17930a65d8e0fa65216d99b1b56b1da0b995d6d9b56e24f54a71",
+    "coverage_in": null,
+    "coverage_out": null,
+    "decay": "0.4",
+    "exposures": [],
+    "k": "8",
+    "level": "low",
+    "rules": [
+     "R-HEU-03",
+     "R-HEU-04",
+     "R-SYS-01"
+    ],
+    "score": 15,
+    "verdict": "INCOMPLETE",
+    "version": "2.0.0b1"
+   },
+   "risks": [],
+   "source": "MistTrack Light, 2026-10-07",
+   "theirs": "low"
+  },
+  {
+   "address": "TVvWhZyLcd2DT2Y78XpyrUS3SyzfLeSsWP",
+   "cause": null,
+   "chain": "tron",
+   "note": "from our runs",
+   "reason": null,
+   "recorded": {
+    "at": "2026-10-07T10:56:24.744264Z",
+    "check_id": "8b045812-1bb4-4560-8000-1c7b34d12f90",
+    "config_hash": "456cbb83717c17930a65d8e0fa65216d99b1b56b1da0b995d6d9b56e24f54a71",
+    "coverage_in": "0.301805",
+    "coverage_out": "0.06443",
+    "decay": "0.4",
+    "exposures": [
+     {
+      "address": "TNwe3WoEX6XrQ5NPAeWPkvpTtdaf27XYxK",
+      "category": "sanctioned",
+      "confidence": null,
+      "direction": "in",
+      "entity": "OFAC SDN: XINBI GUARANTEE",
+      "estimated_usdt": "2217.263619",
+      "exposure_type": "indirect",
+      "hop": 2,
+      "inferred": false,
+      "path": [
+       "TVvWhZyLcd2DT2Y78XpyrUS3SyzfLeSsWP",
+       "TSArbmMUf5ZYpEU1ChC6BPhpT7bgVF2Rku",
+       "TNwe3WoEX6XrQ5NPAeWPkvpTtdaf27XYxK"
+      ],
+      "percent": "0.049021",
+      "risk_type": "sanctioned_entity",
+      "volume_usdt": "17366.5"
+     },
+     {
+      "address": "TXHX2NUvcgft4zs6MkkUtdNVERPTavHDWN",
+      "category": "sanctioned",
+      "confidence": null,
+      "direction": "in",
+      "entity": "OFAC SDN: XINBI GUARANTEE",
+      "estimated_usdt": "15.011324",
+      "exposure_type": "indirect",
+      "hop": 5,
+      "inferred": false,
+      "path": [
+       "TVvWhZyLcd2DT2Y78XpyrUS3SyzfLeSsWP",
+       "TA3ppmyGdAMVjGAaeKwGxVtuAwqZNTUjQL",
+       "TCtDn8vf5ARtAE5eQJSWf25k3yzDosST2D",
+       "TYaU9Zbm6R8PLNgF7A2vRgD45YyGMTy8u4",
+       "TRUjZfQhZZBWRg2RDtJbr4fJmM1JYKr9Vp",
+       "TXHX2NUvcgft4zs6MkkUtdNVERPTavHDWN"
+      ],
+      "percent": "0.135255",
+      "risk_type": "sanctioned_entity",
+      "volume_usdt": "47916"
+     },
+     {
+      "address": "TSmcHwvTR27Ao4NN8HhPFCVcPU5aTEqLDt",
+      "category": "sanctioned",
+      "confidence": null,
+      "direction": "in",
+      "entity": "OFAC SDN: XINBI GUARANTEE",
+      "estimated_usdt": "5.535275",
+      "exposure_type": "indirect",
+      "hop": 5,
+      "inferred": false,
+      "path": [
+       "TVvWhZyLcd2DT2Y78XpyrUS3SyzfLeSsWP",
+       "TA3ppmyGdAMVjGAaeKwGxVtuAwqZNTUjQL",
+       "TCtDn8vf5ARtAE5eQJSWf25k3yzDosST2D",
+       "TYaU9Zbm6R8PLNgF7A2vRgD45YyGMTy8u4",
+       "TAcXg8JuDzaYy1fLwNAP8CD1vJEA3E3eV3",
+       "TSmcHwvTR27Ao4NN8HhPFCVcPU5aTEqLDt"
+      ],
+      "percent": "0.061099",
+      "risk_type": "sanctioned_entity",
+      "volume_usdt": "21645"
+     },
+     {
+      "address": "TSmcHwvTR27Ao4NN8HhPFCVcPU5aTEqLDt",
+      "category": "sanctioned",
+      "confidence": null,
+      "direction": "in",
+      "entity": "OFAC SDN: XINBI GUARANTEE",
+      "estimated_usdt": "79.294285",
+      "exposure_type": "indirect",
+      "hop": 4,
+      "inferred": false,
+      "path": [
+       "TVvWhZyLcd2DT2Y78XpyrUS3SyzfLeSsWP",
+       "THCy7FV6cvuxX5w7UUDc6yGYvoLyF8yFXB",
+       "TEhg9FJCLPMcJgvDMYYGpmKcZUE4UnxDrT",
+       "TSVUJzbqB9yYrJnyHdigncYTvuJcmBdE88",
+       "TSmcHwvTR27Ao4NN8HhPFCVcPU5aTEqLDt"
+      ],
+      "percent": "0.033121",
+      "risk_type": "sanctioned_entity",
+      "volume_usdt": "11733.499757"
+     },
+     {
+      "address": "TRUjZfQhZZBWRg2RDtJbr4fJmM1JYKr9Vp",
+      "category": "suspected_malicious",
+      "confidence": "0.37",
+      "direction": "in",
+      "entity": "SUSPECTED_MALICIOUS",
+      "estimated_usdt": "45.666878",
+      "exposure_type": "indirect",
+      "hop": 4,
+      "inferred": true,
+      "path": [
+       "TVvWhZyLcd2DT2Y78XpyrUS3SyzfLeSsWP",
+       "TA3ppmyGdAMVjGAaeKwGxVtuAwqZNTUjQL",
+       "TCtDn8vf5ARtAE5eQJSWf25k3yzDosST2D",
+       "TYaU9Zbm6R8PLNgF7A2vRgD45YyGMTy8u4",
+       "TRUjZfQhZZBWRg2RDtJbr4fJmM1JYKr9Vp"
+      ],
+      "percent": "0.135255",
+      "risk_type": "illicit_activity",
+      "volume_usdt": "47916"
+     },
+     {
+      "address": "TNwe3WoEX6XrQ5NPAeWPkvpTtdaf27XYxK",
+      "category": "sanctioned",
+      "confidence": null,
+      "direction": "in",
+      "entity": "OFAC SDN: XINBI GUARANTEE",
+      "estimated_usdt": "16.263319",
+      "exposure_type": "indirect",
+      "hop": 5,
+      "inferred": false,
+      "path": [
+       "TVvWhZyLcd2DT2Y78XpyrUS3SyzfLeSsWP",
+       "TSArbmMUf5ZYpEU1ChC6BPhpT7bgVF2Rku",
+       "TPvQdTGeda4a4waByEh9PSsVFbk5ZWyLyr",
+       "TCc1BAEnXCJNcnKKnDPPK3w1dh9QJRBxG7",
+       "TQqG37vceUqS5ZKHkARS6zDcKGb9ATHByk",
+       "TNwe3WoEX6XrQ5NPAeWPkvpTtdaf27XYxK"
+      ],
+      "percent": "0.049021",
+      "risk_type": "sanctioned_entity",
+      "volume_usdt": "17366.5"
+     },
+     {
+      "address": "TXHX2NUvcgft4zs6MkkUtdNVERPTavHDWN",
+      "category": "sanctioned",
+      "confidence": null,
+      "direction": "in",
+      "entity": "OFAC SDN: XINBI GUARANTEE",
+      "estimated_usdt": "13.633783",
+      "exposure_type": "indirect",
+      "hop": 5,
+      "inferred": false,
+      "path": [
+       "TVvWhZyLcd2DT2Y78XpyrUS3SyzfLeSsWP",
+       "THCy7FV6cvuxX5w7UUDc6yGYvoLyF8yFXB",
+       "TMYzkdk4ZpNh5kYkE5MJnStYYBrBTfnn95",
+       "TD2L13bntRPGzCzDfTBbHKLqKRtLdQSNG1",
+       "TUahBhapShgsUQxFzwnVULGNBT1hN29VTT",
+       "TXHX2NUvcgft4zs6MkkUtdNVERPTavHDWN"
+      ],
+      "percent": "0.038069",
+      "risk_type": "sanctioned_entity",
+      "volume_usdt": "13486.356271"
+     },
+     {
+      "address": "TNwe3WoEX6XrQ5NPAeWPkvpTtdaf27XYxK",
+      "category": "sanctioned",
+      "confidence": null,
+      "direction": "in",
+      "entity": "OFAC SDN: XINBI GUARANTEE",
+      "estimated_usdt": "4.66221",
+      "exposure_type": "indirect",
+      "hop": 5,
+      "inferred": false,
+      "path": [
+       "TVvWhZyLcd2DT2Y78XpyrUS3SyzfLeSsWP",
+       "THCy7FV6cvuxX5w7UUDc6yGYvoLyF8yFXB",
+       "TPMQgmnbhTiKLByGn8rXnKQqRKsBJLGUfg",
+       "TBF9fSzpMAqmjT3i7nwpULKuwynnohnUL7",
+       "TYGWx6b7h2dajc7qxqH8GELyvuG6zH6Lmv",
+       "TNwe3WoEX6XrQ5NPAeWPkvpTtdaf27XYxK"
+      ],
+      "percent": "0.035713",
+      "risk_type": "sanctioned_entity",
+      "volume_usdt": "12651.743968"
+     },
+     {
+      "address": "TXHX2NUvcgft4zs6MkkUtdNVERPTavHDWN",
+      "category": "sanctioned",
+      "confidence": null,
+      "direction": "in",
+      "entity": "OFAC SDN: XINBI GUARANTEE",
+      "estimated_usdt": "40.033883",
+      "exposure_type": "indirect",
+      "hop": 5,
+      "inferred": false,
+      "path": [
+       "TVvWhZyLcd2DT2Y78XpyrUS3SyzfLeSsWP",
+       "THCy7FV6cvuxX5w7UUDc6yGYvoLyF8yFXB",
+       "TMYzkdk4ZpNh5kYkE5MJnStYYBrBTfnn95",
+       "TD2L13bntRPGzCzDfTBbHKLqKRtLdQSNG1",
+       "TB47wWFpa7hJYibVQ51RKNR2daRkG7bJGs",
+       "TXHX2NUvcgft4zs6MkkUtdNVERPTavHDWN"
+      ],
+      "percent": "0.035674",
+      "risk_type": "sanctioned_entity",
+      "volume_usdt": "12638.089779"
+     },
+     {
+      "address": "TNwe3WoEX6XrQ5NPAeWPkvpTtdaf27XYxK",
+      "category": "sanctioned",
+      "confidence": null,
+      "direction": "in",
+      "entity": "OFAC SDN: XINBI GUARANTEE",
+      "estimated_usdt": "23.780049",
+      "exposure_type": "indirect",
+      "hop": 5,
+      "inferred": false,
+      "path": [
+       "TVvWhZyLcd2DT2Y78XpyrUS3SyzfLeSsWP",
+       "THCy7FV6cvuxX5w7UUDc6yGYvoLyF8yFXB",
+       "TC9WgwREvgTU1A8QrrSggiutrLJiLWyqaT",
+       "TXG5uxmCB3Qwsi9caJirDEpkj7pFZF389U",
+       "TSArbmMUf5ZYpEU1ChC6BPhpT7bgVF2Rku",
+       "TNwe3WoEX6XrQ5NPAeWPkvpTtdaf27XYxK"
+      ],
+      "percent": "0.028175",
+      "risk_type": "sanctioned_entity",
+      "volume_usdt": "9981.212167"
+     },
+     {
+      "address": "TNwe3WoEX6XrQ5NPAeWPkvpTtdaf27XYxK",
+      "category": "sanctioned",
+      "confidence": null,
+      "direction": "in",
+      "entity": "OFAC SDN: XINBI GUARANTEE",
+      "estimated_usdt": "20.661469",
+      "exposure_type": "indirect",
+      "hop": 4,
+      "inferred": false,
+      "path": [
+       "TVvWhZyLcd2DT2Y78XpyrUS3SyzfLeSsWP",
+       "THCy7FV6cvuxX5w7UUDc6yGYvoLyF8yFXB",
+       "TPMQgmnbhTiKLByGn8rXnKQqRKsBJLGUfg",
+       "TBF9fSzpMAqmjT3i7nwpULKuwynnohnUL7",
+       "TNwe3WoEX6XrQ5NPAeWPkvpTtdaf27XYxK"
+      ],
+      "percent": "0.011023",
+      "risk_type": "sanctioned_entity",
+      "volume_usdt": "3905.098057"
+     }
+    ],
+    "k": "8",
+    "level": "moderate",
+    "rules": [
+     "R-SCR-01",
+     "R-TRC-01",
+     "R-TRC-04"
+    ],
+    "score": 53,
+    "verdict": "REVIEW",
+    "version": "2.0.0b1"
+   },
+   "risks": [
+    {
+     "exposure": "direct",
+     "risk_type": "Illicit Activity",
+     "share": "52.07"
+    },
+    {
+     "exposure": "indirect",
+     "risk_type": "Illicit Activity",
+     "share": "26.66"
+    },
+    {
+     "exposure": "indirect",
+     "risk_type": "Sanctioned Entity",
+     "share": "15.91"
+    },
+    {
+     "exposure": "direct",
+     "risk_type": "Risky Exchange",
+     "share": "0.33"
+    }
+   ],
+   "source": "MistTrack Light, 2026-10-07",
+   "theirs": "risky"
+  },
+  {
+   "address": "TWkaZR9DPkFninJjdSRtjJtCfeo7TfRUv6",
+   "cause": null,
+   "chain": "tron",
+   "note": "from our runs",
+   "reason": null,
+   "recorded": {
+    "at": "2026-10-07T10:56:27.024780Z",
+    "check_id": "53a404c5-b381-44f0-9014-768bb9c7e8d0",
+    "config_hash": "456cbb83717c17930a65d8e0fa65216d99b1b56b1da0b995d6d9b56e24f54a71",
+    "coverage_in": "0.126274",
+    "coverage_out": "0.257744",
+    "decay": "0.4",
+    "exposures": [
+     {
+      "address": "TB5UPBTtXYwwmSviWBkQcFM64o6R1CDXUY",
+      "category": "sanctioned",
+      "confidence": null,
+      "direction": "in",
+      "entity": "NBCTF: order ASO 06/26",
+      "estimated_usdt": null,
+      "exposure_type": "direct",
+      "hop": 1,
+      "inferred": false,
+      "path": [
+       "TWkaZR9DPkFninJjdSRtjJtCfeo7TfRUv6",
+       "TB5UPBTtXYwwmSviWBkQcFM64o6R1CDXUY"
+      ],
+      "percent": "0.06381",
+      "risk_type": "sanctioned_entity",
+      "volume_usdt": "846510"
+     },
+     {
+      "address": "TAtNGo3UEvgyDxCZH1kssbjvZ7DRVCos7r",
+      "category": "sanctioned",
+      "confidence": null,
+      "direction": "in",
+      "entity": "NBCTF: order ASO 01/26",
+      "estimated_usdt": "110460.071406",
+      "exposure_type": "indirect",
+      "hop": 2,
+      "inferred": false,
+      "path": [
+       "TWkaZR9DPkFninJjdSRtjJtCfeo7TfRUv6",
+       "TSBmeHR56jBfPaN4jhYLGc3m9nUatRCutk",
+       "TAtNGo3UEvgyDxCZH1kssbjvZ7DRVCos7r"
+      ],
+      "percent": "0.047959",
+      "risk_type": "sanctioned_entity",
+      "volume_usdt": "636231.945244"
+     },
+     {
+      "address": "TDduLTxUF4Vf5HTRU5tRdMgFmTyV65Zd91",
+      "category": "frozen",
+      "confidence": null,
+      "direction": "out",
+      "entity": "Tether-frozen",
+      "estimated_usdt": "1533.413683",
+      "exposure_type": "indirect",
+      "hop": 4,
+      "inferred": false,
+      "path": [
+       "TWkaZR9DPkFninJjdSRtjJtCfeo7TfRUv6",
+       "TRczSMnBcW19LPSbXp19BrMYVk626r4eJy",
+       "TEjaLFZtpfuTCgT3MSy5qdfHbCfuNqEJzP",
+       "TJTq5EkkokqK52aEF8PvRBs2nRYaR5XNWt",
+       "TDduLTxUF4Vf5HTRU5tRdMgFmTyV65Zd91"
+      ],
+      "percent": "0.083741",
+      "risk_type": "frozen",
+      "volume_usdt": "1110918"
+     },
+     {
+      "address": "TBegmXo2j3tAWPBWkueaWVCzh75HoWNHem",
+      "category": "frozen",
+      "confidence": null,
+      "direction": "out",
+      "entity": "Tether-frozen",
+      "estimated_usdt": "160.323928",
+      "exposure_type": "indirect",
+      "hop": 5,
+      "inferred": false,
+      "path": [
+       "TWkaZR9DPkFninJjdSRtjJtCfeo7TfRUv6",
+       "TPQwfi7mdAGPk9X99TnkEaM2txbQbDdeoW",
+       "TMGdRVxD2Fwqb1PS496Y24396kp7AZHiRi",
+       "TN7CqbufVmGEjx8TFG8o4J26Y47F6hdNnT",
+       "TCYm6FUZqK474GWey1Ech5Vee2w7T6cDz2",
+       "TBegmXo2j3tAWPBWkueaWVCzh75HoWNHem"
+      ],
+      "percent": "0.064781",
+      "risk_type": "frozen",
+      "volume_usdt": "859390"
+     },
+     {
+      "address": "TGtpnHgW8gcfzRj1NEkLXR9AbN8WWLdJ2p",
+      "category": "sanctioned",
+      "confidence": null,
+      "direction": "in",
+      "entity": "NBCTF: order ASO 06/26",
+      "estimated_usdt": "32976.474062",
+      "exposure_type": "indirect",
+      "hop": 3,
+      "inferred": false,
+      "path": [
+       "TWkaZR9DPkFninJjdSRtjJtCfeo7TfRUv6",
+       "TSBmeHR56jBfPaN4jhYLGc3m9nUatRCutk",
+       "TCmKGQV4i2P54DdkTpRAU4ctZs4ukDEuxd",
+       "TGtpnHgW8gcfzRj1NEkLXR9AbN8WWLdJ2p"
+      ],
+      "percent": "0.01572",
+      "risk_type": "sanctioned_entity",
+      "volume_usdt": "208542.693163"
+     },
+     {
+      "address": "TP834zaucGKtAVjJPc9QQQkz5ses87KEf8",
+      "category": "sanctioned",
+      "confidence": null,
+      "direction": "in",
+      "entity": "NBCTF: order ASO 06/26",
+      "estimated_usdt": "2364.387758",
+      "exposure_type": "indirect",
+      "hop": 4,
+      "inferred": false,
+      "path": [
+       "TWkaZR9DPkFninJjdSRtjJtCfeo7TfRUv6",
+       "TSBmeHR56jBfPaN4jhYLGc3m9nUatRCutk",
+       "TTNADGhdB5CiS2eZPRsZF3WnYj3C2ZyMHs",
+       "TXwrqQNqGC2D8BCGe2dscbdK6nFmEpqhXg",
+       "TP834zaucGKtAVjJPc9QQQkz5ses87KEf8"
+      ],
+      "percent": "0.02398",
+      "risk_type": "sanctioned_entity",
+      "volume_usdt": "318116.114032"
+     },
+     {
+      "address": "TSBv5CsUrenGUwnf5LZ7g6t3HEurxHf5Hi",
+      "category": "frozen",
+      "confidence": null,
+      "direction": "in",
+      "entity": "Tether-frozen",
+      "estimated_usdt": "32417.550773",
+      "exposure_type": "indirect",
+      "hop": 3,
+      "inferred": false,
+      "path": [
+       "TWkaZR9DPkFninJjdSRtjJtCfeo7TfRUv6",
+       "TSBmeHR56jBfPaN4jhYLGc3m9nUatRCutk",
+       "TCmKGQV4i2P54DdkTpRAU4ctZs4ukDEuxd",
+       "TSBv5CsUrenGUwnf5LZ7g6t3HEurxHf5Hi"
+      ],
+      "percent": "0.015453",
+      "risk_type": "frozen",
+      "volume_usdt": "205008.071245"
+     },
+     {
+      "address": "TP834zaucGKtAVjJPc9QQQkz5ses87KEf8",
+      "category": "sanctioned",
+      "confidence": null,
+      "direction": "in",
+      "entity": "NBCTF: order ASO 06/26",
+      "estimated_usdt": "12003.691647",
+      "exposure_type": "indirect",
+      "hop": 3,
+      "inferred": false,
+      "path": [
+       "TWkaZR9DPkFninJjdSRtjJtCfeo7TfRUv6",
+       "TXwrqQNqGC2D8BCGe2dscbdK6nFmEpqhXg",
+       "TUHtsWkT15883ggHMGS138dVoNJJvMYxiE",
+       "TP834zaucGKtAVjJPc9QQQkz5ses87KEf8"
+      ],
+      "percent": "0.0106",
+      "risk_type": "sanctioned_entity",
+      "volume_usdt": "140620.605606"
+     },
+     {
+      "address": "TPtmWhM71BDeizN3L2hken92KBTBSa85An",
+      "category": "frozen",
+      "confidence": null,
+      "direction": "in",
+      "entity": "Tether-frozen",
+      "estimated_usdt": "15205.622145",
+      "exposure_type": "indirect",
+      "hop": 3,
+      "inferred": false,
+      "path": [
+       "TWkaZR9DPkFninJjdSRtjJtCfeo7TfRUv6",
+       "TSBmeHR56jBfPaN4jhYLGc3m9nUatRCutk",
+       "TSG5aba1kcdPJHQQuQ4owQLty83nY4HGpL",
+       "TPtmWhM71BDeizN3L2hken92KBTBSa85An"
+      ],
+      "percent": "0.010658",
+      "risk_type": "frozen",
+      "volume_usdt": "141384.876721"
+     },
+     {
+      "address": "TSBv5CsUrenGUwnf5LZ7g6t3HEurxHf5Hi",
+      "category": "frozen",
+      "confidence": null,
+      "direction": "in",
+      "entity": "Tether-frozen",
+      "estimated_usdt": null,
+      "exposure_type": "direct",
+      "hop": 1,
+      "inferred": false,
+      "path": [
+       "TWkaZR9DPkFninJjdSRtjJtCfeo7TfRUv6",
+       "TSBv5CsUrenGUwnf5LZ7g6t3HEurxHf5Hi"
+      ],
+      "percent": "0.003769",
+      "risk_type": "frozen",
+      "volume_usdt": "50000"
+     },
+     {
+      "address": "TSoQQCZ3DrZ1us6RcHGHd9UXp6bM6PukNQ",
+      "category": "sanctioned",
+      "confidence": null,
+      "direction": "in",
+      "entity": "NBCTF: order FO 50/25",
+      "estimated_usdt": "15212.238412",
+      "exposure_type": "indirect",
+      "hop": 4,
+      "inferred": false,
+      "path": [
+       "TWkaZR9DPkFninJjdSRtjJtCfeo7TfRUv6",
+       "TXwrqQNqGC2D8BCGe2dscbdK6nFmEpqhXg",
+       "TUHtsWkT15883ggHMGS138dVoNJJvMYxiE",
+       "TAfws84qqzWXwJWjTWvF8xtbUv6KQCqNPr",
+       "TSoQQCZ3DrZ1us6RcHGHd9UXp6bM6PukNQ"
+      ],
+      "percent": "0.01325",
+      "risk_type": "sanctioned_entity",
+      "volume_usdt": "175775.757008"
+     },
+     {
+      "address": "TSoQQCZ3DrZ1us6RcHGHd9UXp6bM6PukNQ",
+      "category": "sanctioned",
+      "confidence": null,
+      "direction": "in",
+      "entity": "NBCTF: order FO 50/25",
+      "estimated_usdt": "1025.782284",
+      "exposure_type": "indirect",
+      "hop": 5,
+      "inferred": false,
+      "path": [
+       "TWkaZR9DPkFninJjdSRtjJtCfeo7TfRUv6",
+       "TSBmeHR56jBfPaN4jhYLGc3m9nUatRCutk",
+       "TTNADGhdB5CiS2eZPRsZF3WnYj3C2ZyMHs",
+       "TXwrqQNqGC2D8BCGe2dscbdK6nFmEpqhXg",
+       "TMs1aG1kQNPXgZpRnipC2mQNgUwbmyCmqv",
+       "TSoQQCZ3DrZ1us6RcHGHd9UXp6bM6PukNQ"
+      ],
+      "percent": "0.021315",
+      "risk_type": "sanctioned_entity",
+      "volume_usdt": "282769.753442"
+     },
+     {
+      "address": "TSoQQCZ3DrZ1us6RcHGHd9UXp6bM6PukNQ",
+      "category": "sanctioned",
+      "confidence": null,
+      "direction": "in",
+      "entity": "NBCTF: order FO 50/25",
+      "estimated_usdt": "13668.825588",
+      "exposure_type": "indirect",
+      "hop": 3,
+      "inferred": false,
+      "path": [
+       "TWkaZR9DPkFninJjdSRtjJtCfeo7TfRUv6",
+       "TXwrqQNqGC2D8BCGe2dscbdK6nFmEpqhXg",
+       "TMs1aG1kQNPXgZpRnipC2mQNgUwbmyCmqv",
+       "TSoQQCZ3DrZ1us6RcHGHd9UXp6bM6PukNQ"
+      ],
+      "percent": "0.007067",
+      "risk_type": "sanctioned_entity",
+      "volume_usdt": "93747.070404"
+     },
+     {
+      "address": "TKsfwynMRHPTtCJCqUEx5DYQ974YtKhfnE",
+      "category": "sanctioned",
+      "confidence": null,
+      "direction": "in",
+      "entity": "NBCTF: order FO 43/25",
+      "estimated_usdt": "81.654392",
+      "exposure_type": "indirect",
+      "hop": 5,
+      "inferred": false,
+      "path": [
+       "TWkaZR9DPkFninJjdSRtjJtCfeo7TfRUv6",
+       "TBBPeXV1dxKDPphK4fn9fs4mMV46ExUN53",
+       "TGydSens2iWw9wxZeoWeM9mDphbgZmpdJx",
+       "TPpiCHB8kVSvqTyjfY2hHnuqkNZghpi4La",
+       "TSG86g8tcXKvuSBpw2TofL2RQNgDAxdNvr",
+       "TKsfwynMRHPTtCJCqUEx5DYQ974YtKhfnE"
+      ],
+      "percent": "0.015961",
+      "risk_type": "sanctioned_entity",
+      "volume_usdt": "211746.889686"
+     },
+     {
+      "address": "TGkjY3Vgx84XbC21gq9eKEXf6HiuAdJx4F",
+      "category": "frozen",
+      "confidence": null,
+      "direction": "in",
+      "entity": "Tether-frozen",
+      "estimated_usdt": "63.223093",
+      "exposure_type": "indirect",
+      "hop": 5,
+      "inferred": false,
+      "path": [
+       "TWkaZR9DPkFninJjdSRtjJtCfeo7TfRUv6",
+       "TBBPeXV1dxKDPphK4fn9fs4mMV46ExUN53",
+       "TGydSens2iWw9wxZeoWeM9mDphbgZmpdJx",
+       "TTaq6Bnboy5tTZjjeq3prDXsXkUSn6CwYB",
+       "TURSf718YhnntW93CpuoA1fGDn47kVgbMB",
+       "TGkjY3Vgx84XbC21gq9eKEXf6HiuAdJx4F"
+      ],
+      "percent": "0.015961",
+      "risk_type": "frozen",
+      "volume_usdt": "211746.889686"
+     },
+     {
+      "address": "TUHtsWkT15883ggHMGS138dVoNJJvMYxiE",
+      "category": "suspected_malicious",
+      "confidence": "0.39",
+      "direction": "in",
+      "entity": "SUSPECTED_MALICIOUS",
+      "estimated_usdt": "77364.955707",
+      "exposure_type": "indirect",
+      "hop": 2,
+      "inferred": true,
+      "path": [
+       "TWkaZR9DPkFninJjdSRtjJtCfeo7TfRUv6",
+       "TXwrqQNqGC2D8BCGe2dscbdK6nFmEpqhXg",
+       "TUHtsWkT15883ggHMGS138dVoNJJvMYxiE"
+      ],
+      "percent": "0.01325",
+      "risk_type": "illicit_activity",
+      "volume_usdt": "175775.757008"
+     },
+     {
+      "address": "THogjBskeFpktSyzzLntDwGwXtjekXpe7s",
+      "category": "frozen",
+      "confidence": null,
+      "direction": "in",
+      "entity": "Tether-frozen",
+      "estimated_usdt": "343.277294",
+      "exposure_type": "indirect",
+      "hop": 5,
+      "inferred": false,
+      "path": [
+       "TWkaZR9DPkFninJjdSRtjJtCfeo7TfRUv6",
+       "TBBPeXV1dxKDPphK4fn9fs4mMV46ExUN53",
+       "THd6jpKZGw6nCUAvRHrjvHcE7GJXefwbrC",
+       "TAoxUjrYTwDFk1T5Cw197SARKx3XvtbFjo",
+       "TDy2ZEjfbfw3W58M3vR1p8qfeaqm1w7NFT",
+       "THogjBskeFpktSyzzLntDwGwXtjekXpe7s"
+      ],
+      "percent": "0.015226",
+      "risk_type": "frozen",
+      "volume_usdt": "201990.052985"
+     },
+     {
+      "address": "TDduLTxUF4Vf5HTRU5tRdMgFmTyV65Zd91",
+      "category": "frozen",
+      "confidence": null,
+      "direction": "in",
+      "entity": "Tether-frozen",
+      "estimated_usdt": "82.736122",
+      "exposure_type": "indirect",
+      "hop": 5,
+      "inferred": false,
+      "path": [
+       "TWkaZR9DPkFninJjdSRtjJtCfeo7TfRUv6",
+       "TBBPeXV1dxKDPphK4fn9fs4mMV46ExUN53",
+       "TKfvkpqXaSa5QsvYtxtGSQe8ccpni5CWBa",
+       "TGLJmaZbcqkbofJ5iuXmgnFhhCMz7uajkw",
+       "TTJj4pgBhJHrefat11tzq6wN4PGNGTxcGW",
+       "TDduLTxUF4Vf5HTRU5tRdMgFmTyV65Zd91"
+      ],
+      "percent": "0.014461",
+      "risk_type": "frozen",
+      "volume_usdt": "191848.058312"
+     },
+     {
+      "address": "TMYHcFSeoyNWNKL7eYmNf67wJccuP8UFxn",
+      "category": "frozen",
+      "confidence": null,
+      "direction": "in",
+      "entity": "Tether-frozen",
+      "estimated_usdt": "633.340979",
+      "exposure_type": "indirect",
+      "hop": 5,
+      "inferred": false,
+      "path": [
+       "TWkaZR9DPkFninJjdSRtjJtCfeo7TfRUv6",
+       "TSBmeHR56jBfPaN4jhYLGc3m9nUatRCutk",
+       "TTNADGhdB5CiS2eZPRsZF3WnYj3C2ZyMHs",
+       "TXwrqQNqGC2D8BCGe2dscbdK6nFmEpqhXg",
+       "TRW7eG9Vu4Syf7B67me8b9YVti8SWKhuWs",
+       "TMYHcFSeoyNWNKL7eYmNf67wJccuP8UFxn"
+      ],
+      "percent": "0.010663",
+      "risk_type": "frozen",
+      "volume_usdt": "141455.569159"
+     },
+     {
+      "address": "TMYHcFSeoyNWNKL7eYmNf67wJccuP8UFxn",
+      "category": "frozen",
+      "confidence": null,
+      "direction": "in",
+      "entity": "Tether-frozen",
+      "estimated_usdt": "8439.439359",
+      "exposure_type": "indirect",
+      "hop": 3,
+      "inferred": false,
+      "path": [
+       "TWkaZR9DPkFninJjdSRtjJtCfeo7TfRUv6",
+       "TXwrqQNqGC2D8BCGe2dscbdK6nFmEpqhXg",
+       "TRW7eG9Vu4Syf7B67me8b9YVti8SWKhuWs",
+       "TMYHcFSeoyNWNKL7eYmNf67wJccuP8UFxn"
+      ],
+      "percent": "0.003535",
+      "risk_type": "frozen",
+      "volume_usdt": "46896.97197"
+     },
+     {
+      "address": "TNHiU7JAEpEt5uVDV9fLJSPijHCHr89o5u",
+      "category": "suspected_malicious",
+      "confidence": "0.37",
+      "direction": "in",
+      "entity": "SUSPECTED_MALICIOUS",
+      "estimated_usdt": "10003.076373",
+      "exposure_type": "indirect",
+      "hop": 3,
+      "inferred": true,
+      "path": [
+       "TWkaZR9DPkFninJjdSRtjJtCfeo7TfRUv6",
+       "TXwrqQNqGC2D8BCGe2dscbdK6nFmEpqhXg",
+       "TUHtsWkT15883ggHMGS138dVoNJJvMYxiE",
+       "TNHiU7JAEpEt5uVDV9fLJSPijHCHr89o5u"
+      ],
+      "percent": "0.008833",
+      "risk_type": "illicit_activity",
+      "volume_usdt": "117183.838005"
+     },
+     {
+      "address": "TP834zaucGKtAVjJPc9QQQkz5ses87KEf8",
+      "category": "sanctioned",
+      "confidence": null,
+      "direction": "in",
+      "entity": "NBCTF: order ASO 06/26",
+      "estimated_usdt": "74.107671",
+      "exposure_type": "indirect",
+      "hop": 5,
+      "inferred": false,
+      "path": [
+       "TWkaZR9DPkFninJjdSRtjJtCfeo7TfRUv6",
+       "TSBmeHR56jBfPaN4jhYLGc3m9nUatRCutk",
+       "TFtDhpJLrRuoQah1oMjDSHBnhnV6wFMbBq",
+       "TXwrqQNqGC2D8BCGe2dscbdK6nFmEpqhXg",
+       "TUHtsWkT15883ggHMGS138dVoNJJvMYxiE",
+       "TP834zaucGKtAVjJPc9QQQkz5ses87KEf8"
+      ],
+      "percent": "0.002824",
+      "risk_type": "sanctioned_entity",
+      "volume_usdt": "37466.992331"
+     },
+     {
+      "address": "TSoQQCZ3DrZ1us6RcHGHd9UXp6bM6PukNQ",
+      "category": "sanctioned",
+      "confidence": null,
+      "direction": "in",
+      "entity": "NBCTF: order FO 50/25",
+      "estimated_usdt": "84.387775",
+      "exposure_type": "indirect",
+      "hop": 5,
+      "inferred": false,
+      "path": [
+       "TWkaZR9DPkFninJjdSRtjJtCfeo7TfRUv6",
+       "TSBmeHR56jBfPaN4jhYLGc3m9nUatRCutk",
+       "TFtDhpJLrRuoQah1oMjDSHBnhnV6wFMbBq",
+       "TXwrqQNqGC2D8BCGe2dscbdK6nFmEpqhXg",
+       "TMs1aG1kQNPXgZpRnipC2mQNgUwbmyCmqv",
+       "TSoQQCZ3DrZ1us6RcHGHd9UXp6bM6PukNQ"
+      ],
+      "percent": "0.002824",
+      "risk_type": "sanctioned_entity",
+      "volume_usdt": "37466.992331"
+     },
+     {
+      "address": "TBJT9BP7cM5yYne9kTdf2HNu9mX1WpRQpt",
+      "category": "frozen",
+      "confidence": null,
+      "direction": "in",
+      "entity": "Tether-frozen",
+      "estimated_usdt": "323.892408",
+      "exposure_type": "indirect",
+      "hop": 5,
+      "inferred": false,
+      "path": [
+       "TWkaZR9DPkFninJjdSRtjJtCfeo7TfRUv6",
+       "TBBPeXV1dxKDPphK4fn9fs4mMV46ExUN53",
+       "THd6jpKZGw6nCUAvRHrjvHcE7GJXefwbrC",
+       "TMPZMziDU6NyMQuztC4DwBUHi6gX1Kg8aT",
+       "TZAfJUXM63EmkF47kLCPg1XyMNAyhqrsXK",
+       "TBJT9BP7cM5yYne9kTdf2HNu9mX1WpRQpt"
+      ],
+      "percent": "0.002416",
+      "risk_type": "frozen",
+      "volume_usdt": "32057.109332"
+     },
+     {
+      "address": "TUHtsWkT15883ggHMGS138dVoNJJvMYxiE",
+      "category": "suspected_malicious",
+      "confidence": "0.39",
+      "direction": "in",
+      "entity": "SUSPECTED_MALICIOUS",
+      "estimated_usdt": "477.63112",
+      "exposure_type": "indirect",
+      "hop": 4,
+      "inferred": true,
+      "path": [
+       "TWkaZR9DPkFninJjdSRtjJtCfeo7TfRUv6",
+       "TSBmeHR56jBfPaN4jhYLGc3m9nUatRCutk",
+       "TFtDhpJLrRuoQah1oMjDSHBnhnV6wFMbBq",
+       "TXwrqQNqGC2D8BCGe2dscbdK6nFmEpqhXg",
+       "TUHtsWkT15883ggHMGS138dVoNJJvMYxiE"
+      ],
+      "percent": "0.002824",
+      "risk_type": "illicit_activity",
+      "volume_usdt": "37466.992331"
+     }
+    ],
+    "k": "8",
+    "level": "high",
+    "rules": [
+     "R-EXP-01",
+     "R-EXP-02",
+     "R-HEU-02",
+     "R-SCR-01",
+     "R-TRC-01",
+     "R-TRC-02",
+     "R-TRC-04"
+    ],
+    "score": 75,
+    "verdict": "REVIEW",
+    "version": "2.0.0b1"
+   },
+   "risks": [
+    {
+     "exposure": "indirect",
+     "risk_type": "Sanctioned Entity",
+     "share": "11.01"
+    },
+    {
+     "exposure": "indirect",
+     "risk_type": "Illicit Activity",
+     "share": "10.89"
+    },
+    {
+     "exposure": "direct",
+     "risk_type": "Illicit Activity",
+     "share": "5"
+    }
+   ],
+   "source": "MistTrack Light, 2026-10-07",
+   "theirs": "risky"
+  }
+ ]
 }
