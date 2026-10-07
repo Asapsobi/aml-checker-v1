@@ -853,3 +853,29 @@
   or `high_risk` by tag), exchange tags name entities. The terms are recorded as the licence.
 - **Alternatives:** Skip Tronscan.
 - **Consequences:** Verified live (VS-21) before code relies on it.
+
+### D-088 · TRON traces read ahead; branch and node budget unchanged (measured)
+- **Status:** Accepted
+- **Date:** 2026-10-07 · **Phase:** P14
+- **Context:** T-14.07 asked for deeper TRON coverage within a check's 3 minutes. Measured live on two
+  wallets, cold and warm, on the same synced data:
+  - Branch 8 found less sanctioned exposure than branch 5 (15.6% against 29.4% on `TVvWhZyL…`).
+    It was slower (128 s and 177 s against 92 s and 105 s) and gave a different result warm than cold.
+  - 70 nodes per direction ran out of time cold (2026-10-05).
+  - The trace waited on one read at a time: about 3.7 TronGrid requests a second, against the 10
+    the limiter allows.
+- **Decision:** Keep `branch` 5 and `max_nodes` 50, and read ahead: `[trace] parallel_reads` = 4.
+  - While one queued item is taken, the reads of the next three run at once, paced by the
+    process-wide limiter. The step uses the answer, so nothing is read twice.
+  - Items are still taken one at a time in the same order: the trace is the same, only sooner.
+  - BSC keeps one at a time (`bsc_parallel_reads` = 1): HyperSync's free budget is spent per query.
+- **Alternatives:**
+  - Branch 8.
+  - More nodes per direction: it finds more distant risk but goes over PRD G8 (Q-39).
+  - Items taken in rounds: faster still, but the order would depend on the round size.
+- **Consequences:**
+  - The same scores and the same number of requests.
+  - A cold TRON check takes about half the time (`TVvWhZyL…` 45 s against 92 s), so busy wallets
+    run out of time less often.
+  - A failed read ahead is left to the step, which reads again: a passing error costs a read, not
+    the trace.

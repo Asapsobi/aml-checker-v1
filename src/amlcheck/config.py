@@ -168,6 +168,11 @@ class Trace(_Section):
     min_attributed_usdt: Annotated[Decimal, Field(ge=0)] = Decimal("100")
     hop_window_days: PosInt = 30
     max_nodes: PosInt = 50  # per direction (§12.2)
+    #: Queued items whose reads run at once, per direction (D-088): the order and the result are
+    #: the same as one at a time, only sooner; the provider's limiter paces them. BSC: one at a
+    #: time, since HyperSync's free budget is spent by the query, not by the second.
+    parallel_reads: PosInt = 4
+    bsc_parallel_reads: PosInt = 1
     time_budget_seconds: PosInt = (
         180  # both directions together; running out isn't a failure (D-080)
     )

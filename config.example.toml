@@ -94,6 +94,10 @@ coverage_share = 0.8
 min_attributed_usdt = 100
 hop_window_days = 30
 max_nodes = 50
+# Queued addresses read at once per direction (D-088): the same result as one at a time, sooner.
+# BSC reads one at a time: HyperSync's free budget is spent per query.
+parallel_reads = 4
+bsc_parallel_reads = 1
 time_budget_seconds = 180
 hub_transfers = 1000
 min_flagged_usdt = 1000
