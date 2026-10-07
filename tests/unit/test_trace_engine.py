@@ -11,7 +11,7 @@ import pytest
 
 from amlcheck.chain.base import History
 from amlcheck.chain.cache import ContractCache, TransferCache
-from amlcheck.config import Cache, Settings, Trace
+from amlcheck.config import Cache
 from amlcheck.core.address import detect
 from amlcheck.core.clock import fixed
 from amlcheck.intel.store import IntelStore
@@ -30,6 +30,7 @@ from tests.unit.trace_world import (
     addr,
     engine,
     example,
+    example_settings,
     sanction,
     setup_example,
     tr,
@@ -94,7 +95,7 @@ async def test_at39_read_failure_keeps_partial(conn: sqlite3.Connection) -> None
 # not a failure.
 async def test_at40_node_budget(conn: sqlite3.Connection) -> None:
     fake = Fake(example())
-    eng, store = engine(conn, fake, Settings(trace=Trace(bsc_max_nodes=2)))
+    eng, store = engine(conn, fake, example_settings(bsc_max_nodes=2))
     setup_example(conn, store)
     t = await eng.run(detect(T))
     assert t.complete
@@ -129,7 +130,7 @@ def real_time_engine(conn: sqlite3.Connection, fake: Fake, budget_s: int) -> Tra
         TransferCache(conn, {fake.chain: fake}, Cache(), clock=fixed(NOW)),
         ContractCache(conn, {fake.chain: NoContracts()}, clock=fixed(NOW)),
         IntelStore(conn, clock=fixed(NOW)),
-        Settings(trace=Trace(time_budget_seconds=budget_s)),
+        example_settings(time_budget_seconds=budget_s),
         clock=fixed(NOW),
         monotonic=time.monotonic,
     )

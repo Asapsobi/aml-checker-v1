@@ -91,6 +91,9 @@ max_hops = 5
 bsc_max_hops = 3
 branch = 5
 coverage_share = 0.8
+# Hop 1, the wallet's own counterparties, is followed wider (D-098).
+first_hop_branch = 20
+first_hop_coverage = 0.95
 min_attributed_usdt = 100
 # A small wallet's floor is at most this share of its own flow (D-096).
 min_attributed_share = 0.01

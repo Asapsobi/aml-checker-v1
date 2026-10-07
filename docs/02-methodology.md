@@ -650,6 +650,7 @@ own 90-day window (§5).
 | `max_nodes` | 40 | **100 per direction on TRON** (D-090); 50 on BSC (`bsc_max_nodes`) | Bounds requests; reaching it is `untraced:budget` (§7.7) |
 | `parallel_reads` | 1 | **4** on TRON, 1 on BSC (`bsc_parallel_reads`) | Reads run ahead; order and result unchanged (D-088) |
 | `time_budget_seconds` | 300, a failure | **180 for both directions**, not a failure | D-079, D-080 |
+| `branch`, `coverage_share` | 5, 0.8 | 5, 0.8; at hop 1 (the wallet's own counterparties) `first_hop_branch` 20, `first_hop_coverage` 0.95 | D-098 |
 | `min_attributed_usdt` | 100, on the proportional estimate | 100, on the **path volume**; for a small wallet at most `min_attributed_share` (1%) of its own flow | D-081, D-096 |
 
 **Order: best first** (D-081). Items wait in one queue per direction and the one with the largest
@@ -676,7 +677,9 @@ hand; for a hub they are a sample, the newest `hub_transfers`. From them comes t
 service's own money, in the trace's direction, that came from (tracing in) or went to (tracing out)
 sanctioned or frozen addresses. The wallet gets an inferred exposure one hop beyond the service: the
 path volume to the service × that share, at weight `[trace] service_pass_through` (0.5; 0 turns it
-off), named "behind a busy service". It needs no extra read, changes no partition and never makes a
+off), named "behind a busy service". On TRON the share is measured on that side of the service's
+transfers in the item's window, read for the purpose (D-099): its deposits nearest the edge when
+tracing in, its payouts when tracing out. It needs no extra read, changes no partition and never makes a
 finding or a BLOCK.
 
 **Pruning (§7.4) criterion (c)** becomes: the sender's path bottleneck `min(parent bottleneck, a_j)`

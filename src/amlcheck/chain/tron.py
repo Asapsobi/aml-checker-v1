@@ -97,17 +97,37 @@ class TronGridSource:
             zero_value=zero,
         )
 
+    async def fetch_side(
+        self, address: str, since: datetime, until: datetime, limit: int, side: str
+    ) -> list[Transfer]:
+        """One side of an address's transfers in `[since, until]`, uncached (D-099, VS-22):
+        incoming (`only_to`), newest first, or outgoing (`only_from`), oldest first: the end
+        nearest the trace's edge either way. At most `limit`."""
+        extra = {"only_to": "true"} if side == "in" else {"only_from": "true"}
+        order = "desc" if side == "in" else "asc"
+        rows, _, _ = await self._read(
+            address, ensure_utc(since), ensure_utc(until), limit, extra, order
+        )
+        return list(newest_first(_with_idx(rows[:limit])))
+
     async def _read(
-        self, address: str, since: datetime, until: datetime, limit: int
+        self,
+        address: str,
+        since: datetime,
+        until: datetime,
+        limit: int,
+        extra: Mapping[str, str] | None = None,
+        order: str = "desc",
     ) -> tuple[list[_Row], int, bool]:
         url = f"{self._api}/v1/accounts/{address}/transactions/trc20"
         params: Mapping[str, str | int] | None = {
             "contract_address": self._contract,
             "only_confirmed": "true",
             "limit": PAGE_SIZE,
-            "order_by": "block_timestamp,desc",
+            "order_by": f"block_timestamp,{order}",
             "min_timestamp": ms(since),
             "max_timestamp": ms(until),
+            **(extra or {}),
         }
         rows: list[_Row] = []
         zero = 0

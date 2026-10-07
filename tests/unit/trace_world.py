@@ -9,7 +9,7 @@ from decimal import Decimal
 
 from amlcheck.chain.base import History, Transfer
 from amlcheck.chain.cache import ContractCache, TransferCache
-from amlcheck.config import Cache, Settings
+from amlcheck.config import Cache, Settings, Trace
 from amlcheck.core.clock import fixed, to_db
 from amlcheck.core.models import Chain
 from amlcheck.intel.store import IntelStore
@@ -104,6 +104,15 @@ def sanction(conn: sqlite3.Connection, *addresses: str) -> None:
         )
 
 
+#: The worked example (§7.11) follows one branch rule at every hop; D-098's wider first hop is
+#: tested on its own.
+EXAMPLE_HOP1: dict[str, object] = {"first_hop_branch": 5, "first_hop_coverage": Decimal("0.8")}
+
+
+def example_settings(**trace: object) -> Settings:
+    return Settings(trace=Trace(**{**EXAMPLE_HOP1, **trace}))  # type: ignore[arg-type]
+
+
 def engine(
     conn: sqlite3.Connection, fake: Fake, settings: Settings | None = None
 ) -> tuple[TraceEngine, IntelStore]:
@@ -114,7 +123,7 @@ def engine(
         cache,
         ContractCache(conn, {Chain.BSC: NoContracts()}, clock=fixed(NOW)),
         store,
-        settings or Settings(),
+        settings or example_settings(),
         clock=fixed(NOW),
         monotonic=lambda: 0.0,
         queries=lambda: len(fake.asked),

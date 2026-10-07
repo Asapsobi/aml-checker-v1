@@ -105,6 +105,18 @@ class TransferCache:
         self._ttl = timedelta(seconds=settings.target_ttl_seconds)
         self._clock = clock
 
+    async def side(
+        self, address: str, since: datetime, until: datetime, limit: int, side: str
+    ) -> list[Transfer] | None:
+        """One side of an address's transfers, uncached, when its source can read that (D-099);
+        None otherwise (BSC)."""
+        addr = detect(address)
+        read = getattr(self._sources.get(addr.chain), "fetch_side", None)
+        if read is None:
+            return None
+        got: list[Transfer] = await read(addr.norm, since, until, limit, side)
+        return got
+
     async def history(
         self,
         address: str,
