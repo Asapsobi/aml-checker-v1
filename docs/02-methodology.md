@@ -717,6 +717,8 @@ confidence. Not stored: it is judged again whenever the address is read. Never B
 
 ### 13.3 Tronscan tags (when the owner's key is set, D-087)
 
-Looked up only for addresses a check reaches, cached for `[intel] tag_days` (7). Red tags → `scam`,
-`stolen_funds` or `high_risk`; exchange tags → a named entity. Pending VS-21.
+**Deferred** (D-087). VS-21 found no risk tag on any sanctioned or frozen address tried, and the API
+takes one call per address a check reaches (100+ per check). The design, if revisited: look up only
+addresses a check reaches, cached for `[intel] tag_days` (7); red tags → `scam`, `stolen_funds` or
+`high_risk`; exchange tags → a named entity.
 
