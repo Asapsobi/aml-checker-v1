@@ -78,5 +78,5 @@
 | AT-70 | P15 | **live** The owner's benchmark set | Level agreement reported; every mismatch has a reason; targets agreed with the owner met |
 | AT-71 | P14 | NBCTF files with TRON and EVM addresses in any cell, one with a bad checksum; the official export (real rows, VS-20) as CSV and as zip, with a look-alike-letter address, a passed validity date, a cancelled order, a re-import | Valid addresses imported as an `nbctf` snapshot with the order id; the bad one reported, not imported; a listed address BLOCKs, naming the order, its type and dates; the look-alike read as Latin; the passed date reported, still listed; a cancelled order not listed; an order's newest import wins |
 | AT-72 | P14 | Tracing in: a node that sent 30% of its outflow (≥ 1,000 USDT) to sanctioned or frozen addresses; one with 9%; one whose sender is sanctioned | First gives a `suspected_malicious` exposure (confidence 0.3, never BLOCK) and is traced through; second nothing; third: the sanctioned sender found as a fact |
-| AT-73 | P14 | Tronscan tags (recorded answers) for a red-tagged and an exchange address | Red tag → `scam`-type label; exchange → named entity; only addresses the check reached are looked up |
+| AT-73 | P14 | ~~Tronscan tags (recorded answers) for a red-tagged and an exchange address~~ | Deferred with D-087 (VS-21) |
 
