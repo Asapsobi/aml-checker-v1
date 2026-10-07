@@ -1,6 +1,7 @@
 """Trace version 2 (methodology §12.2): both directions, 5 hops, best first (AT-67)."""
 
 import sqlite3
+from datetime import datetime
 from decimal import Decimal
 from pathlib import Path
 
@@ -198,3 +199,34 @@ async def test_the_first_hop_is_followed_wider(conn: sqlite3.Connection) -> None
     t = await wide.run(detect(T))
     assert t.partition["sanctioned"] > 0  # the sixth sender, then what paid it
     assert sixth in {n.address for n in t.nodes if n.hop == 1}
+
+
+class Sided(Fake):
+    """A provider that can also read one side of an address's transfers (TronGrid, D-099)."""
+
+    async def fetch_side(
+        self, address: str, since: datetime, until: datetime, limit: int, side: str
+    ) -> list[Transfer]:
+        mine = [
+            t
+            for t in self.transfers
+            if (t.recipient if side == "in" else t.sender) == address and since <= t.time <= until
+        ]
+        return sorted(mine, key=lambda t: t.time, reverse=True)[:limit]
+
+
+# D-099: a busy wallet's newest transfers can be hours of payouts only; its deposits from a frozen
+# wallet a day earlier are found by reading its incoming side.
+async def test_behind_a_busy_wallet_its_deposits_are_read(conn: sqlite3.Connection) -> None:
+    hub, frozen = addr("xhub"), addr("xfrz")
+    xs = [tr(5, hub, T, 868)]
+    xs += [tr(5.1 + n / 100, hub, addr(f"payout{n}"), 50, n) for n in range(5)]  # newest: payouts
+    xs += [tr(6, frozen, hub, 8000), tr(6.5, addr("xok"), hub, 8000)]  # deposits a day before
+    sanction(conn, frozen)
+    settings = Settings(trace=Trace(hub_transfers=3))
+    sample_only, _ = engine(conn, Fake(xs), settings)
+    t = await sample_only.run(detect(T))
+    assert [n.behind for n in t.nodes if n.address == hub] == [()]  # the sample had payouts only
+    sided, _ = engine(conn, Sided(xs), settings)
+    t = await sided.run(detect(T))
+    assert [n.behind for n in t.nodes if n.address == hub] == [(("sanctioned", D0("0.5")),)]

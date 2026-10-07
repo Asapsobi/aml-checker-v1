@@ -378,15 +378,23 @@ class TraceEngine:
         coverage = sum((v for k, v in st.buckets.items() if k not in UNTRACED), Decimal(0))
         return trace(in_t=in_t, coverage=coverage)
 
-    def _behind(
-        self, chain: Chain, address: str, transfers: list[Transfer], direction: Direction
+    async def _behind(
+        self, chain: Chain, item: _Item, transfers: list[Transfer], direction: Direction
     ) -> tuple[tuple[str, Decimal], ...]:
-        """D-097: the share of a busy service's own money, in the trace's direction, that came from
-        (tracing in) or went to (tracing out) sanctioned or frozen addresses, by category. Over
-        the transfers its window read gave, which for a hub is a sample: the newest ones."""
+        """D-097, D-099: the share of a busy service's own money, in the trace's direction, that
+        came from (tracing in) or went to (tracing out) sanctioned or frozen addresses, by
+        category. Measured on that side of its transfers in the item's window, nearest the edge
+        (one uncached read, where the source can do it); else on the sample its window read gave,
+        which for a busy service may be hours of the other side only."""
         if not self._t.service_pass_through:
             return ()
-        theirs = flows(address, transfers, direction)
+        try:
+            own = await self._cache.side(
+                item.address, item.window[0], item.window[1], self._t.hub_transfers, direction
+            )
+        except SourceError:
+            own = None  # the sample still says something; the check doesn't fail for this
+        theirs = flows(item.address, own if own is not None else transfers, direction)
         total = sum((f.amount for f in theirs.values()), Decimal(0))
         if not total:
             return ()
@@ -468,14 +476,14 @@ class TraceEngine:
         )
         if not complete:  # test 8: too many transfers in the window → a hub
             category = self._entity_kind(chain, item.address) or "service_unattributed"
-            behind = self._behind(chain, item.address, transfers, direction)
+            behind = await self._behind(chain, item, transfers, direction)
             hub = NodeClass("HUB", Decimal("0.95"))
             return self._end(item, category, 8, hub, True, in_t, st, behind)
         read_terminal = await self._classify(item, chain, transfers)
         if read_terminal is not None:
             category, cls = read_terminal
             behind = (
-                self._behind(chain, item.address, transfers, direction) if cls.type == "HUB" else ()
+                await self._behind(chain, item, transfers, direction) if cls.type == "HUB" else ()
             )
             return self._end(item, category, 9, cls, True, in_t, st, behind)
         # §13.2 (D-086): a freeze neighbour is noted on the node, not an end: the trace goes on

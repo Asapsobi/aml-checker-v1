@@ -26,6 +26,7 @@ VS-07 (P6) and VS-11 to VS-14 (later phases) are not P0 items. VS-15 was redone 
 | VS-19 | Confirmed: 3 TRON, 2 EVM addresses in free text | Public token URL, no login | — |
 | VS-20 | Confirmed with the official export: 38 orders, 694 addresses | New site with a CSV export; one address typed with Cyrillic letters; validity dates | Q-38 |
 | VS-21 | Confirmed with the owner's key: works, but no risk tags on any sanctioned or frozen address tried | Tags name only famous entities | — |
+| VS-22 | Confirmed with the owner's key: `only_to=true` gives incoming transfers only | No | — |
 
 ---
 
@@ -474,3 +475,17 @@ rate-limit headers, no refusals. The endpoint's limits are not published in its 
 **What this changes:** TRON `is_contract` = the answer has `contract_address`.
 **Fixtures:** `tests/fixtures/trongrid/getcontract_contract.json`, `getcontract_created_by_contract.json`,
 `getcontract_wallet.json`, `getcontract_never_used.json` (bytecode and ABI trimmed)
+
+## VS-22 · TronGrid one-sided transfer reads (2.0.2)
+**Checked:** 2026-10-07 with the owner's key, never printed. The call was `GET /v1/accounts/{a}/transactions/trc20`
+with `only_to=true` for `TKaR2oCp…`, a busy exchange wallet, over 2025-03-09 to 2025-03-12 08:23.
+**Found:**
+- It returned 15 rows on one page, every one incoming. Among them were `TNif5EdW…`'s (now
+  Tether-frozen) 8,000,000 and 5,000,000 USDT, on 11 and 10 March.
+- The same call without the filter returned 50 rows of payouts, none incoming. So a busy wallet's
+  newest transfers can miss its deposits entirely.
+- `only_from` is the documented counterpart.
+
+**What this changes:** D-099. A trace reads one side of a busy wallet it stops at.
+**Fixture:** `tests/fixtures/trongrid/only_to_incoming.json` (5 real rows, trimmed).
+

@@ -154,3 +154,4 @@ as a fixture) in `docs/verification-log.md`, and raises a question for any chang
 | VS-19 | EU Financial Sanctions Files XML: public URL, TRON addresses in free text, licence (Decision 2011/833/EU) | P14 |
 | VS-20 | NBCTF seizure orders: the official export (matal.mod.gov.il), its format and where wallets are | P14 |
 | VS-21 | Tronscan account-tag API: path, fields, rate limit, with the owner's key | P14 |
+| VS-22 | TronGrid `only_to` / `only_from` on the TRC20 transfer endpoint: one side of an address's transfers | 2.0.2 |

@@ -237,3 +237,20 @@ async def test_repeated_page_link_is_an_error_not_a_hang(client: httpx.AsyncClie
     respx.get(url__startswith=trc20(HOT)).respond(json=fixture("trc20_transfers_desc.json"))
     with pytest.raises(SourceError, match="paging does not advance"):
         await source(client).fetch(HOT, LONG_AGO, NOW, 10_000, first_activity=False)
+
+
+# D-099, VS-22: one side of a busy wallet's transfers, read live with TronGrid's own filters.
+@respx.mock
+async def test_one_side_of_a_wallets_transfers(client: httpx.AsyncClient) -> None:
+    k = "TKaR2oCprQjsno6XBFCCCpwcXVKXk6etQ5"
+    route = respx.get(trc20(k)).respond(json=fixture("only_to_incoming.json"))
+    got = await source(client).fetch_side(k, LONG_AGO, NOW, 100, "in")
+    assert len(got) == 5
+    assert all(t.recipient == k for t in got)
+    q = route.calls.last.request.url.params
+    assert (q["only_to"], q["order_by"]) == ("true", "block_timestamp,desc")
+    assert "only_from" not in q
+    await source(client).fetch_side(k, LONG_AGO, NOW, 100, "out")
+    q = route.calls.last.request.url.params
+    assert (q["only_from"], q["order_by"]) == ("true", "block_timestamp,asc")
+    assert "only_to" not in q

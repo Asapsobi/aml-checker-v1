@@ -546,3 +546,20 @@ wallets now show small inferred exposures behind busy services; `TVvWhZyL…` ha
 behind two services. No level changed. The owner's wallet stays low: in this period its two services
 dealt with no listed or frozen address (1,000+ transfers each). So MistTrack's 11% there comes from
 its own labels (`unknowable`). AT-70 still passes ([benchmark.md](benchmark.md)).
+
+## 2.0.2 · Fixes from MistTrack's full report on an owner's wallet
+
+The owner's wallet `TWjieWuU…` was NO_HITS. MistTrack's report showed five risk lines. Four rest on
+MistTrack's own entity labels (Nobitex and HTX as sanctioned, ChangeNOW as risky, a dusting attack),
+which no public list carries. The fifth, "USDT Banned Address, 2 hops, 4.99%", is public and
+was missed for two reasons:
+
+| Why | Fix | Test |
+|---|---|---|
+| The trace kept 5 senders; the wallet's top 5 were busy services, so the 6th, `TKaR2oCp…`, was pruned | Hop 1 follows up to 20 counterparties, until 95% of the money is covered (D-098) | `test_trace_v2.py::test_the_first_hop_is_followed_wider` |
+| `TKaR2oCp…` is a busy exchange wallet; its newest 1,000 transfers were 6 hours of payouts, so the frozen wallet's deposits a day earlier weren't seen | A trace reads a busy service's deposits (or payouts) in the window (D-099, VS-22) | `test_tron.py::test_one_side_of_a_wallets_transfers`, `test_trace_v2.py::test_behind_a_busy_wallet_its_deposits_are_read` |
+
+Live: the wallet now shows "Tether-frozen address: indirect received 5.4% (inferred)" behind
+`TKaR2oCp…`, 773.69 USDT, score 11 · low. Coverage went from 66% to 89.5% in, and from 39.5% to 77.1%
+out. The check took 66 s cold.
+

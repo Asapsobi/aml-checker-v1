@@ -1029,3 +1029,21 @@
 - **Alternatives:** A wider branch at every hop (measured slower and no better, D-088).
 - **Consequences:** That wallet's trace covers 89.5% in (was 66%) and 77% out (was 39.5%), in 54 s
   cold. The frozen wallet sits behind an exchange wallet whose sample didn't reach it (next step).
+
+### D-099 · A trace reads the deposits (or payouts) of a busy wallet it stops at
+- **Status:** Accepted
+- **Date:** 2026-10-07 · **Phase:** 2.0.2 (owner's choice, MVP test)
+- **Context:** MistTrack showed "USDT Banned Address, 2 hops" for an owner's wallet. The frozen wallet
+  paid a busy exchange wallet 13 million USDT, which paid the owner's wallet 868 USDT a day later.
+  Our trace stops at the busy wallet and looks behind it (D-097) through its newest transfers. Here
+  those were 6 hours of payouts only, so the deposits were missed (VS-22).
+- **Decision:** On TRON, when a trace stops at a busy service, it reads that side of the service's
+  transfers in the item's window, uncached:
+  - tracing in, its deposits, newest first (nearest the edge);
+  - tracing out, its payouts, oldest first.
+  It reads up to `hub_transfers` of them. If that read fails, or on BSC, the old sample is used.
+- **Alternatives:** Keep the sample; read a busy service's whole history (too slow).
+- **Consequences:**
+  - A few more TronGrid calls per busy service a trace stops at.
+  - The owner's wallet now shows "Tether-frozen address: indirect received 5.4% (inferred)",
+    behind `TKaR2oCp…`, matching MistTrack's line from public data. Its score went from 0 to 11.

@@ -677,7 +677,9 @@ hand; for a hub they are a sample, the newest `hub_transfers`. From them comes t
 service's own money, in the trace's direction, that came from (tracing in) or went to (tracing out)
 sanctioned or frozen addresses. The wallet gets an inferred exposure one hop beyond the service: the
 path volume to the service × that share, at weight `[trace] service_pass_through` (0.5; 0 turns it
-off), named "behind a busy service". It needs no extra read, changes no partition and never makes a
+off), named "behind a busy service". On TRON the share is measured on that side of the service's
+transfers in the item's window, read for the purpose (D-099): its deposits nearest the edge when
+tracing in, its payouts when tracing out. It needs no extra read, changes no partition and never makes a
 finding or a BLOCK.
 
 **Pruning (§7.4) criterion (c)** becomes: the sender's path bottleneck `min(parent bottleneck, a_j)`
