@@ -7,15 +7,15 @@
 
 | When | What | How |
 |---|---|---|
-| Automatically, twice a day | Refresh the OFAC list and the Tether TRON freeze index | `amlcheck sync` on a timer ([scheduling](scheduling.md)) |
+| Automatically, twice a day | Refresh the OFAC, UK and EU lists and the Tether TRON freeze index | `amlcheck sync` on a timer ([scheduling](scheduling.md)) |
 | Automatically, every 10 minutes | Screen new senders to your own wallets, up to 10 a run, each traced (a run still going makes the next one wait its turn) | `amlcheck monitor run` (exit 6 = look at it) |
 | Automatically, once a day | Re-screen the watchlist | `amlcheck watch run` (exit 6 = a verdict changed) |
 | Before every payout | Screen the counterparty | `amlcheck check <address> --amount N --client NAME` (or the web UI, or the API) |
 | When a result is REVIEW, BLOCK or INCOMPLETE | Decide, and record why | A case: `amlcheck case open <address>`, then `case decide` |
 | Now and then | Check the audit trail | `amlcheck audit verify`; keep the two head hashes it prints somewhere else |
 
-Before anything else each morning, `amlcheck status`: the OFAC list must be younger than 48 hours and
-the freeze index current, or every check comes back INCOMPLETE.
+Before anything else each morning, `amlcheck status`: the OFAC, UK and EU lists must be younger than
+48 hours and the freeze index current, or every check comes back INCOMPLETE.
 
 ## Screening a counterparty
 
@@ -134,6 +134,7 @@ amlcheck case decide <case> approved --note "known OTC client; source of funds m
 | A licensed third-party pack | `amlcheck intel import-pack file.csv --name … --licence "…"` |
 | Name an exchange's entity (its deposits then resolve locally in traces) | `amlcheck intel entity name <id> Binance --kind exchange_regulated` |
 | Watch an address daily | `amlcheck watch add <address> --client acme` |
+| Israel's NBCTF seizure orders, monthly or when NBCTF announces new ones: export "צווי תפיסה - מטבעות קריפטו" as CSV on matal.mod.gov.il | `amlcheck lists import-nbctf <file>.csv` |
 
 ## When something goes wrong
 

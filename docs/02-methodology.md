@@ -687,12 +687,20 @@ R-TRC-01 to R-TRC-05 keep reading the inbound trace. Outbound risk is in the exp
 | OFAC SDN (`ofac_sdn`) | §2.2 | `Digital Currency Address` ids | `sync`, 48 h | yes |
 | UK Sanctions List (`uk_sanctions`) | FCDO XML, OGL v3.0 (VS-18) | TRON and EVM addresses in each designation's text | `sync`, 48 h | yes |
 | EU Financial Sanctions (`eu_sanctions`) | Commission FSF XML, Decision 2011/833/EU (VS-19) | addresses in each entity's text | `sync`, 48 h | yes |
-| NBCTF seizure orders (`nbctf`) | the owner's downloads of the official annexes (VS-20) | every address in the files | `lists import-nbctf` | no |
+| NBCTF seizure orders (`nbctf`) | the official export (matal.mod.gov.il, CSV), or order files, downloaded by the owner (VS-20) | each order's `Assets`; any cell of an order file | `lists import-nbctf` | no |
 
 An address from free text is kept only when it passes its checksum (TRON base58check; `0x` with 40
 hex characters). A listing on any of them is R-SAN-01, BLOCK, naming the list (D-084, D-085). For
 exposures (§11.1) every list is `sanctioned`; the entity names the list (`UK sanctions: XINBI COMPANY
 LIMITED`), OFAC first when several list it.
+
+A TRON address typed with look-alike Cyrillic or Greek letters is read as Latin only when its
+checksum then holds (NBCTF FO 02/24); `0x` addresses have no checksum to confirm a reading, so never.
+In the NBCTF export each row is an order, and the finding shows its type and dates
+(`ASO (Seizure) of 2026-02-16, valid to 2028-02-16`). A cancelled order is not listed. An order
+imported again with wallets, or cancelled, replaces what was listed for it; one the new files leave
+out stays (`--replace` starts over). An order whose validity date has passed stays listed while NBCTF
+publishes it (Q-38).
 
 ### 13.2 Freeze neighbours (`suspected_malicious`, inferred)
 
