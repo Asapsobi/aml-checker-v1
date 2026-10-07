@@ -8,14 +8,13 @@ import pytest
 from typer.testing import CliRunner
 
 from amlcheck.cli import app, runtime
-from amlcheck.config import Settings
 from amlcheck.core.models import Chain
 from amlcheck.net.http import Mode
 from amlcheck.trace.adapter import TraceSource
 from amlcheck.trace.engine import TraceEngine
 from amlcheck.trace.jobs import TraceJobs
 from tests.unit.test_engine import Fake as FakeSource
-from tests.unit.trace_world import NOW, E, Fake, T, engine, example, setup_example
+from tests.unit.trace_world import NOW, E, Fake, T, engine, example, example_settings, setup_example
 
 runner = CliRunner()
 
@@ -46,7 +45,7 @@ def use_world(monkeypatch: pytest.MonkeyPatch, *, fail: bool = False) -> None:
     ) -> list[Any]:
         assert trace
         jobs = TraceJobs(conn, rt.settings, clock=rt.clock)
-        return [FakeSource("ofac_sdn"), TraceSource(jobs, world(conn, fail), Settings())]
+        return [FakeSource("ofac_sdn"), TraceSource(jobs, world(conn, fail), example_settings())]
 
     monkeypatch.setattr(runtime, "build_trace_engine", build)
     monkeypatch.setattr(runtime, "make_screening_sources", sources)

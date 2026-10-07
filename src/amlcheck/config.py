@@ -165,6 +165,10 @@ class Trace(_Section):
     bsc_max_hops: PosInt = 3  # D-082: HyperSync's free plan can't reach 5 hops in 3 minutes
     branch: PosInt = 5
     coverage_share: Share = Decimal("0.8")
+    #: The wallet's own counterparties (hop 1) are followed wider (D-098): five busy services
+    #: used to fill the five slots and hide a sixth sender with a frozen address behind it.
+    first_hop_branch: PosInt = 20
+    first_hop_coverage: Share = Decimal("0.95")
     min_attributed_usdt: Annotated[Decimal, Field(ge=0)] = Decimal("100")
     #: For a small wallet the floor is at most this share of its own flow (D-096): 100 USDT would
     #: leave a 26 USDT wallet's trace empty, while MistTrack follows a few dollars.

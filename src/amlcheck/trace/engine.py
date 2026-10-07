@@ -543,8 +543,8 @@ class TraceEngine:
             parent_weight=parent_weight,
             parent_flow=parent_flow,
             parent_bottleneck=parent_bottleneck,
-            branch=self._t.branch,
-            coverage_share=self._t.coverage_share,
+            branch=self._t.first_hop_branch if hop == 1 else self._t.branch,
+            coverage_share=self._t.first_hop_coverage if hop == 1 else self._t.coverage_share,
             min_attributed=st.floor,
         )
         st.buckets["untraced:pruned"] += pruned

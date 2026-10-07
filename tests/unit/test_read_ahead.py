@@ -12,7 +12,7 @@ import pytest
 
 from amlcheck.chain.base import History, Transfer
 from amlcheck.chain.cache import ContractCache, TransferCache
-from amlcheck.config import Cache, Settings, Trace
+from amlcheck.config import Cache, Settings
 from amlcheck.core.address import detect
 from amlcheck.core.clock import fixed
 from amlcheck.core.models import Chain
@@ -22,7 +22,18 @@ from amlcheck.storage.db import open_db
 from amlcheck.trace.engine import TraceEngine, TraceFailed
 from amlcheck.trace.model import Trace as Traced
 from tests.unit.test_trace_engine import Slow
-from tests.unit.trace_world import NOW, B, Fake, NoContracts, T, addr, example, setup_example, tr
+from tests.unit.trace_world import (
+    NOW,
+    B,
+    Fake,
+    NoContracts,
+    T,
+    addr,
+    example,
+    example_settings,
+    setup_example,
+    tr,
+)
 
 
 def tree(depth: int = 3, fan: int = 4) -> list[Transfer]:
@@ -79,7 +90,7 @@ def run(conn: sqlite3.Connection, fake: Fake, parallel: int, budget_s: int = 180
         TransferCache(conn, {fake.chain: fake}, Cache(), clock=fixed(NOW)),
         ContractCache(conn, {fake.chain: NoContracts()}, clock=fixed(NOW)),
         IntelStore(conn, clock=fixed(NOW)),
-        Settings(trace=Trace(bsc_parallel_reads=parallel, time_budget_seconds=budget_s)),
+        example_settings(bsc_parallel_reads=parallel, time_budget_seconds=budget_s),
         clock=fixed(NOW),
         monotonic=time.monotonic,
     )

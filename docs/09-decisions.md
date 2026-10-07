@@ -1017,3 +1017,15 @@
     shows a small inferred exposure, as MistTrack does. It costs no extra read.
   - For the owner's wallet, the two services' samples (1,000+ transfers each) held no listed or
     frozen address. So MistTrack's 11.11% there comes from its own labels.
+
+### D-098 · The wallet's own counterparties are followed wider
+- **Status:** Accepted
+- **Date:** 2026-10-07 · **Phase:** 2.0.2 (MVP test)
+- **Context:** In the owner's MVP test, MistTrack showed a wallet's sixth-largest sender passing on
+  money from a Tether-frozen wallet. Our trace keeps at most 5 senders per address. That wallet's
+  top 5 were busy services, so the sixth was pruned: 34% of its money was never looked at.
+- **Decision:** At hop 1, follow up to `[trace] first_hop_branch` = 20 counterparties, until
+  `first_hop_coverage` = 95% of the money is covered. Deeper hops keep 5 and 80%.
+- **Alternatives:** A wider branch at every hop (measured slower and no better, D-088).
+- **Consequences:** That wallet's trace covers 89.5% in (was 66%) and 77% out (was 39.5%), in 54 s
+  cold. The frozen wallet sits behind an exchange wallet whose sample didn't reach it (next step).

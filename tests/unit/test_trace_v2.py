@@ -182,3 +182,19 @@ async def test_the_pass_through_can_be_turned_off(conn: sqlite3.Connection) -> N
     assert [n.behind for n in t.nodes if n.address == hub] == [()]
     assert from_trace(t, lambda x, c: x) == []
     assert "behind" not in str(t.to_json())  # a trace without it reads and hashes as before
+
+
+# D-098: hop 1 is followed wider. The owner's MVP wallet had five big senders filling the five
+# slots, and the sixth one passed on money from a frozen address.
+async def test_the_first_hop_is_followed_wider(conn: sqlite3.Connection) -> None:
+    big = [addr(f"w{n}") for n in range(5)]
+    sixth, frozen = addr("w6"), addr("wfrz")
+    xs = [tr(5 + n / 10, a, T, 3000 - 200 * n, n) for n, a in enumerate(big)]
+    xs += [tr(6, sixth, T, 868), tr(20, frozen, sixth, 868)]
+    sanction(conn, frozen)
+    narrow, _ = engine(conn, Fake(xs))  # one rule at every hop: five senders at most
+    assert "sanctioned" not in (await narrow.run(detect(T))).partition
+    wide, _ = engine(conn, Fake(xs), Settings())
+    t = await wide.run(detect(T))
+    assert t.partition["sanctioned"] > 0  # the sixth sender, then what paid it
+    assert sixth in {n.address for n in t.nodes if n.hop == 1}
