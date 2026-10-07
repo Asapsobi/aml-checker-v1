@@ -92,6 +92,8 @@ bsc_max_hops = 3
 branch = 5
 coverage_share = 0.8
 min_attributed_usdt = 100
+# A small wallet's floor is at most this share of its own flow (D-096).
+min_attributed_share = 0.01
 hop_window_days = 30
 # Addresses read per direction: 100 on TRON (D-090), 50 on BSC.
 max_nodes = 100

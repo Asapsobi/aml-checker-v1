@@ -513,6 +513,37 @@
    "theirs": "risky"
   },
   {
+   "address": "TJcS48zPKvBeXeLfX6RLxR62M8sQPkcpn6",
+   "cause": "method",
+   "chain": "tron",
+   "note": "from the owner (MVP test)",
+   "reason": "A 26 USDT wallet. Before 2.0.1 the 100 USDT floor left its trace empty (D-096, fixed). Now its money is traced to two busy services, where our traces stop because funds mix: one has no risk data on MistTrack Light, the other is a large service MistTrack itself rates Low (0.35% direct sanctioned). MistTrack follows money through them and shows 11.11% indirect sanctioned.",
+   "recorded": {
+    "at": "2026-10-07T11:46:53.412012Z",
+    "check_id": "033e54aa-fce1-481a-b520-4097245cccfe",
+    "config_hash": "e5c974171b7c1d116334220da604f7828533327d91bf3f7946b535e23e955472",
+    "coverage_in": "0.627494",
+    "coverage_out": "0.159851",
+    "decay": "0.4",
+    "exposures": [],
+    "k": "8",
+    "level": "low",
+    "rules": [],
+    "score": 0,
+    "verdict": "NO_HITS",
+    "version": "2.0.0"
+   },
+   "risks": [
+    {
+     "exposure": "indirect",
+     "risk_type": "Sanctioned Entity",
+     "share": "11.11"
+    }
+   ],
+   "source": "MistTrack Light, 2026-10-07",
+   "theirs": "risky"
+  },
+  {
    "address": "TKHuVq1oKVruCGLvqVexFs6dawKv6fQgFs",
    "cause": "method",
    "chain": "tron",

@@ -118,3 +118,25 @@ def test_should_trace(
         settings = Settings(trace=Trace(every_check=every))
 
     assert runtime.should_trace(Rt(), asked, amount) is expected  # type: ignore[arg-type]
+
+
+# D-096: the 100 USDT floor scales down for a small wallet, to 1% of its own flow. Coverage share 1
+# keeps every sender in play, so only the floor decides.
+async def test_a_small_wallets_trace_follows_small_amounts(conn: sqlite3.Connection) -> None:
+    a, b, c = addr("sa"), addr("sb"), addr("sc")
+    xs = [tr(5, a, T, "8.39"), tr(6, b, T, "4.91"), tr(20, c, a, "8")]
+    sanction(conn, c)
+    eng, _ = engine(conn, Fake(xs), Settings(trace=Trace(coverage_share=D0(1))))
+    t = await eng.run(detect(T))
+    assert "untraced:pruned" not in t.partition  # the old floor pruned all 13.30 USDT
+    assert abs(t.partition["sanctioned"] - D0("8.39") / D0("13.30")) < D0("1e-12")  # C, behind A
+
+
+async def test_a_big_wallet_keeps_the_100_usdt_floor(conn: sqlite3.Connection) -> None:
+    a, b, c = addr("ba"), addr("bb"), addr("bc")
+    xs = [tr(5, a, T, 1_000_000), tr(6, b, T, 50), tr(20, c, b, 50)]
+    sanction(conn, c)
+    eng, _ = engine(conn, Fake(xs), Settings(trace=Trace(coverage_share=D0(1))))
+    t = await eng.run(detect(T))
+    assert "sanctioned" not in t.partition  # B's 50 USDT is under min(100, 1% of 1,000,050)
+    assert t.partition["untraced:pruned"] == D0(50) / D0(1_000_050)

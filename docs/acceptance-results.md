@@ -531,3 +531,13 @@ stay (D-095).
 Live end-to-end on 2.0.0: **17 / 17 passed** (947 s; the list sync alone took 235 s on a slow line).
 
 **Owner sign-off** (2026-10-07): 2.0.0 signed off, to merge once CI is green.
+
+## 2.0.1 · Fixes from the owner's MVP test
+
+| Finding | Fix | Test |
+|---|---|---|
+| The check form said "Trace the source of funds (always on from 10,000 USDT)", the v1 rule. Every check traces in v2, so the box did nothing | The box is now "Quick check: skip the trace" | `test_web.py::test_every_check_is_traced` |
+| A 26 USDT wallet was traced nowhere: every payment was under the 100 USDT floor (MistTrack: 11.11% indirect sanctioned) | The floor scales to 1% of the wallet's own flow for small wallets (D-096). The trace now covers 62.7% in and 16% out, and ends at two busy services | `test_trace_v2.py::test_a_small_wallets_trace_follows_small_amounts`, `::test_a_big_wallet_keeps_the_100_usdt_floor` |
+
+The wallet joined the benchmark: 11 wallets, 9 at the same level (82%). Both mismatches are a
+difference of method, explained in [benchmark.md](benchmark.md). AT-70 still passes.

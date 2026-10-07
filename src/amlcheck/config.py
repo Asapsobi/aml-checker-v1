@@ -166,6 +166,9 @@ class Trace(_Section):
     branch: PosInt = 5
     coverage_share: Share = Decimal("0.8")
     min_attributed_usdt: Annotated[Decimal, Field(ge=0)] = Decimal("100")
+    #: For a small wallet the floor is at most this share of its own flow (D-096): 100 USDT would
+    #: leave a 26 USDT wallet's trace empty, while MistTrack follows a few dollars.
+    min_attributed_share: Share = Decimal("0.01")
     hop_window_days: PosInt = 30
     max_nodes: PosInt = 100  # per direction (§12.2); TRON (D-090, owner's choice)
     bsc_max_nodes: PosInt = 50  # BSC: its reads are slow on HyperSync's free plan (D-082)

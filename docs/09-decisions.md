@@ -980,3 +980,18 @@
   `k` = 4, `decay` = 0.6 and `sanctioned` = 0.5 each broke 1 or 2 wallets that agree now.
 - **Alternatives:** The closest fit (rejected by D-092).
 - **Consequences:** Score version 2 and risk version 2 are unchanged in 2.0.0.
+
+### D-096 · A small wallet's trace follows small amounts
+- **Status:** Accepted
+- **Date:** 2026-10-07 · **Phase:** 2.0.1 (MVP test)
+- **Context:** In the owner's MVP test, a 26 USDT wallet was NO_HITS with nothing traced, while
+  MistTrack Light showed 11.11% indirect sanctioned exposure. The trace prunes a sender whose path
+  volume is under `min_attributed_usdt`, 100 USDT (D-081). Every payment of this wallet was under
+  that, so 100% of its money was `untraced:pruned`, in both directions.
+- **Decision:** The floor is `min(min_attributed_usdt, min_attributed_share × the target's flow)`,
+  with `[trace] min_attributed_share` = 0.01. A big wallet keeps 100 USDT; a small one follows
+  anything of at least 1% of its own flow (0.27 USDT for that wallet).
+- **Alternatives:** A lower fixed floor, which would chase dust on busy wallets.
+- **Consequences:** Small wallets are traced. That wallet's money now reaches two busy services,
+  where traces stop by design, so it stays low. That remaining difference is one of method
+  (benchmark). Busy wallets cost the same as before.

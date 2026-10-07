@@ -180,6 +180,7 @@ def create_app(rt: runtime.Runtime, token: str) -> FastAPI:
         client: str = Form(""),
         note: str = Form(""),
         trace: str = Form(""),
+        quick: str = Form(""),
         token_: str = Form("", alias="token"),
     ) -> Response:
         if (refused := posted(token_)) is not None:
@@ -190,7 +191,7 @@ def create_app(rt: runtime.Runtime, token: str) -> FastAPI:
             "amount": amount,
             "client": client,
             "note": note,
-            "trace": trace,
+            "quick": quick,
         }
         try:
             addr = detect(address.strip(), Chain(chain) if chain else None)
@@ -208,7 +209,10 @@ def create_app(rt: runtime.Runtime, token: str) -> FastAPI:
                 form=form,
                 error="Amount must be a positive number.",
             )
-        run_trace = runtime.should_trace(rt, True if trace else None, value)
+        # "Quick check" is `--no-trace`; otherwise every check traces (D-079). `trace` is the form
+        # field before 2.0.1, still accepted.
+        asked = False if quick else (True if trace else None)
+        run_trace = runtime.should_trace(rt, asked, value)
         async with check_lock:
             conn = db()
             try:

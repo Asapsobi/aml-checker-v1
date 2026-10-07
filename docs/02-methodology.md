@@ -650,7 +650,7 @@ own 90-day window (§5).
 | `max_nodes` | 40 | **100 per direction on TRON** (D-090); 50 on BSC (`bsc_max_nodes`) | Bounds requests; reaching it is `untraced:budget` (§7.7) |
 | `parallel_reads` | 1 | **4** on TRON, 1 on BSC (`bsc_parallel_reads`) | Reads run ahead; order and result unchanged (D-088) |
 | `time_budget_seconds` | 300, a failure | **180 for both directions**, not a failure | D-079, D-080 |
-| `min_attributed_usdt` | 100, on the proportional estimate | 100, on the **path volume** | D-081 |
+| `min_attributed_usdt` | 100, on the proportional estimate | 100, on the **path volume**; for a small wallet at most `min_attributed_share` (1%) of its own flow | D-081, D-096 |
 
 **Order: best first** (D-081). Items wait in one queue per direction and the one with the largest
 *discounted path volume* is expanded next:

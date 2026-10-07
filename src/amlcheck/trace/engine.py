@@ -110,6 +110,7 @@ class _State:
     paths: list[TracePath] = field(default_factory=list)
     read: set[str] = field(default_factory=set)
     cache_hits: int = 0
+    floor: Decimal = Decimal(0)  # the path volume a sender needs to be followed (D-081, D-096)
 
 
 def flows(address: str, transfers: Iterable[Transfer], direction: Direction) -> dict[str, _Flow]:
@@ -281,6 +282,8 @@ class TraceEngine:
         st.nodes.append(Node(target.norm, 0, Decimal(1), None, True, None))
         if not in_t:
             return trace(in_t=in_t, coverage=None)
+        # D-096: a small wallet's trace follows anything of at least 1% of its own flow.
+        st.floor = min(self._t.min_attributed_usdt, self._t.min_attributed_share * in_t)
 
         # Best first (D-081): the largest discounted path volume is expanded next.
         queue: list[tuple[Decimal, str, tuple[str, ...], int, _Item]] = []
@@ -516,7 +519,7 @@ class TraceEngine:
             parent_bottleneck=parent_bottleneck,
             branch=self._t.branch,
             coverage_share=self._t.coverage_share,
-            min_attributed=self._t.min_attributed_usdt,
+            min_attributed=st.floor,
         )
         st.buckets["untraced:pruned"] += pruned
         days = timedelta(days=self._t.hop_window_days)
