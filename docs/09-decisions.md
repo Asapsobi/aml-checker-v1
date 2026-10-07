@@ -879,3 +879,29 @@
     run out of time less often.
   - A failed read ahead is left to the step, which reads again: a passing error costs a read, not
     the trace.
+- **Update:** since D-090 (owner's choice), TRON reads 100 addresses per direction.
+
+### D-089 · NBCTF orders past their validity date keep BLOCKing (owner's choice, Q-38)
+- **Status:** Accepted
+- **Date:** 2026-10-07 · **Phase:** P14
+- **Context:** VS-20 found ten orders whose validity date has passed, five of them with wallets
+  (111 listings, the oldest 2024-02-22). NBCTF still publishes them.
+- **Decision:** An order stays listed, and BLOCKs, while NBCTF publishes it, whatever its validity
+  date. The finding shows "valid to …", and the import says when the date has passed.
+- **Alternatives:** REVIEW once the date has passed.
+- **Consequences:** A seized or forfeited wallet stays tied to terror financing after its order's
+  date. An order NBCTF cancels, or stops publishing and the owner re-imports without it using
+  `--replace`, is no longer listed.
+
+### D-090 · TRON traces read 100 addresses per direction (owner's choice, Q-39)
+- **Status:** Accepted
+- **Date:** 2026-10-07 · **Phase:** P14
+- **Context:** With reads ahead (D-088), 100 addresses per direction fit in a TRON check, and they
+  find much more distant risk (`TVvWhZyL…`: sanctioned 29.4% → 47.6%). The cost is about twice the
+  requests, over PRD G8's 200 per trace.
+- **Decision:** `[trace] max_nodes` = 100, on TRON. BSC keeps 50 (`bsc_max_nodes`): its reads are
+  slow on HyperSync's free plan (D-082). G8 is restated: on TRON, 400 requests per direction.
+- **Alternatives:** Keep 50 (within G8).
+- **Consequences:** A cold TRON check takes about 1.5 minutes on a busy wallet, seconds when
+  repeated. It uses about twice the TronGrid requests, monitor runs included: the owner keeps an eye
+  on the key's daily quota.

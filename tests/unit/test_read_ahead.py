@@ -15,6 +15,7 @@ from amlcheck.chain.cache import ContractCache, TransferCache
 from amlcheck.config import Cache, Settings, Trace
 from amlcheck.core.address import detect
 from amlcheck.core.clock import fixed
+from amlcheck.core.models import Chain
 from amlcheck.intel.store import IntelStore
 from amlcheck.net.http import SourceError
 from amlcheck.storage.db import open_db
@@ -129,3 +130,17 @@ async def test_out_of_time_reads_ahead_are_cancelled(tmp_path: Path) -> None:
     assert t.stopped == "time"
     assert t.partition["untraced:budget"] == Decimal("0.3")  # B, cut off mid-read
     assert asyncio.all_tasks() == {asyncio.current_task()}
+
+
+def test_budgets_per_chain(tmp_path: Path) -> None:
+    """TRON reads 100 addresses per direction, four at a time (D-088, D-090); BSC 50, one at a
+    time, since HyperSync's free plan is slow."""
+    eng = TraceEngine(
+        open_db(tmp_path / "a.db"),
+        TransferCache(open_db(tmp_path / "a.db"), {}, Cache(), clock=fixed(NOW)),
+        ContractCache(open_db(tmp_path / "a.db"), {}, clock=fixed(NOW)),
+        IntelStore(open_db(tmp_path / "a.db"), clock=fixed(NOW)),
+        Settings(),
+    )
+    assert (eng._max_nodes(Chain.TRON), eng._parallel(Chain.TRON)) == (100, 4)
+    assert (eng._max_nodes(Chain.BSC), eng._parallel(Chain.BSC)) == (50, 1)

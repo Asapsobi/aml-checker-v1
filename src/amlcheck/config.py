@@ -167,7 +167,8 @@ class Trace(_Section):
     coverage_share: Share = Decimal("0.8")
     min_attributed_usdt: Annotated[Decimal, Field(ge=0)] = Decimal("100")
     hop_window_days: PosInt = 30
-    max_nodes: PosInt = 50  # per direction (§12.2)
+    max_nodes: PosInt = 100  # per direction (§12.2); TRON (D-090, owner's choice)
+    bsc_max_nodes: PosInt = 50  # BSC: its reads are slow on HyperSync's free plan (D-082)
     #: Queued items whose reads run at once, per direction (D-088): the order and the result are
     #: the same as one at a time, only sooner; the provider's limiter paces them. BSC: one at a
     #: time, since HyperSync's free budget is spent by the query, not by the second.

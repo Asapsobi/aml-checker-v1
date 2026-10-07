@@ -647,7 +647,7 @@ own 90-day window (§5).
 | directions | in | **in and out**, at the same time, one shared deadline | Outgoing risk counts (D-075) |
 | `max_hops` | 3 | **5** on TRON | D-075 |
 | `bsc_max_hops` | 3 | **3** on BSC | HyperSync's free plan can't reach 5 in 3 minutes (D-082) |
-| `max_nodes` | 40 | **50 per direction** | Bounds requests; reaching it is `untraced:budget` (§7.7) |
+| `max_nodes` | 40 | **100 per direction on TRON** (D-090); 50 on BSC (`bsc_max_nodes`) | Bounds requests; reaching it is `untraced:budget` (§7.7) |
 | `parallel_reads` | 1 | **4** on TRON, 1 on BSC (`bsc_parallel_reads`) | Reads run ahead; order and result unchanged (D-088) |
 | `time_budget_seconds` | 300, a failure | **180 for both directions**, not a failure | D-079, D-080 |
 | `min_attributed_usdt` | 100, on the proportional estimate | 100, on the **path volume** | D-081 |
