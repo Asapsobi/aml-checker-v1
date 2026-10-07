@@ -8,9 +8,9 @@
    "note": "from our runs",
    "reason": null,
    "recorded": {
-    "at": "2026-10-07T10:53:28.823802Z",
-    "check_id": "f585b668-7266-4cbc-8412-45b4f140ee95",
-    "config_hash": "456cbb83717c17930a65d8e0fa65216d99b1b56b1da0b995d6d9b56e24f54a71",
+    "at": "2026-10-07T11:55:58.023025Z",
+    "check_id": "9dc4e745-8160-4694-b477-701fec490341",
+    "config_hash": "0fd404be33ea5fb77822dd309a8c209ef397b68446fadaa7c53e4d922d61235c",
     "coverage_in": "0.155113",
     "coverage_out": "0.491814",
     "decay": "0.4",
@@ -24,7 +24,7 @@
     ],
     "score": 15,
     "verdict": "NO_HITS",
-    "version": "2.0.0b1"
+    "version": "2.0.1"
    },
    "risks": [],
    "source": "MistTrack Light, 2026-10-07",
@@ -37,9 +37,9 @@
    "note": "from our runs",
    "reason": null,
    "recorded": {
-    "at": "2026-10-07T10:56:06.484754Z",
-    "check_id": "df79ae43-7f42-4aa5-ae00-47eed993e11c",
-    "config_hash": "456cbb83717c17930a65d8e0fa65216d99b1b56b1da0b995d6d9b56e24f54a71",
+    "at": "2026-10-07T11:55:59.908934Z",
+    "check_id": "72c2d796-f867-49fe-956f-f78979715f0f",
+    "config_hash": "0fd404be33ea5fb77822dd309a8c209ef397b68446fadaa7c53e4d922d61235c",
     "coverage_in": "0.950607",
     "coverage_out": null,
     "decay": "0.4",
@@ -73,7 +73,7 @@
     ],
     "score": 100,
     "verdict": "BLOCK",
-    "version": "2.0.0b1"
+    "version": "2.0.1"
    },
    "risks": [
     {
@@ -92,9 +92,9 @@
    "note": "from our runs",
    "reason": null,
    "recorded": {
-    "at": "2026-10-07T10:56:09.009764Z",
-    "check_id": "cfc78548-af81-4a53-acbc-43645dba3224",
-    "config_hash": "456cbb83717c17930a65d8e0fa65216d99b1b56b1da0b995d6d9b56e24f54a71",
+    "at": "2026-10-07T11:56:05.203720Z",
+    "check_id": "d3089561-5bb5-4bfa-84ca-d95b6cb93b08",
+    "config_hash": "0fd404be33ea5fb77822dd309a8c209ef397b68446fadaa7c53e4d922d61235c",
     "coverage_in": "0.290477",
     "coverage_out": "0.364084",
     "decay": "0.4",
@@ -131,9 +131,9 @@
        "TB5UPBTtXYwwmSviWBkQcFM64o6R1CDXUY",
        "TPjV5GhMM3e5woPgGoWavKgCyKop6tsVy7"
       ],
-      "percent": "0.078639",
+      "percent": "0.076156",
       "risk_type": "illicit_activity",
-      "volume_usdt": "222981.5668202764976958525346"
+      "volume_usdt": "215941.3998786544784393429274"
      },
      {
       "address": "TP834zaucGKtAVjJPc9QQQkz5ses87KEf8",
@@ -150,9 +150,9 @@
        "TPZzGrhwetLFYUYzBAaYRe6QeYVqyfuW8K",
        "TP834zaucGKtAVjJPc9QQQkz5ses87KEf8"
       ],
-      "percent": "0.034956",
+      "percent": "0.031949",
       "risk_type": "sanctioned_entity",
-      "volume_usdt": "100000"
+      "volume_usdt": "91395.650257"
      },
      {
       "address": "TDduLTxUF4Vf5HTRU5tRdMgFmTyV65Zd91",
@@ -171,9 +171,9 @@
        "TA1Vkoc3GdUG26Awd75Cj74rPAETLiJ6dA",
        "TDduLTxUF4Vf5HTRU5tRdMgFmTyV65Zd91"
       ],
-      "percent": "0.072735",
+      "percent": "0.070548",
       "risk_type": "frozen",
-      "volume_usdt": "206241.796292"
+      "volume_usdt": "200039.281255"
      },
      {
       "address": "TP834zaucGKtAVjJPc9QQQkz5ses87KEf8",
@@ -232,9 +232,9 @@
        "TA1Vkoc3GdUG26Awd75Cj74rPAETLiJ6dA",
        "TDduLTxUF4Vf5HTRU5tRdMgFmTyV65Zd91"
       ],
-      "percent": "0.064841",
+      "percent": "0.064816",
       "risk_type": "frozen",
-      "volume_usdt": "183858.333333"
+      "volume_usdt": "183787.394783"
      },
      {
       "address": "TDduLTxUF4Vf5HTRU5tRdMgFmTyV65Zd91",
@@ -254,9 +254,9 @@
        "TJTq5EkkokqK52aEF8PvRBs2nRYaR5XNWt",
        "TDduLTxUF4Vf5HTRU5tRdMgFmTyV65Zd91"
       ],
-      "percent": "0.080332",
+      "percent": "0.077916",
       "risk_type": "frozen",
-      "volume_usdt": "227784.611123"
+      "volume_usdt": "220934.21755"
      },
      {
       "address": "TDduLTxUF4Vf5HTRU5tRdMgFmTyV65Zd91",
@@ -276,9 +276,9 @@
        "TPKjqjAfWCmakChQ8wMV3EZMuEqo7wU7Ue",
        "TDduLTxUF4Vf5HTRU5tRdMgFmTyV65Zd91"
       ],
-      "percent": "0.072735",
+      "percent": "0.070548",
       "risk_type": "frozen",
-      "volume_usdt": "206241.796292"
+      "volume_usdt": "200039.281255"
      },
      {
       "address": "TDduLTxUF4Vf5HTRU5tRdMgFmTyV65Zd91",
@@ -298,9 +298,9 @@
        "TA1Vkoc3GdUG26Awd75Cj74rPAETLiJ6dA",
        "TDduLTxUF4Vf5HTRU5tRdMgFmTyV65Zd91"
       ],
-      "percent": "0.072735",
+      "percent": "0.070548",
       "risk_type": "frozen",
-      "volume_usdt": "206241.796292"
+      "volume_usdt": "200039.281255"
      },
      {
       "address": "TDduLTxUF4Vf5HTRU5tRdMgFmTyV65Zd91",
@@ -320,9 +320,9 @@
        "TPKjqjAfWCmakChQ8wMV3EZMuEqo7wU7Ue",
        "TDduLTxUF4Vf5HTRU5tRdMgFmTyV65Zd91"
       ],
-      "percent": "0.064841",
+      "percent": "0.064816",
       "risk_type": "frozen",
-      "volume_usdt": "183858.333333"
+      "volume_usdt": "183787.394783"
      },
      {
       "address": "TDduLTxUF4Vf5HTRU5tRdMgFmTyV65Zd91",
@@ -342,9 +342,9 @@
        "TA1Vkoc3GdUG26Awd75Cj74rPAETLiJ6dA",
        "TDduLTxUF4Vf5HTRU5tRdMgFmTyV65Zd91"
       ],
-      "percent": "0.064841",
+      "percent": "0.064816",
       "risk_type": "frozen",
-      "volume_usdt": "183858.333333"
+      "volume_usdt": "183787.394783"
      },
      {
       "address": "TDduLTxUF4Vf5HTRU5tRdMgFmTyV65Zd91",
@@ -364,9 +364,9 @@
        "TJTq5EkkokqK52aEF8PvRBs2nRYaR5XNWt",
        "TDduLTxUF4Vf5HTRU5tRdMgFmTyV65Zd91"
       ],
-      "percent": "0.055728",
+      "percent": "0.053969",
       "risk_type": "frozen",
-      "volume_usdt": "158018.43318"
+      "volume_usdt": "153029.338497"
      },
      {
       "address": "TTVqPB3KaD7WpbUPr2pxvXL7V45iRTYi93",
@@ -404,9 +404,331 @@
        "TVbAAh7sjudfxWqJVbcPfyApGQjBKjwZaE",
        "TFcLDs8SWxc4WoaJvk5pXuJd6wuZkG2ZiN"
       ],
-      "percent": "0.034956",
+      "percent": "0.031949",
       "risk_type": "frozen",
-      "volume_usdt": "100000"
+      "volume_usdt": "91395.650257"
+     },
+     {
+      "address": "TR82th4R4JciaEME3cbh7hLhsumqSe5wu5",
+      "category": "frozen",
+      "confidence": "0.5",
+      "direction": "in",
+      "entity": "behind a busy service",
+      "estimated_usdt": "5033.149362",
+      "exposure_type": "indirect",
+      "hop": 2,
+      "inferred": true,
+      "path": [
+       "TB5UPBTtXYwwmSviWBkQcFM64o6R1CDXUY",
+       "TR82th4R4JciaEME3cbh7hLhsumqSe5wu5"
+      ],
+      "percent": "0.001759",
+      "risk_type": "frozen",
+      "volume_usdt": "5033.149362"
+     },
+     {
+      "address": "TYCmCPfQFRrxGQEd9P5NkyoPArycSJiBJm",
+      "category": "frozen",
+      "confidence": "0.5",
+      "direction": "in",
+      "entity": "behind a busy service",
+      "estimated_usdt": "125.063864",
+      "exposure_type": "indirect",
+      "hop": 5,
+      "inferred": true,
+      "path": [
+       "TB5UPBTtXYwwmSviWBkQcFM64o6R1CDXUY",
+       "TPZzGrhwetLFYUYzBAaYRe6QeYVqyfuW8K",
+       "TNBANbPmg5RzPSc6PQKfj7SaaByQeUSCTD",
+       "TSvDfkvsd2UTHHRpNLnNDp9RwuxgCyWVpR",
+       "TYCmCPfQFRrxGQEd9P5NkyoPArycSJiBJm"
+      ],
+      "percent": "0.006016",
+      "risk_type": "frozen",
+      "volume_usdt": "17208.699486"
+     },
+     {
+      "address": "TJTq5EkkokqK52aEF8PvRBs2nRYaR5XNWt",
+      "category": "frozen",
+      "confidence": "0.5",
+      "direction": "out",
+      "entity": "behind a busy service",
+      "estimated_usdt": "664.216466",
+      "exposure_type": "indirect",
+      "hop": 4,
+      "inferred": true,
+      "path": [
+       "TB5UPBTtXYwwmSviWBkQcFM64o6R1CDXUY",
+       "TWkaZR9DPkFninJjdSRtjJtCfeo7TfRUv6",
+       "TRczSMnBcW19LPSbXp19BrMYVk626r4eJy",
+       "TJTq5EkkokqK52aEF8PvRBs2nRYaR5XNWt"
+      ],
+      "percent": "0.002946",
+      "risk_type": "frozen",
+      "volume_usdt": "8352.484316"
+     },
+     {
+      "address": "TJTq5EkkokqK52aEF8PvRBs2nRYaR5XNWt",
+      "category": "frozen",
+      "confidence": "0.5",
+      "direction": "out",
+      "entity": "behind a busy service",
+      "estimated_usdt": "1246.893544",
+      "exposure_type": "indirect",
+      "hop": 4,
+      "inferred": true,
+      "path": [
+       "TB5UPBTtXYwwmSviWBkQcFM64o6R1CDXUY",
+       "TPjV5GhMM3e5woPgGoWavKgCyKop6tsVy7",
+       "TRczSMnBcW19LPSbXp19BrMYVk626r4eJy",
+       "TJTq5EkkokqK52aEF8PvRBs2nRYaR5XNWt"
+      ],
+      "percent": "0.00204",
+      "risk_type": "frozen",
+      "volume_usdt": "5785.32001"
+     },
+     {
+      "address": "TJTq5EkkokqK52aEF8PvRBs2nRYaR5XNWt",
+      "category": "frozen",
+      "confidence": "0.5",
+      "direction": "out",
+      "entity": "behind a busy service",
+      "estimated_usdt": "282.696352",
+      "exposure_type": "indirect",
+      "hop": 5,
+      "inferred": true,
+      "path": [
+       "TB5UPBTtXYwwmSviWBkQcFM64o6R1CDXUY",
+       "TWkaZR9DPkFninJjdSRtjJtCfeo7TfRUv6",
+       "TRczSMnBcW19LPSbXp19BrMYVk626r4eJy",
+       "TT3vFf6gsbs5i5WrvH1XB6xcyPtG1MkLvD",
+       "TJTq5EkkokqK52aEF8PvRBs2nRYaR5XNWt"
+      ],
+      "percent": "0.002946",
+      "risk_type": "frozen",
+      "volume_usdt": "8352.484316"
+     },
+     {
+      "address": "TTPNfVZKzCdHJPqWxUcpVinWXa7rTXTTkH",
+      "category": "frozen",
+      "confidence": "0.5",
+      "direction": "out",
+      "entity": "behind a busy service",
+      "estimated_usdt": "202.968213",
+      "exposure_type": "indirect",
+      "hop": 4,
+      "inferred": true,
+      "path": [
+       "TB5UPBTtXYwwmSviWBkQcFM64o6R1CDXUY",
+       "TWkaZR9DPkFninJjdSRtjJtCfeo7TfRUv6",
+       "TRczSMnBcW19LPSbXp19BrMYVk626r4eJy",
+       "TTPNfVZKzCdHJPqWxUcpVinWXa7rTXTTkH"
+      ],
+      "percent": "0.001381",
+      "risk_type": "frozen",
+      "volume_usdt": "3915.998743"
+     },
+     {
+      "address": "TJTq5EkkokqK52aEF8PvRBs2nRYaR5XNWt",
+      "category": "frozen",
+      "confidence": "0.5",
+      "direction": "out",
+      "entity": "behind a busy service",
+      "estimated_usdt": "530.688825",
+      "exposure_type": "indirect",
+      "hop": 5,
+      "inferred": true,
+      "path": [
+       "TB5UPBTtXYwwmSviWBkQcFM64o6R1CDXUY",
+       "TPjV5GhMM3e5woPgGoWavKgCyKop6tsVy7",
+       "TRczSMnBcW19LPSbXp19BrMYVk626r4eJy",
+       "TT3vFf6gsbs5i5WrvH1XB6xcyPtG1MkLvD",
+       "TJTq5EkkokqK52aEF8PvRBs2nRYaR5XNWt"
+      ],
+      "percent": "0.00204",
+      "risk_type": "frozen",
+      "volume_usdt": "5785.32001"
+     },
+     {
+      "address": "TTPNfVZKzCdHJPqWxUcpVinWXa7rTXTTkH",
+      "category": "frozen",
+      "confidence": "0.5",
+      "direction": "out",
+      "entity": "behind a busy service",
+      "estimated_usdt": "439.154685",
+      "exposure_type": "indirect",
+      "hop": 4,
+      "inferred": true,
+      "path": [
+       "TB5UPBTtXYwwmSviWBkQcFM64o6R1CDXUY",
+       "TWkaZR9DPkFninJjdSRtjJtCfeo7TfRUv6",
+       "TCSim2hJvWNAMERRNLivDTW4QsPr8vSNda",
+       "TTPNfVZKzCdHJPqWxUcpVinWXa7rTXTTkH"
+      ],
+      "percent": "0.000621",
+      "risk_type": "frozen",
+      "volume_usdt": "1759.662644"
+     },
+     {
+      "address": "TTPNfVZKzCdHJPqWxUcpVinWXa7rTXTTkH",
+      "category": "frozen",
+      "confidence": "0.5",
+      "direction": "out",
+      "entity": "behind a busy service",
+      "estimated_usdt": "20.340946",
+      "exposure_type": "indirect",
+      "hop": 5,
+      "inferred": true,
+      "path": [
+       "TB5UPBTtXYwwmSviWBkQcFM64o6R1CDXUY",
+       "TWkaZR9DPkFninJjdSRtjJtCfeo7TfRUv6",
+       "TCSim2hJvWNAMERRNLivDTW4QsPr8vSNda",
+       "TJcUewidTdtEWdTjQ3LRPnAumymMQtGNri",
+       "TTPNfVZKzCdHJPqWxUcpVinWXa7rTXTTkH"
+      ],
+      "percent": "0.000815",
+      "risk_type": "frozen",
+      "volume_usdt": "2311.637868"
+     },
+     {
+      "address": "TJVa9Ltx9esHP8hBmCf3i2jyTPs9qGFjkh",
+      "category": "frozen",
+      "confidence": "0.5",
+      "direction": "out",
+      "entity": "behind a busy service",
+      "estimated_usdt": "12.70654",
+      "exposure_type": "indirect",
+      "hop": 5,
+      "inferred": true,
+      "path": [
+       "TB5UPBTtXYwwmSviWBkQcFM64o6R1CDXUY",
+       "TWkaZR9DPkFninJjdSRtjJtCfeo7TfRUv6",
+       "TRczSMnBcW19LPSbXp19BrMYVk626r4eJy",
+       "TT3vFf6gsbs5i5WrvH1XB6xcyPtG1MkLvD",
+       "TJVa9Ltx9esHP8hBmCf3i2jyTPs9qGFjkh"
+      ],
+      "percent": "0.000234",
+      "risk_type": "frozen",
+      "volume_usdt": "662.129278"
+     },
+     {
+      "address": "TJVa9Ltx9esHP8hBmCf3i2jyTPs9qGFjkh",
+      "category": "frozen",
+      "confidence": "0.5",
+      "direction": "out",
+      "entity": "behind a busy service",
+      "estimated_usdt": "23.853222",
+      "exposure_type": "indirect",
+      "hop": 5,
+      "inferred": true,
+      "path": [
+       "TB5UPBTtXYwwmSviWBkQcFM64o6R1CDXUY",
+       "TPjV5GhMM3e5woPgGoWavKgCyKop6tsVy7",
+       "TRczSMnBcW19LPSbXp19BrMYVk626r4eJy",
+       "TT3vFf6gsbs5i5WrvH1XB6xcyPtG1MkLvD",
+       "TJVa9Ltx9esHP8hBmCf3i2jyTPs9qGFjkh"
+      ],
+      "percent": "0.000162",
+      "risk_type": "frozen",
+      "volume_usdt": "458.621605"
+     },
+     {
+      "address": "TYSpTJXWa3jRqdpD7rgNS7weyn5UiE92F9",
+      "category": "frozen",
+      "confidence": "0.5",
+      "direction": "out",
+      "entity": "behind a busy service",
+      "estimated_usdt": "3.794003",
+      "exposure_type": "indirect",
+      "hop": 4,
+      "inferred": true,
+      "path": [
+       "TB5UPBTtXYwwmSviWBkQcFM64o6R1CDXUY",
+       "TRneCpa4beE2ctMu1Z1JCdX92BtJU4u5Xr",
+       "TSfezJqB9a8vsXpaVsxv4ozASmqbNfHZe2",
+       "TYSpTJXWa3jRqdpD7rgNS7weyn5UiE92F9"
+      ],
+      "percent": "0.000037",
+      "risk_type": "frozen",
+      "volume_usdt": "104.409461"
+     },
+     {
+      "address": "TD4iGZhnUjFaDL1pb3oDukoEnunns9Rz2G",
+      "category": "frozen",
+      "confidence": "0.5",
+      "direction": "out",
+      "entity": "behind a busy service",
+      "estimated_usdt": "11.9945",
+      "exposure_type": "indirect",
+      "hop": 3,
+      "inferred": true,
+      "path": [
+       "TB5UPBTtXYwwmSviWBkQcFM64o6R1CDXUY",
+       "TRneCpa4beE2ctMu1Z1JCdX92BtJU4u5Xr",
+       "TD4iGZhnUjFaDL1pb3oDukoEnunns9Rz2G"
+      ],
+      "percent": "0.000019",
+      "risk_type": "frozen",
+      "volume_usdt": "54.203095"
+     },
+     {
+      "address": "TR82th4R4JciaEME3cbh7hLhsumqSe5wu5",
+      "category": "sanctioned",
+      "confidence": "0.5",
+      "direction": "in",
+      "entity": "behind a busy service",
+      "estimated_usdt": "29.360038",
+      "exposure_type": "indirect",
+      "hop": 2,
+      "inferred": true,
+      "path": [
+       "TB5UPBTtXYwwmSviWBkQcFM64o6R1CDXUY",
+       "TR82th4R4JciaEME3cbh7hLhsumqSe5wu5"
+      ],
+      "percent": "0.00001",
+      "risk_type": "sanctioned_entity",
+      "volume_usdt": "29.360038"
+     },
+     {
+      "address": "TKsqSapUB97g2WLyoKfevcKmgRre4tcKXb",
+      "category": "frozen",
+      "confidence": "0.5",
+      "direction": "out",
+      "entity": "behind a busy service",
+      "estimated_usdt": "0.472739",
+      "exposure_type": "indirect",
+      "hop": 5,
+      "inferred": true,
+      "path": [
+       "TB5UPBTtXYwwmSviWBkQcFM64o6R1CDXUY",
+       "TWkaZR9DPkFninJjdSRtjJtCfeo7TfRUv6",
+       "TCSim2hJvWNAMERRNLivDTW4QsPr8vSNda",
+       "TJcUewidTdtEWdTjQ3LRPnAumymMQtGNri",
+       "TKsqSapUB97g2WLyoKfevcKmgRre4tcKXb"
+      ],
+      "percent": "0.000037",
+      "risk_type": "frozen",
+      "volume_usdt": "103.54152"
+     },
+     {
+      "address": "TD4iGZhnUjFaDL1pb3oDukoEnunns9Rz2G",
+      "category": "frozen",
+      "confidence": "0.5",
+      "direction": "out",
+      "entity": "behind a busy service",
+      "estimated_usdt": "1.10473",
+      "exposure_type": "indirect",
+      "hop": 4,
+      "inferred": true,
+      "path": [
+       "TB5UPBTtXYwwmSviWBkQcFM64o6R1CDXUY",
+       "TRneCpa4beE2ctMu1Z1JCdX92BtJU4u5Xr",
+       "TSfezJqB9a8vsXpaVsxv4ozASmqbNfHZe2",
+       "TD4iGZhnUjFaDL1pb3oDukoEnunns9Rz2G"
+      ],
+      "percent": "0.000019",
+      "risk_type": "frozen",
+      "volume_usdt": "54.203095"
      }
     ],
     "k": "8",
@@ -421,7 +743,7 @@
     ],
     "score": 100,
     "verdict": "BLOCK",
-    "version": "2.0.0b1"
+    "version": "2.0.1"
    },
    "risks": [
     {
@@ -440,9 +762,9 @@
    "note": "from our runs",
    "reason": null,
    "recorded": {
-    "at": "2026-10-07T10:56:11.376430Z",
-    "check_id": "421fab70-1ec1-4f9b-8bcf-c5925b443283",
-    "config_hash": "456cbb83717c17930a65d8e0fa65216d99b1b56b1da0b995d6d9b56e24f54a71",
+    "at": "2026-10-07T11:56:07.356060Z",
+    "check_id": "f326e120-8e30-4920-a067-0da8b141ee63",
+    "config_hash": "0fd404be33ea5fb77822dd309a8c209ef397b68446fadaa7c53e4d922d61235c",
     "coverage_in": "0.508891",
     "coverage_out": "0.758916",
     "decay": "0.4",
@@ -484,6 +806,27 @@
       "percent": "0.015575",
       "risk_type": "illicit_activity",
       "volume_usdt": "3000"
+     },
+     {
+      "address": "TEwwWnPJ2vZWmLEwoX18BPXf4XJdLWWg16",
+      "category": "frozen",
+      "confidence": "0.5",
+      "direction": "in",
+      "entity": "behind a busy service",
+      "estimated_usdt": "6.340139",
+      "exposure_type": "indirect",
+      "hop": 5,
+      "inferred": true,
+      "path": [
+       "TDpbgW7HJnNh7s7kHEqfBuWaeFqTZPBdNA",
+       "TYAPTr7w1NL2sSZLFTy2YZqUoWziCsNfgt",
+       "TT5A4jMtqyYYMwPr6tcbSzrrRBY1D5QmPF",
+       "TKFEGDZuwhvvRbCQ6RPhCfi7159nfZz5PQ",
+       "TEwwWnPJ2vZWmLEwoX18BPXf4XJdLWWg16"
+      ],
+      "percent": "0.000287",
+      "risk_type": "frozen",
+      "volume_usdt": "55.287836"
      }
     ],
     "k": "8",
@@ -495,7 +838,7 @@
     ],
     "score": 47,
     "verdict": "REVIEW",
-    "version": "2.0.0b1"
+    "version": "2.0.1"
    },
    "risks": [
     {
@@ -514,14 +857,14 @@
   },
   {
    "address": "TJcS48zPKvBeXeLfX6RLxR62M8sQPkcpn6",
-   "cause": "method",
+   "cause": "unknowable",
    "chain": "tron",
    "note": "from the owner (MVP test)",
-   "reason": "A 26 USDT wallet. Before 2.0.1 the 100 USDT floor left its trace empty (D-096, fixed). Now its money is traced to two busy services, where our traces stop because funds mix: one has no risk data on MistTrack Light, the other is a large service MistTrack itself rates Low (0.35% direct sanctioned). MistTrack follows money through them and shows 11.11% indirect sanctioned.",
+   "reason": "A 26 USDT wallet. Before 2.0.1 the 100 USDT floor left its trace empty (D-096, fixed). Its money now traces to two busy services, and what sits behind them passes through (D-097): in this period neither dealt with any address on OFAC, UK, EU, NBCTF or Tether's freeze list (1,000+ transfers each; one is a 2.4-billion-USDT service MistTrack itself rates Low). MistTrack's 11.11% indirect sanctioned must come from its own labels.",
    "recorded": {
-    "at": "2026-10-07T11:46:53.412012Z",
-    "check_id": "033e54aa-fce1-481a-b520-4097245cccfe",
-    "config_hash": "e5c974171b7c1d116334220da604f7828533327d91bf3f7946b535e23e955472",
+    "at": "2026-10-07T11:56:09.566733Z",
+    "check_id": "1e8de8df-d027-4a32-b756-23c03afe15d8",
+    "config_hash": "0fd404be33ea5fb77822dd309a8c209ef397b68446fadaa7c53e4d922d61235c",
     "coverage_in": "0.627494",
     "coverage_out": "0.159851",
     "decay": "0.4",
@@ -531,7 +874,7 @@
     "rules": [],
     "score": 0,
     "verdict": "NO_HITS",
-    "version": "2.0.0"
+    "version": "2.0.1"
    },
    "risks": [
     {
@@ -550,11 +893,11 @@
    "note": "from our runs",
    "reason": "Tether's treasury issues to and redeems from exchanges. Our traces stop at exchanges, where funds mix, so none of its money reaches a sanctioned address in our trace; MistTrack Light follows money through them (5.76% indirect sanctioned) and calls any risky funds Risky. We still give REVIEW: one transfer with a Tether-frozen wallet, 0.0001% of its volume, so the score is 0.",
    "recorded": {
-    "at": "2026-10-07T10:56:13.929757Z",
-    "check_id": "ace2b7e7-0c36-42f7-9880-1369de250470",
-    "config_hash": "456cbb83717c17930a65d8e0fa65216d99b1b56b1da0b995d6d9b56e24f54a71",
+    "at": "2026-10-07T11:56:12.438827Z",
+    "check_id": "38593a1b-b15f-40b7-b670-a9c67603d756",
+    "config_hash": "0fd404be33ea5fb77822dd309a8c209ef397b68446fadaa7c53e4d922d61235c",
     "coverage_in": "0.742952",
-    "coverage_out": "0.611966",
+    "coverage_out": "0.611917",
     "decay": "0.4",
     "exposures": [
      {
@@ -583,7 +926,7 @@
     ],
     "score": 0,
     "verdict": "REVIEW",
-    "version": "2.0.0b1"
+    "version": "2.0.1"
    },
    "risks": [
     {
@@ -622,9 +965,9 @@
    "note": "from our runs",
    "reason": null,
    "recorded": {
-    "at": "2026-10-07T10:56:16.276230Z",
-    "check_id": "c1fa97fc-2462-464c-b4bd-470c80ba4bb6",
-    "config_hash": "456cbb83717c17930a65d8e0fa65216d99b1b56b1da0b995d6d9b56e24f54a71",
+    "at": "2026-10-07T11:56:14.772968Z",
+    "check_id": "c4e84c73-2e07-45a8-a125-b6eb88426b73",
+    "config_hash": "0fd404be33ea5fb77822dd309a8c209ef397b68446fadaa7c53e4d922d61235c",
     "coverage_in": "0.537919",
     "coverage_out": "0.680937",
     "decay": "0.4",
@@ -765,7 +1108,7 @@
     ],
     "score": 100,
     "verdict": "BLOCK",
-    "version": "2.0.0b1"
+    "version": "2.0.1"
    },
    "risks": [
     {
@@ -799,9 +1142,9 @@
    "note": "from our runs",
    "reason": null,
    "recorded": {
-    "at": "2026-10-07T10:56:18.274407Z",
-    "check_id": "114f7739-bc50-4c72-8a2a-787b37f666fd",
-    "config_hash": "456cbb83717c17930a65d8e0fa65216d99b1b56b1da0b995d6d9b56e24f54a71",
+    "at": "2026-10-07T11:56:17.106249Z",
+    "check_id": "f24028b1-21f9-4544-a313-f1aa4410596a",
+    "config_hash": "0fd404be33ea5fb77822dd309a8c209ef397b68446fadaa7c53e4d922d61235c",
     "coverage_in": "0.310127",
     "coverage_out": "0.155938",
     "decay": "0.4",
@@ -841,9 +1184,9 @@
        "TQqG37vceUqS5ZKHkARS6zDcKGb9ATHByk",
        "TNwe3WoEX6XrQ5NPAeWPkvpTtdaf27XYxK"
       ],
-      "percent": "0.028642",
+      "percent": "0.02857",
       "risk_type": "sanctioned_entity",
-      "volume_usdt": "31370"
+      "volume_usdt": "31290.998453"
      },
      {
       "address": "TNwe3WoEX6XrQ5NPAeWPkvpTtdaf27XYxK",
@@ -863,9 +1206,9 @@
        "TWe1ArU3TkgEGovmyQN4XeF2JTQTonP5fV",
        "TNwe3WoEX6XrQ5NPAeWPkvpTtdaf27XYxK"
       ],
-      "percent": "0.028642",
+      "percent": "0.02857",
       "risk_type": "sanctioned_entity",
-      "volume_usdt": "31370"
+      "volume_usdt": "31290.998453"
      },
      {
       "address": "TSejKphDPcPb5p5Q5UVzxUHobdrn2Ttae3",
@@ -887,6 +1230,87 @@
       "percent": "0.022029",
       "risk_type": "illicit_activity",
       "volume_usdt": "24127"
+     },
+     {
+      "address": "TWCQMtqQHUc2hqmpgDXcESkxWTrEmHhesY",
+      "category": "sanctioned",
+      "confidence": "0.5",
+      "direction": "in",
+      "entity": "behind a busy service",
+      "estimated_usdt": "39.405908",
+      "exposure_type": "indirect",
+      "hop": 3,
+      "inferred": true,
+      "path": [
+       "TSArbmMUf5ZYpEU1ChC6BPhpT7bgVF2Rku",
+       "TPvQdTGeda4a4waByEh9PSsVFbk5ZWyLyr",
+       "TWCQMtqQHUc2hqmpgDXcESkxWTrEmHhesY"
+      ],
+      "percent": "0.000115",
+      "risk_type": "sanctioned_entity",
+      "volume_usdt": "126.210348"
+     },
+     {
+      "address": "TD8QvkK6zBSh8Ftu8LkRq8Gkwi4ZaZLXCu",
+      "category": "sanctioned",
+      "confidence": "0.5",
+      "direction": "out",
+      "entity": "behind a busy service",
+      "estimated_usdt": "14.850018",
+      "exposure_type": "indirect",
+      "hop": 4,
+      "inferred": true,
+      "path": [
+       "TSArbmMUf5ZYpEU1ChC6BPhpT7bgVF2Rku",
+       "TTHB5jPefihbS1XjiBXAib1xteKuE91Nwf",
+       "TUQJnWQU9eJDv3XVjahVCt2ikC7WEQmxx8",
+       "TD8QvkK6zBSh8Ftu8LkRq8Gkwi4ZaZLXCu"
+      ],
+      "percent": "0.000136",
+      "risk_type": "sanctioned_entity",
+      "volume_usdt": "148.725922"
+     },
+     {
+      "address": "TD8QvkK6zBSh8Ftu8LkRq8Gkwi4ZaZLXCu",
+      "category": "sanctioned",
+      "confidence": "0.5",
+      "direction": "out",
+      "entity": "behind a busy service",
+      "estimated_usdt": "2.9968",
+      "exposure_type": "indirect",
+      "hop": 5,
+      "inferred": true,
+      "path": [
+       "TSArbmMUf5ZYpEU1ChC6BPhpT7bgVF2Rku",
+       "TYXocRVxCp2Zx9pdTVYqZpJgX1ksUW3EHT",
+       "TTHB5jPefihbS1XjiBXAib1xteKuE91Nwf",
+       "TUQJnWQU9eJDv3XVjahVCt2ikC7WEQmxx8",
+       "TD8QvkK6zBSh8Ftu8LkRq8Gkwi4ZaZLXCu"
+      ],
+      "percent": "0.000055",
+      "risk_type": "sanctioned_entity",
+      "volume_usdt": "60.257833"
+     },
+     {
+      "address": "TVVxfeUW7WFF9htdiWc2z2q4qpsVU3jqr7",
+      "category": "sanctioned",
+      "confidence": "0.5",
+      "direction": "in",
+      "entity": "behind a busy service",
+      "estimated_usdt": "0.303356",
+      "exposure_type": "indirect",
+      "hop": 5,
+      "inferred": true,
+      "path": [
+       "TSArbmMUf5ZYpEU1ChC6BPhpT7bgVF2Rku",
+       "TPvQdTGeda4a4waByEh9PSsVFbk5ZWyLyr",
+       "TCc1BAEnXCJNcnKKnDPPK3w1dh9QJRBxG7",
+       "TQqG37vceUqS5ZKHkARS6zDcKGb9ATHByk",
+       "TVVxfeUW7WFF9htdiWc2z2q4qpsVU3jqr7"
+      ],
+      "percent": "0.000029",
+      "risk_type": "sanctioned_entity",
+      "volume_usdt": "31.792747"
      }
     ],
     "k": "8",
@@ -900,7 +1324,7 @@
     ],
     "score": 41,
     "verdict": "REVIEW",
-    "version": "2.0.0b1"
+    "version": "2.0.1"
    },
    "risks": [
     {
@@ -934,9 +1358,9 @@
    "note": "from our runs",
    "reason": null,
    "recorded": {
-    "at": "2026-10-07T10:56:20.436043Z",
-    "check_id": "55885333-6a85-4203-88eb-15569b7f235b",
-    "config_hash": "456cbb83717c17930a65d8e0fa65216d99b1b56b1da0b995d6d9b56e24f54a71",
+    "at": "2026-10-07T11:56:19.284272Z",
+    "check_id": "6585d5e1-b2ff-4ddb-9e83-28aa8c18bf39",
+    "config_hash": "0fd404be33ea5fb77822dd309a8c209ef397b68446fadaa7c53e4d922d61235c",
     "coverage_in": null,
     "coverage_out": null,
     "decay": "0.4",
@@ -944,13 +1368,12 @@
     "k": "8",
     "level": "low",
     "rules": [
-     "R-HEU-03",
      "R-HEU-04",
      "R-SYS-01"
     ],
-    "score": 15,
+    "score": 5,
     "verdict": "INCOMPLETE",
-    "version": "2.0.0b1"
+    "version": "2.0.1"
    },
    "risks": [],
    "source": "MistTrack Light, 2026-10-07",
@@ -963,9 +1386,9 @@
    "note": "from our runs",
    "reason": null,
    "recorded": {
-    "at": "2026-10-07T10:56:24.744264Z",
-    "check_id": "8b045812-1bb4-4560-8000-1c7b34d12f90",
-    "config_hash": "456cbb83717c17930a65d8e0fa65216d99b1b56b1da0b995d6d9b56e24f54a71",
+    "at": "2026-10-07T11:56:34.964224Z",
+    "check_id": "16b26c5d-bda1-4bec-8fca-545bea028fb1",
+    "config_hash": "0fd404be33ea5fb77822dd309a8c209ef397b68446fadaa7c53e4d922d61235c",
     "coverage_in": "0.301805",
     "coverage_out": "0.06443",
     "decay": "0.4",
@@ -985,9 +1408,9 @@
        "TSArbmMUf5ZYpEU1ChC6BPhpT7bgVF2Rku",
        "TNwe3WoEX6XrQ5NPAeWPkvpTtdaf27XYxK"
       ],
-      "percent": "0.049021",
+      "percent": "0.048923",
       "risk_type": "sanctioned_entity",
-      "volume_usdt": "17366.5"
+      "volume_usdt": "17331.547127"
      },
      {
       "address": "TXHX2NUvcgft4zs6MkkUtdNVERPTavHDWN",
@@ -1050,9 +1473,9 @@
        "TSVUJzbqB9yYrJnyHdigncYTvuJcmBdE88",
        "TSmcHwvTR27Ao4NN8HhPFCVcPU5aTEqLDt"
       ],
-      "percent": "0.033121",
+      "percent": "0.032893",
       "risk_type": "sanctioned_entity",
-      "volume_usdt": "11733.499757"
+      "volume_usdt": "11652.928545"
      },
      {
       "address": "TRUjZfQhZZBWRg2RDtJbr4fJmM1JYKr9Vp",
@@ -1093,9 +1516,9 @@
        "TQqG37vceUqS5ZKHkARS6zDcKGb9ATHByk",
        "TNwe3WoEX6XrQ5NPAeWPkvpTtdaf27XYxK"
       ],
-      "percent": "0.049021",
+      "percent": "0.048923",
       "risk_type": "sanctioned_entity",
-      "volume_usdt": "17366.5"
+      "volume_usdt": "17331.547127"
      },
      {
       "address": "TXHX2NUvcgft4zs6MkkUtdNVERPTavHDWN",
@@ -1115,9 +1538,9 @@
        "TUahBhapShgsUQxFzwnVULGNBT1hN29VTT",
        "TXHX2NUvcgft4zs6MkkUtdNVERPTavHDWN"
       ],
-      "percent": "0.038069",
+      "percent": "0.037807",
       "risk_type": "sanctioned_entity",
-      "volume_usdt": "13486.356271"
+      "volume_usdt": "13393.748602"
      },
      {
       "address": "TNwe3WoEX6XrQ5NPAeWPkvpTtdaf27XYxK",
@@ -1137,9 +1560,9 @@
        "TYGWx6b7h2dajc7qxqH8GELyvuG6zH6Lmv",
        "TNwe3WoEX6XrQ5NPAeWPkvpTtdaf27XYxK"
       ],
-      "percent": "0.035713",
+      "percent": "0.035468",
       "risk_type": "sanctioned_entity",
-      "volume_usdt": "12651.743968"
+      "volume_usdt": "12564.867387"
      },
      {
       "address": "TXHX2NUvcgft4zs6MkkUtdNVERPTavHDWN",
@@ -1159,9 +1582,9 @@
        "TB47wWFpa7hJYibVQ51RKNR2daRkG7bJGs",
        "TXHX2NUvcgft4zs6MkkUtdNVERPTavHDWN"
       ],
-      "percent": "0.035674",
+      "percent": "0.035429",
       "risk_type": "sanctioned_entity",
-      "volume_usdt": "12638.089779"
+      "volume_usdt": "12551.306958"
      },
      {
       "address": "TNwe3WoEX6XrQ5NPAeWPkvpTtdaf27XYxK",
@@ -1181,9 +1604,28 @@
        "TSArbmMUf5ZYpEU1ChC6BPhpT7bgVF2Rku",
        "TNwe3WoEX6XrQ5NPAeWPkvpTtdaf27XYxK"
       ],
-      "percent": "0.028175",
+      "percent": "0.027981",
       "risk_type": "sanctioned_entity",
-      "volume_usdt": "9981.212167"
+      "volume_usdt": "9912.673506"
+     },
+     {
+      "address": "THxPvgeBe8BUmfuyf2qXTTv6FbXUqrzjNH",
+      "category": "sanctioned",
+      "confidence": "0.5",
+      "direction": "in",
+      "entity": "behind a busy service",
+      "estimated_usdt": "773.867995",
+      "exposure_type": "indirect",
+      "hop": 3,
+      "inferred": true,
+      "path": [
+       "TVvWhZyLcd2DT2Y78XpyrUS3SyzfLeSsWP",
+       "TWeYv9BmunNJj6P9s7MjDdBvuzwNaALHYV",
+       "THxPvgeBe8BUmfuyf2qXTTv6FbXUqrzjNH"
+      ],
+      "percent": "0.017057",
+      "risk_type": "sanctioned_entity",
+      "volume_usdt": "6042.573649"
      },
      {
       "address": "TNwe3WoEX6XrQ5NPAeWPkvpTtdaf27XYxK",
@@ -1202,9 +1644,190 @@
        "TBF9fSzpMAqmjT3i7nwpULKuwynnohnUL7",
        "TNwe3WoEX6XrQ5NPAeWPkvpTtdaf27XYxK"
       ],
-      "percent": "0.011023",
+      "percent": "0.010947",
       "risk_type": "sanctioned_entity",
-      "volume_usdt": "3905.098057"
+      "volume_usdt": "3878.282658"
+     },
+     {
+      "address": "TM29zMhWUx1BsHt4PqaouPtL4WxNNxkoZ6",
+      "category": "sanctioned",
+      "confidence": "0.5",
+      "direction": "in",
+      "entity": "behind a busy service",
+      "estimated_usdt": "20.820825",
+      "exposure_type": "indirect",
+      "hop": 5,
+      "inferred": true,
+      "path": [
+       "TVvWhZyLcd2DT2Y78XpyrUS3SyzfLeSsWP",
+       "TA3ppmyGdAMVjGAaeKwGxVtuAwqZNTUjQL",
+       "TCtDn8vf5ARtAE5eQJSWf25k3yzDosST2D",
+       "TYaU9Zbm6R8PLNgF7A2vRgD45YyGMTy8u4",
+       "TM29zMhWUx1BsHt4PqaouPtL4WxNNxkoZ6"
+      ],
+      "percent": "0.020273",
+      "risk_type": "sanctioned_entity",
+      "volume_usdt": "7182.073872"
+     },
+     {
+      "address": "TEojgka7bNkq5BzXXMxn9r8windML6cAT8",
+      "category": "sanctioned",
+      "confidence": "0.5",
+      "direction": "in",
+      "entity": "behind a busy service",
+      "estimated_usdt": "83.491135",
+      "exposure_type": "indirect",
+      "hop": 3,
+      "inferred": true,
+      "path": [
+       "TVvWhZyLcd2DT2Y78XpyrUS3SyzfLeSsWP",
+       "TA3ppmyGdAMVjGAaeKwGxVtuAwqZNTUjQL",
+       "TEojgka7bNkq5BzXXMxn9r8windML6cAT8"
+      ],
+      "percent": "0.001555",
+      "risk_type": "sanctioned_entity",
+      "volume_usdt": "550.87794"
+     },
+     {
+      "address": "TCSUGmuANzxszagYxE8MuVdqNmVJc7RrzV",
+      "category": "sanctioned",
+      "confidence": "0.5",
+      "direction": "in",
+      "entity": "behind a busy service",
+      "estimated_usdt": "1.870306",
+      "exposure_type": "indirect",
+      "hop": 4,
+      "inferred": true,
+      "path": [
+       "TVvWhZyLcd2DT2Y78XpyrUS3SyzfLeSsWP",
+       "TYGWx6b7h2dajc7qxqH8GELyvuG6zH6Lmv",
+       "TS2GNDLTFzphYrffe2YSgfiyNjGQEzC9Db",
+       "TCSUGmuANzxszagYxE8MuVdqNmVJc7RrzV"
+      ],
+      "percent": "0.00139",
+      "risk_type": "sanctioned_entity",
+      "volume_usdt": "492.268381"
+     },
+     {
+      "address": "TCSUGmuANzxszagYxE8MuVdqNmVJc7RrzV",
+      "category": "sanctioned",
+      "confidence": "0.5",
+      "direction": "in",
+      "entity": "behind a busy service",
+      "estimated_usdt": "0.472215",
+      "exposure_type": "indirect",
+      "hop": 5,
+      "inferred": true,
+      "path": [
+       "TVvWhZyLcd2DT2Y78XpyrUS3SyzfLeSsWP",
+       "THCy7FV6cvuxX5w7UUDc6yGYvoLyF8yFXB",
+       "TPMQgmnbhTiKLByGn8rXnKQqRKsBJLGUfg",
+       "TS2GNDLTFzphYrffe2YSgfiyNjGQEzC9Db",
+       "TCSUGmuANzxszagYxE8MuVdqNmVJc7RrzV"
+      ],
+      "percent": "0.000966",
+      "risk_type": "sanctioned_entity",
+      "volume_usdt": "342.074264"
+     },
+     {
+      "address": "TA3ppmyGdAMVjGAaeKwGxVtuAwqZNTUjQL",
+      "category": "sanctioned",
+      "confidence": "0.5",
+      "direction": "in",
+      "entity": "behind a busy service",
+      "estimated_usdt": "10.081068",
+      "exposure_type": "indirect",
+      "hop": 3,
+      "inferred": true,
+      "path": [
+       "TVvWhZyLcd2DT2Y78XpyrUS3SyzfLeSsWP",
+       "TWeYv9BmunNJj6P9s7MjDdBvuzwNaALHYV",
+       "TA3ppmyGdAMVjGAaeKwGxVtuAwqZNTUjQL"
+      ],
+      "percent": "0.000222",
+      "risk_type": "sanctioned_entity",
+      "volume_usdt": "78.715743"
+     },
+     {
+      "address": "TWCQMtqQHUc2hqmpgDXcESkxWTrEmHhesY",
+      "category": "sanctioned",
+      "confidence": "0.5",
+      "direction": "in",
+      "entity": "behind a busy service",
+      "estimated_usdt": "0.529147",
+      "exposure_type": "indirect",
+      "hop": 5,
+      "inferred": true,
+      "path": [
+       "TVvWhZyLcd2DT2Y78XpyrUS3SyzfLeSsWP",
+       "TA3ppmyGdAMVjGAaeKwGxVtuAwqZNTUjQL",
+       "TCtDn8vf5ARtAE5eQJSWf25k3yzDosST2D",
+       "TPvQdTGeda4a4waByEh9PSsVFbk5ZWyLyr",
+       "TWCQMtqQHUc2hqmpgDXcESkxWTrEmHhesY"
+      ],
+      "percent": "0.000546",
+      "risk_type": "sanctioned_entity",
+      "volume_usdt": "193.266286"
+     },
+     {
+      "address": "TWCQMtqQHUc2hqmpgDXcESkxWTrEmHhesY",
+      "category": "sanctioned",
+      "confidence": "0.5",
+      "direction": "in",
+      "entity": "behind a busy service",
+      "estimated_usdt": "1.421814",
+      "exposure_type": "indirect",
+      "hop": 4,
+      "inferred": true,
+      "path": [
+       "TVvWhZyLcd2DT2Y78XpyrUS3SyzfLeSsWP",
+       "TSArbmMUf5ZYpEU1ChC6BPhpT7bgVF2Rku",
+       "TPvQdTGeda4a4waByEh9PSsVFbk5ZWyLyr",
+       "TWCQMtqQHUc2hqmpgDXcESkxWTrEmHhesY"
+      ],
+      "percent": "0.000197",
+      "risk_type": "sanctioned_entity",
+      "volume_usdt": "69.905746"
+     },
+     {
+      "address": "TEojgka7bNkq5BzXXMxn9r8windML6cAT8",
+      "category": "sanctioned",
+      "confidence": "0.5",
+      "direction": "in",
+      "entity": "behind a busy service",
+      "estimated_usdt": "0.246351",
+      "exposure_type": "indirect",
+      "hop": 5,
+      "inferred": true,
+      "path": [
+       "TVvWhZyLcd2DT2Y78XpyrUS3SyzfLeSsWP",
+       "THCy7FV6cvuxX5w7UUDc6yGYvoLyF8yFXB",
+       "TEhg9FJCLPMcJgvDMYYGpmKcZUE4UnxDrT",
+       "TDLk79qUi98Y5sFS7owkxXETjNdDqMqEHJ",
+       "TEojgka7bNkq5BzXXMxn9r8windML6cAT8"
+      ],
+      "percent": "0.00025",
+      "risk_type": "sanctioned_entity",
+      "volume_usdt": "88.708971"
+     },
+     {
+      "address": "TDemrzkxDmJ85DxFHWhK5ZL9ejNpPxEwZ3",
+      "category": "sanctioned",
+      "confidence": "0.5",
+      "direction": "in",
+      "entity": "behind a busy service",
+      "estimated_usdt": "2.392981",
+      "exposure_type": "indirect",
+      "hop": 3,
+      "inferred": true,
+      "path": [
+       "TVvWhZyLcd2DT2Y78XpyrUS3SyzfLeSsWP",
+       "THCy7FV6cvuxX5w7UUDc6yGYvoLyF8yFXB",
+       "TDemrzkxDmJ85DxFHWhK5ZL9ejNpPxEwZ3"
+      ],
+      "percent": "0.000032",
+      "risk_type": "sanctioned_entity",
+      "volume_usdt": "11.40911"
      }
     ],
     "k": "8",
@@ -1214,9 +1837,9 @@
      "R-TRC-01",
      "R-TRC-04"
     ],
-    "score": 53,
+    "score": 55,
     "verdict": "REVIEW",
-    "version": "2.0.0b1"
+    "version": "2.0.1"
    },
    "risks": [
     {
@@ -1250,9 +1873,9 @@
    "note": "from our runs",
    "reason": null,
    "recorded": {
-    "at": "2026-10-07T10:56:27.024780Z",
-    "check_id": "53a404c5-b381-44f0-9014-768bb9c7e8d0",
-    "config_hash": "456cbb83717c17930a65d8e0fa65216d99b1b56b1da0b995d6d9b56e24f54a71",
+    "at": "2026-10-07T11:56:37.050430Z",
+    "check_id": "6f193f08-a016-4ed6-a38a-3d4ee170cbff",
+    "config_hash": "0fd404be33ea5fb77822dd309a8c209ef397b68446fadaa7c53e4d922d61235c",
     "coverage_in": "0.126274",
     "coverage_out": "0.257744",
     "decay": "0.4",
@@ -1311,9 +1934,9 @@
        "TJTq5EkkokqK52aEF8PvRBs2nRYaR5XNWt",
        "TDduLTxUF4Vf5HTRU5tRdMgFmTyV65Zd91"
       ],
-      "percent": "0.083741",
+      "percent": "0.076383",
       "risk_type": "frozen",
-      "volume_usdt": "1110918"
+      "volume_usdt": "1013304.106275"
      },
      {
       "address": "TBegmXo2j3tAWPBWkueaWVCzh75HoWNHem",
@@ -1414,9 +2037,9 @@
        "TUHtsWkT15883ggHMGS138dVoNJJvMYxiE",
        "TP834zaucGKtAVjJPc9QQQkz5ses87KEf8"
       ],
-      "percent": "0.0106",
+      "percent": "0.010563",
       "risk_type": "sanctioned_entity",
-      "volume_usdt": "140620.605606"
+      "volume_usdt": "140131.281721"
      },
      {
       "address": "TPtmWhM71BDeizN3L2hken92KBTBSa85An",
@@ -1473,9 +2096,9 @@
        "TAfws84qqzWXwJWjTWvF8xtbUv6KQCqNPr",
        "TSoQQCZ3DrZ1us6RcHGHd9UXp6bM6PukNQ"
       ],
-      "percent": "0.01325",
+      "percent": "0.013204",
       "risk_type": "sanctioned_entity",
-      "volume_usdt": "175775.757008"
+      "volume_usdt": "175164.102151"
      },
      {
       "address": "TSoQQCZ3DrZ1us6RcHGHd9UXp6bM6PukNQ",
@@ -1515,9 +2138,28 @@
        "TMs1aG1kQNPXgZpRnipC2mQNgUwbmyCmqv",
        "TSoQQCZ3DrZ1us6RcHGHd9UXp6bM6PukNQ"
       ],
-      "percent": "0.007067",
+      "percent": "0.007042",
       "risk_type": "sanctioned_entity",
-      "volume_usdt": "93747.070404"
+      "volume_usdt": "93420.854481"
+     },
+     {
+      "address": "TUHtsWkT15883ggHMGS138dVoNJJvMYxiE",
+      "category": "suspected_malicious",
+      "confidence": "0.39",
+      "direction": "in",
+      "entity": "SUSPECTED_MALICIOUS",
+      "estimated_usdt": "77364.955707",
+      "exposure_type": "indirect",
+      "hop": 2,
+      "inferred": true,
+      "path": [
+       "TWkaZR9DPkFninJjdSRtjJtCfeo7TfRUv6",
+       "TXwrqQNqGC2D8BCGe2dscbdK6nFmEpqhXg",
+       "TUHtsWkT15883ggHMGS138dVoNJJvMYxiE"
+      ],
+      "percent": "0.013204",
+      "risk_type": "illicit_activity",
+      "volume_usdt": "175164.102151"
      },
      {
       "address": "TKsfwynMRHPTtCJCqUEx5DYQ974YtKhfnE",
@@ -1537,9 +2179,9 @@
        "TSG86g8tcXKvuSBpw2TofL2RQNgDAxdNvr",
        "TKsfwynMRHPTtCJCqUEx5DYQ974YtKhfnE"
       ],
-      "percent": "0.015961",
+      "percent": "0.013582",
       "risk_type": "sanctioned_entity",
-      "volume_usdt": "211746.889686"
+      "volume_usdt": "180185.244201"
      },
      {
       "address": "TGkjY3Vgx84XbC21gq9eKEXf6HiuAdJx4F",
@@ -1559,28 +2201,9 @@
        "TURSf718YhnntW93CpuoA1fGDn47kVgbMB",
        "TGkjY3Vgx84XbC21gq9eKEXf6HiuAdJx4F"
       ],
-      "percent": "0.015961",
+      "percent": "0.013582",
       "risk_type": "frozen",
-      "volume_usdt": "211746.889686"
-     },
-     {
-      "address": "TUHtsWkT15883ggHMGS138dVoNJJvMYxiE",
-      "category": "suspected_malicious",
-      "confidence": "0.39",
-      "direction": "in",
-      "entity": "SUSPECTED_MALICIOUS",
-      "estimated_usdt": "77364.955707",
-      "exposure_type": "indirect",
-      "hop": 2,
-      "inferred": true,
-      "path": [
-       "TWkaZR9DPkFninJjdSRtjJtCfeo7TfRUv6",
-       "TXwrqQNqGC2D8BCGe2dscbdK6nFmEpqhXg",
-       "TUHtsWkT15883ggHMGS138dVoNJJvMYxiE"
-      ],
-      "percent": "0.01325",
-      "risk_type": "illicit_activity",
-      "volume_usdt": "175775.757008"
+      "volume_usdt": "180185.244201"
      },
      {
       "address": "THogjBskeFpktSyzzLntDwGwXtjekXpe7s",
@@ -1600,9 +2223,9 @@
        "TDy2ZEjfbfw3W58M3vR1p8qfeaqm1w7NFT",
        "THogjBskeFpktSyzzLntDwGwXtjekXpe7s"
       ],
-      "percent": "0.015226",
+      "percent": "0.012957",
       "risk_type": "frozen",
-      "volume_usdt": "201990.052985"
+      "volume_usdt": "171882.699563"
      },
      {
       "address": "TDduLTxUF4Vf5HTRU5tRdMgFmTyV65Zd91",
@@ -1622,9 +2245,9 @@
        "TTJj4pgBhJHrefat11tzq6wN4PGNGTxcGW",
        "TDduLTxUF4Vf5HTRU5tRdMgFmTyV65Zd91"
       ],
-      "percent": "0.014461",
+      "percent": "0.012306",
       "risk_type": "frozen",
-      "volume_usdt": "191848.058312"
+      "volume_usdt": "163252.406153"
      },
      {
       "address": "TMYHcFSeoyNWNKL7eYmNf67wJccuP8UFxn",
@@ -1664,9 +2287,9 @@
        "TRW7eG9Vu4Syf7B67me8b9YVti8SWKhuWs",
        "TMYHcFSeoyNWNKL7eYmNf67wJccuP8UFxn"
       ],
-      "percent": "0.003535",
+      "percent": "0.003523",
       "risk_type": "frozen",
-      "volume_usdt": "46896.97197"
+      "volume_usdt": "46733.782454"
      },
      {
       "address": "TNHiU7JAEpEt5uVDV9fLJSPijHCHr89o5u",
@@ -1684,9 +2307,28 @@
        "TUHtsWkT15883ggHMGS138dVoNJJvMYxiE",
        "TNHiU7JAEpEt5uVDV9fLJSPijHCHr89o5u"
       ],
-      "percent": "0.008833",
+      "percent": "0.008803",
       "risk_type": "illicit_activity",
-      "volume_usdt": "117183.838005"
+      "volume_usdt": "116776.068101"
+     },
+     {
+      "address": "TJTq5EkkokqK52aEF8PvRBs2nRYaR5XNWt",
+      "category": "frozen",
+      "confidence": "0.5",
+      "direction": "out",
+      "entity": "behind a busy service",
+      "estimated_usdt": "4885.569987",
+      "exposure_type": "indirect",
+      "hop": 3,
+      "inferred": true,
+      "path": [
+       "TWkaZR9DPkFninJjdSRtjJtCfeo7TfRUv6",
+       "TRczSMnBcW19LPSbXp19BrMYVk626r4eJy",
+       "TJTq5EkkokqK52aEF8PvRBs2nRYaR5XNWt"
+      ],
+      "percent": "0.002888",
+      "risk_type": "frozen",
+      "volume_usdt": "38308.26546"
      },
      {
       "address": "TP834zaucGKtAVjJPc9QQQkz5ses87KEf8",
@@ -1733,6 +2375,26 @@
       "volume_usdt": "37466.992331"
      },
      {
+      "address": "TJTq5EkkokqK52aEF8PvRBs2nRYaR5XNWt",
+      "category": "frozen",
+      "confidence": "0.5",
+      "direction": "out",
+      "entity": "behind a busy service",
+      "estimated_usdt": "2079.341424",
+      "exposure_type": "indirect",
+      "hop": 4,
+      "inferred": true,
+      "path": [
+       "TWkaZR9DPkFninJjdSRtjJtCfeo7TfRUv6",
+       "TRczSMnBcW19LPSbXp19BrMYVk626r4eJy",
+       "TT3vFf6gsbs5i5WrvH1XB6xcyPtG1MkLvD",
+       "TJTq5EkkokqK52aEF8PvRBs2nRYaR5XNWt"
+      ],
+      "percent": "0.002888",
+      "risk_type": "frozen",
+      "volume_usdt": "38308.26546"
+     },
+     {
       "address": "TBJT9BP7cM5yYne9kTdf2HNu9mX1WpRQpt",
       "category": "frozen",
       "confidence": null,
@@ -1750,9 +2412,48 @@
        "TZAfJUXM63EmkF47kLCPg1XyMNAyhqrsXK",
        "TBJT9BP7cM5yYne9kTdf2HNu9mX1WpRQpt"
       ],
-      "percent": "0.002416",
+      "percent": "0.002056",
       "risk_type": "frozen",
-      "volume_usdt": "32057.109332"
+      "volume_usdt": "27278.880374"
+     },
+     {
+      "address": "TTPNfVZKzCdHJPqWxUcpVinWXa7rTXTTkH",
+      "category": "frozen",
+      "confidence": "0.5",
+      "direction": "out",
+      "entity": "behind a busy service",
+      "estimated_usdt": "1492.910011",
+      "exposure_type": "indirect",
+      "hop": 3,
+      "inferred": true,
+      "path": [
+       "TWkaZR9DPkFninJjdSRtjJtCfeo7TfRUv6",
+       "TRczSMnBcW19LPSbXp19BrMYVk626r4eJy",
+       "TTPNfVZKzCdHJPqWxUcpVinWXa7rTXTTkH"
+      ],
+      "percent": "0.001354",
+      "risk_type": "frozen",
+      "volume_usdt": "17960.538888"
+     },
+     {
+      "address": "TYCmCPfQFRrxGQEd9P5NkyoPArycSJiBJm",
+      "category": "frozen",
+      "confidence": "0.5",
+      "direction": "in",
+      "entity": "behind a busy service",
+      "estimated_usdt": "1324.883895",
+      "exposure_type": "indirect",
+      "hop": 4,
+      "inferred": true,
+      "path": [
+       "TWkaZR9DPkFninJjdSRtjJtCfeo7TfRUv6",
+       "TBBPeXV1dxKDPphK4fn9fs4mMV46ExUN53",
+       "TKfvkpqXaSa5QsvYtxtGSQe8ccpni5CWBa",
+       "TYCmCPfQFRrxGQEd9P5NkyoPArycSJiBJm"
+      ],
+      "percent": "0.002158",
+      "risk_type": "frozen",
+      "volume_usdt": "28625.626411"
      },
      {
       "address": "TUHtsWkT15883ggHMGS138dVoNJJvMYxiE",
@@ -1774,6 +2475,233 @@
       "percent": "0.002824",
       "risk_type": "illicit_activity",
       "volume_usdt": "37466.992331"
+     },
+     {
+      "address": "TLMEuf8CfT51HLJvwPpd9JgML6k453NkPh",
+      "category": "frozen",
+      "confidence": "0.5",
+      "direction": "in",
+      "entity": "behind a busy service",
+      "estimated_usdt": "633.5191",
+      "exposure_type": "indirect",
+      "hop": 5,
+      "inferred": true,
+      "path": [
+       "TWkaZR9DPkFninJjdSRtjJtCfeo7TfRUv6",
+       "TBBPeXV1dxKDPphK4fn9fs4mMV46ExUN53",
+       "TGydSens2iWw9wxZeoWeM9mDphbgZmpdJx",
+       "TTaq6Bnboy5tTZjjeq3prDXsXkUSn6CwYB",
+       "TLMEuf8CfT51HLJvwPpd9JgML6k453NkPh"
+      ],
+      "percent": "0.002263",
+      "risk_type": "frozen",
+      "volume_usdt": "30018.627409"
+     },
+     {
+      "address": "TZAfJUXM63EmkF47kLCPg1XyMNAyhqrsXK",
+      "category": "frozen",
+      "confidence": "0.5",
+      "direction": "in",
+      "entity": "behind a busy service",
+      "estimated_usdt": "255.834812",
+      "exposure_type": "indirect",
+      "hop": 5,
+      "inferred": true,
+      "path": [
+       "TWkaZR9DPkFninJjdSRtjJtCfeo7TfRUv6",
+       "TBBPeXV1dxKDPphK4fn9fs4mMV46ExUN53",
+       "TGydSens2iWw9wxZeoWeM9mDphbgZmpdJx",
+       "TUuUwUcPrc6ZNuyGgG2ec6JvZkwuHKpdLW",
+       "TZAfJUXM63EmkF47kLCPg1XyMNAyhqrsXK"
+      ],
+      "percent": "0.00219",
+      "risk_type": "frozen",
+      "volume_usdt": "29052.110294"
+     },
+     {
+      "address": "TLMEuf8CfT51HLJvwPpd9JgML6k453NkPh",
+      "category": "frozen",
+      "confidence": "0.5",
+      "direction": "in",
+      "entity": "behind a busy service",
+      "estimated_usdt": "292.590797",
+      "exposure_type": "indirect",
+      "hop": 5,
+      "inferred": true,
+      "path": [
+       "TWkaZR9DPkFninJjdSRtjJtCfeo7TfRUv6",
+       "TBBPeXV1dxKDPphK4fn9fs4mMV46ExUN53",
+       "THd6jpKZGw6nCUAvRHrjvHcE7GJXefwbrC",
+       "TAoxUjrYTwDFk1T5Cw197SARKx3XvtbFjo",
+       "TLMEuf8CfT51HLJvwPpd9JgML6k453NkPh"
+      ],
+      "percent": "0.002092",
+      "risk_type": "frozen",
+      "volume_usdt": "27752.11717"
+     },
+     {
+      "address": "TFxny1HmVa2UW8Dnh14iCmeYXzpczf8K7e",
+      "category": "sanctioned",
+      "confidence": "0.5",
+      "direction": "in",
+      "entity": "behind a busy service",
+      "estimated_usdt": "551.538514",
+      "exposure_type": "indirect",
+      "hop": 4,
+      "inferred": true,
+      "path": [
+       "TWkaZR9DPkFninJjdSRtjJtCfeo7TfRUv6",
+       "TBBPeXV1dxKDPphK4fn9fs4mMV46ExUN53",
+       "TKfvkpqXaSa5QsvYtxtGSQe8ccpni5CWBa",
+       "TFxny1HmVa2UW8Dnh14iCmeYXzpczf8K7e"
+      ],
+      "percent": "0.00032",
+      "risk_type": "sanctioned_entity",
+      "volume_usdt": "4249.656784"
+     },
+     {
+      "address": "TYMEcctgUo9SUpG7MPjN4rz4STHLxiAKUP",
+      "category": "frozen",
+      "confidence": "0.5",
+      "direction": "in",
+      "entity": "behind a busy service",
+      "estimated_usdt": "36.4041",
+      "exposure_type": "indirect",
+      "hop": 5,
+      "inferred": true,
+      "path": [
+       "TWkaZR9DPkFninJjdSRtjJtCfeo7TfRUv6",
+       "TBBPeXV1dxKDPphK4fn9fs4mMV46ExUN53",
+       "TGydSens2iWw9wxZeoWeM9mDphbgZmpdJx",
+       "TWME8jqm7qKR8X5cRXzE5pgwvz9Metbi3T",
+       "TYMEcctgUo9SUpG7MPjN4rz4STHLxiAKUP"
+      ],
+      "percent": "0.000515",
+      "risk_type": "frozen",
+      "volume_usdt": "6835.896368"
+     },
+     {
+      "address": "TJVa9Ltx9esHP8hBmCf3i2jyTPs9qGFjkh",
+      "category": "frozen",
+      "confidence": "0.5",
+      "direction": "out",
+      "entity": "behind a busy service",
+      "estimated_usdt": "93.461535",
+      "exposure_type": "indirect",
+      "hop": 4,
+      "inferred": true,
+      "path": [
+       "TWkaZR9DPkFninJjdSRtjJtCfeo7TfRUv6",
+       "TRczSMnBcW19LPSbXp19BrMYVk626r4eJy",
+       "TT3vFf6gsbs5i5WrvH1XB6xcyPtG1MkLvD",
+       "TJVa9Ltx9esHP8hBmCf3i2jyTPs9qGFjkh"
+      ],
+      "percent": "0.000229",
+      "risk_type": "frozen",
+      "volume_usdt": "3036.823917"
+     },
+     {
+      "address": "TBfJVhzU2H2RdFoqzcGFvWaSe8hZuU2goC",
+      "category": "frozen",
+      "confidence": "0.5",
+      "direction": "in",
+      "entity": "behind a busy service",
+      "estimated_usdt": "172.047049",
+      "exposure_type": "indirect",
+      "hop": 4,
+      "inferred": true,
+      "path": [
+       "TWkaZR9DPkFninJjdSRtjJtCfeo7TfRUv6",
+       "TXwrqQNqGC2D8BCGe2dscbdK6nFmEpqhXg",
+       "TUHtsWkT15883ggHMGS138dVoNJJvMYxiE",
+       "TBfJVhzU2H2RdFoqzcGFvWaSe8hZuU2goC"
+      ],
+      "percent": "0.000151",
+      "risk_type": "frozen",
+      "volume_usdt": "2008.479904"
+     },
+     {
+      "address": "TBfJVhzU2H2RdFoqzcGFvWaSe8hZuU2goC",
+      "category": "frozen",
+      "confidence": "0.5",
+      "direction": "in",
+      "entity": "behind a busy service",
+      "estimated_usdt": "7.018075",
+      "exposure_type": "indirect",
+      "hop": 5,
+      "inferred": true,
+      "path": [
+       "TWkaZR9DPkFninJjdSRtjJtCfeo7TfRUv6",
+       "TXwrqQNqGC2D8BCGe2dscbdK6nFmEpqhXg",
+       "TUHtsWkT15883ggHMGS138dVoNJJvMYxiE",
+       "TNHiU7JAEpEt5uVDV9fLJSPijHCHr89o5u",
+       "TBfJVhzU2H2RdFoqzcGFvWaSe8hZuU2goC"
+      ],
+      "percent": "0.000041",
+      "risk_type": "frozen",
+      "volume_usdt": "550.457364"
+     },
+     {
+      "address": "TBfJVhzU2H2RdFoqzcGFvWaSe8hZuU2goC",
+      "category": "sanctioned",
+      "confidence": "0.5",
+      "direction": "in",
+      "entity": "behind a busy service",
+      "estimated_usdt": "3.420295",
+      "exposure_type": "indirect",
+      "hop": 4,
+      "inferred": true,
+      "path": [
+       "TWkaZR9DPkFninJjdSRtjJtCfeo7TfRUv6",
+       "TXwrqQNqGC2D8BCGe2dscbdK6nFmEpqhXg",
+       "TUHtsWkT15883ggHMGS138dVoNJJvMYxiE",
+       "TBfJVhzU2H2RdFoqzcGFvWaSe8hZuU2goC"
+      ],
+      "percent": "0.000003",
+      "risk_type": "sanctioned_entity",
+      "volume_usdt": "39.92858"
+     },
+     {
+      "address": "TQkQcdu7GQaqm5iaR48ZJH8z2tRhgh9Goa",
+      "category": "sanctioned",
+      "confidence": "0.5",
+      "direction": "in",
+      "entity": "behind a busy service",
+      "estimated_usdt": "0.516785",
+      "exposure_type": "indirect",
+      "hop": 5,
+      "inferred": true,
+      "path": [
+       "TWkaZR9DPkFninJjdSRtjJtCfeo7TfRUv6",
+       "TBBPeXV1dxKDPphK4fn9fs4mMV46ExUN53",
+       "THd6jpKZGw6nCUAvRHrjvHcE7GJXefwbrC",
+       "TAoxUjrYTwDFk1T5Cw197SARKx3XvtbFjo",
+       "TQkQcdu7GQaqm5iaR48ZJH8z2tRhgh9Goa"
+      ],
+      "percent": "0.000005",
+      "risk_type": "sanctioned_entity",
+      "volume_usdt": "70.491071"
+     },
+     {
+      "address": "TBfJVhzU2H2RdFoqzcGFvWaSe8hZuU2goC",
+      "category": "sanctioned",
+      "confidence": "0.5",
+      "direction": "in",
+      "entity": "behind a busy service",
+      "estimated_usdt": "0.139519",
+      "exposure_type": "indirect",
+      "hop": 5,
+      "inferred": true,
+      "path": [
+       "TWkaZR9DPkFninJjdSRtjJtCfeo7TfRUv6",
+       "TXwrqQNqGC2D8BCGe2dscbdK6nFmEpqhXg",
+       "TUHtsWkT15883ggHMGS138dVoNJJvMYxiE",
+       "TNHiU7JAEpEt5uVDV9fLJSPijHCHr89o5u",
+       "TBfJVhzU2H2RdFoqzcGFvWaSe8hZuU2goC"
+      ],
+      "percent": "0.000001",
+      "risk_type": "sanctioned_entity",
+      "volume_usdt": "10.943092"
      }
     ],
     "k": "8",
@@ -1789,7 +2717,7 @@
     ],
     "score": 75,
     "verdict": "REVIEW",
-    "version": "2.0.0b1"
+    "version": "2.0.1"
    },
    "risks": [
     {

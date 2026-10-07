@@ -139,6 +139,10 @@ SUSPECTED_CLASS = "SUSPECTED_MALICIOUS"
 _LOCAL_TESTS = (2, 3, 4)
 
 
+#: The entity named for what sits behind a busy service (D-097).
+BEHIND = "behind a busy service"
+
+
 def from_trace(
     trace: Trace, name: Callable[[str, str], str], method: str = "path"
 ) -> list[Exposure]:
@@ -184,6 +188,34 @@ def from_trace(
                 ),
             )
         )
+    # D-097: what sits behind a busy service the trace stopped at, one hop beyond it, inferred
+    # at the pass-through weight. Traces recorded without that setting give none.
+    through = Decimal(str(trace.settings.get("service_pass_through", 0)))
+    for n in trace.nodes if through else ():
+        for category, share in n.behind:
+            estimate = n.weight * total * share
+            base = (
+                n.bottleneck if method == "path" and n.bottleneck is not None else n.weight * total
+            )
+            volume = base * share
+            path = (*n.path, n.address)
+            found.append(
+                (
+                    path[1],
+                    Exposure(
+                        trace.direction,
+                        n.hop + 1,
+                        n.address,
+                        category,
+                        BEHIND,
+                        volume,
+                        volume / total,
+                        path,
+                        through,
+                        estimate,
+                    ),
+                )
+            )
     return ordered(_capped(trace, found) if method == "path" else [e for _, e in found])
 
 

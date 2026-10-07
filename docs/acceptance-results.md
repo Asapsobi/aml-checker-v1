@@ -539,5 +539,10 @@ Live end-to-end on 2.0.0: **17 / 17 passed** (947 s; the list sync alone took 23
 | The check form said "Trace the source of funds (always on from 10,000 USDT)", the v1 rule. Every check traces in v2, so the box did nothing | The box is now "Quick check: skip the trace" | `test_web.py::test_every_check_is_traced` |
 | A 26 USDT wallet was traced nowhere: every payment was under the 100 USDT floor (MistTrack: 11.11% indirect sanctioned) | The floor scales to 1% of the wallet's own flow for small wallets (D-096). The trace now covers 62.7% in and 16% out, and ends at two busy services | `test_trace_v2.py::test_a_small_wallets_trace_follows_small_amounts`, `::test_a_big_wallet_keeps_the_100_usdt_floor` |
 
-The wallet joined the benchmark: 11 wallets, 9 at the same level (82%). Both mismatches are a
-difference of method, explained in [benchmark.md](benchmark.md). AT-70 still passes.
+| MistTrack follows money through busy services; ours stopped there | What sits behind a busy service is passed on as a small inferred exposure (D-097, owner's choice) | `test_trace_v2.py::test_what_sits_behind_a_busy_service`, `::test_the_pass_through_can_be_turned_off` |
+
+The wallet joined the benchmark: 11 wallets, 9 at the same level (82%). Re-recorded with 2.0.1, five
+wallets now show small inferred exposures behind busy services; `TVvWhZyL…` has about 2% sanctioned
+behind two services. No level changed. The owner's wallet stays low: in this period its two services
+dealt with no listed or frozen address (1,000+ transfers each). So MistTrack's 11% there comes from
+its own labels (`unknowable`). AT-70 still passes ([benchmark.md](benchmark.md)).

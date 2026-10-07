@@ -15,7 +15,7 @@ from amlcheck.chain.base import canonical_amount
 from amlcheck.core.clock import from_iso, to_iso
 from amlcheck.core.models import Chain
 
-TRACE_VERSION = 2  # P13: best first, path-volume pruning, time → untraced:budget (§12.2)
+TRACE_VERSION = 3  # 2.0.1: a small wallet's floor (D-096); what sits behind a busy service (D-097)
 _PLACES = Decimal("0.000001")
 
 UNTRACED = (
@@ -62,6 +62,9 @@ class Node:
     fresh: bool | None = None  # first seen no earlier than 30 days before its edge (§6.1, D-048)
     # Terminal nodes: the smallest edge on its path, an absolute amount every hop moved (§7.3).
     bottleneck: Decimal | None = None
+    # A busy service the trace stopped at: the share of its own money, in the trace's direction,
+    # from or to sanctioned or frozen addresses, by category (D-097). Empty for anything else.
+    behind: tuple[tuple[str, Decimal], ...] = ()
 
 
 @dataclass(frozen=True)
@@ -144,6 +147,8 @@ class Trace:
                     "sent_on_usdt": dec(n.sent_on) if n.sent_on is not None else None,
                     "fresh": n.fresh,
                     "bottleneck_usdt": dec(n.bottleneck) if n.bottleneck is not None else None,
+                    # Only when set, so traces without it read and hash as before.
+                    **({"behind": {c: dec(s) for c, s in n.behind}} if n.behind else {}),
                 }
                 for n in self.nodes
             ],
@@ -213,6 +218,7 @@ class Trace:
                     Decimal(n["sent_on_usdt"]) if n.get("sent_on_usdt") is not None else None,
                     n.get("fresh"),
                     Decimal(n["bottleneck_usdt"]) if n.get("bottleneck_usdt") is not None else None,
+                    tuple((c, Decimal(s)) for c, s in sorted(n.get("behind", {}).items())),
                 )
                 for n in d["nodes"]
             ),

@@ -670,6 +670,15 @@ taken one at a time in the order above, and each uses its read's answer. So the 
 of requests, are those of reading one at a time; it only comes sooner. A read ahead that fails is
 read again by its step, which reports a failure as before.
 
+**Behind a busy service** (D-097). A trace stops at a busy service: a hub (test 8) or a HUB from the
+classifier (test 9), where many users' funds mix. The transfers its window read gave are already in
+hand; for a hub they are a sample, the newest `hub_transfers`. From them comes the share of the
+service's own money, in the trace's direction, that came from (tracing in) or went to (tracing out)
+sanctioned or frozen addresses. The wallet gets an inferred exposure one hop beyond the service: the
+path volume to the service × that share, at weight `[trace] service_pass_through` (0.5; 0 turns it
+off), named "behind a busy service". It needs no extra read, changes no partition and never makes a
+finding or a BLOCK.
+
 **Pruning (§7.4) criterion (c)** becomes: the sender's path bottleneck `min(parent bottleneck, a_j)`
 ≥ `min_attributed_usdt`. A large payment through a busy middle address is followed even when its
 proportional share is tiny: that is the case D-078 found.
