@@ -72,9 +72,15 @@ class Exposure:
     def inferred(self) -> bool:
         return self.confidence is not None
 
-    def contribution(self, decay: Decimal) -> Decimal:
-        """`c(e) = w × (1 − decay)^(hop − 1) × percent × confidence` (§11.3)."""
-        c = RISK[self.category][1] * (1 - decay) ** (self.hop - 1) * self.percent
+    def contribution(self, decay: Decimal, weights: Mapping[str, Decimal] | None = None) -> Decimal:
+        """`c(e) = w × (1 − decay)^(hop − 1) × percent × confidence` (§11.3). `weights` replaces
+        some categories' `w`: the benchmark tries candidates offline that way (§14.3)."""
+        w = (
+            weights[self.category]
+            if weights and self.category in weights
+            else RISK[self.category][1]
+        )
+        c = w * (1 - decay) ** (self.hop - 1) * self.percent
         return c * self.confidence if self.confidence is not None else c
 
     def to_json(self) -> dict[str, Any]:

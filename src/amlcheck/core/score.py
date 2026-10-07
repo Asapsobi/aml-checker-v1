@@ -16,7 +16,7 @@ as they were, never recomputed.
 from __future__ import annotations
 
 import json
-from collections.abc import Iterable
+from collections.abc import Iterable, Mapping
 from dataclasses import dataclass
 from decimal import ROUND_FLOOR, ROUND_HALF_UP, Decimal
 from typing import Any
@@ -65,11 +65,15 @@ def _tenth(x: Decimal) -> Decimal:
     return x.quantize(_TENTH, rounding=ROUND_HALF_UP)
 
 
-def hazards(exposures: Iterable[Exposure], decay: Decimal) -> dict[str, Decimal]:
+def hazards(
+    exposures: Iterable[Exposure],
+    decay: Decimal,
+    weights: Mapping[str, Decimal] | None = None,
+) -> dict[str, Decimal]:
     """`H_in`, `H_out`, each at most 1."""
     h = dict.fromkeys(DIRECTIONS, Decimal(0))
     for e in exposures:
-        h[e.direction] += e.contribution(decay)
+        h[e.direction] += e.contribution(decay, weights)
     return {d: min(v, Decimal(1)) for d, v in h.items()}
 
 
@@ -157,8 +161,21 @@ def compute(
     settings: ScoreSettings,
 ) -> Score:
     """The score of a check from its exposures (§11.1) and behaviour findings."""
-    rules = {f.rule_id for f in findings}
-    h = hazards(exposures, settings.decay)
+    return score_of(verdict, {f.rule_id for f in findings}, exposures, settings)
+
+
+def score_of(
+    verdict: Verdict,
+    rules: Iterable[str],
+    exposures: Iterable[Exposure],
+    settings: ScoreSettings,
+    *,
+    weights: Mapping[str, Decimal] | None = None,
+) -> Score:
+    """`compute` from the findings' rule IDs: what a recorded check keeps, so the benchmark can
+    re-score it offline, with candidate weights if given (§14.3)."""
+    rules = set(rules)
+    h = hazards(exposures, settings.decay, weights)
     combined = 1 - (1 - h["in"]) * (1 - h["out"])
     exposure = _tenth(100 * (1 - (-settings.k * combined).exp()))
     behaviour = _tenth(
