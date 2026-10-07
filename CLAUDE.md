@@ -7,7 +7,7 @@ Project memory for Claude Code. Keep it short; details live in `docs/`.
 **amlcheck**: a local counterparty-intelligence tool for USDT on TRON (TRC20) and BNB Smart Chain
 (BEP20). It screens addresses (sanctions, issuer freezes, exposure, behaviour), traces source of funds
 up to 3 hops, classifies unknown addresses, scores risk, and records operator decisions.
-Built **from scratch** here, phase by phase (P0–P11).
+Built **from scratch** here, phase by phase (P0–P15).
 
 **Hard constraints:** no own nodes (RPC providers / indexers only) · no third-party AML APIs · intelligence only on our
 counterparties and what their traces reach · local-first, SQLite · internal use only.
@@ -69,7 +69,8 @@ AMLCHECK_HOME=$(mktemp -d) uv run amlcheck check <address>   # live run, never t
 
 ## Workflow
 
-- One phase = branch `p<N>-<slug>` → PR → owner review → merge → tag `v0.N.0` (P11 → `v1.0.0`).
+- One phase = branch `p<N>-<slug>` → PR → owner review → merge → tag `v0.N.0` (P11 → `v1.0.0`;
+  P12–P15 → `v2.0.0a1`, `a2`, `b1`, `v2.0.0`).
 - Never push code to `main` directly. Never tag before the owner merges.
 - Commit per ticket: `T-<phase>.<nn>: <what>`.
 - Skills: `/start-phase N`, `/next-ticket`, `/verify-source VS-NN`, `/record-decision`, `/ask-owner`,

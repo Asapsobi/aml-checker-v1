@@ -527,3 +527,7 @@ stay (D-095).
 | `decay` 0.6 | 8 / 10 | — | `TVvWhZyL…` |
 | `frozen` weight 1.0 | 9 / 10 | — | — |
 | `sanctioned` weight 0.5 | 7 / 10 | — | `TDpbgW7H…`, `TSArbmMU…` |
+
+Live end-to-end on 2.0.0: **17 / 17 passed** (947 s; the list sync alone took 235 s on a slow line).
+
+**Owner sign-off** (2026-10-07): 2.0.0 signed off, to merge once CI is green.

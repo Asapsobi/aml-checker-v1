@@ -4,7 +4,7 @@
 address classification, risk scoring and a recorded decision trail. Local-first, built on RPC
 providers and indexers, no own nodes.
 
-> **Status:** P15 (benchmark & 2.0) in progress, towards **v2.0.0**. Released: v0.1.0 – v1.0.0, v2.0.0a1, v2.0.0a2, v2.0.0b1. Agreement with MistTrack is measured in [docs/benchmark.md](docs/benchmark.md). The product is built from these docs with Claude Code,
+> **Status:** P15 (benchmark & 2.0) ready for review, release **v2.0.0**. Released: v0.1.0 – v1.0.0, v2.0.0a1, v2.0.0a2, v2.0.0b1. Next to MistTrack's free check, 9 of 10 wallets get the same level; see [docs/benchmark.md](docs/benchmark.md). The product is built from these docs with Claude Code,
 > phase by phase.
 
 ## Setup
@@ -34,6 +34,11 @@ commands on a fresh temporary data folder (sync, checks, investigate and trace, 
 batch, watchlist, monitor, exports with the hash chain re-verified, the API and the web UI) and prints
 PASS / FAIL per step. It needs the keys and the network, and never touches `~/.amlcheck`. Don't run
 other amlcheck commands at the same time: they share the TronGrid key's rate limit.
+
+**Benchmark against MistTrack.** `uv run python scripts/benchmark.py` keeps a set of wallets with
+what MistTrack's free check showed for each, and our live check (`import`, `record`, `reason`).
+`report` compares them and re-scores offline, so a change to `k`, `decay` or a weight can be tried
+without new checks ([methodology §14](docs/02-methodology.md), [results](docs/benchmark.md)).
 
 ## Commands
 
