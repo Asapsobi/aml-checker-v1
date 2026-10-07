@@ -201,6 +201,10 @@ MAX_FILE_BYTES = 50 * 1024 * 1024  # the official export is about 0.4 MB; refuse
 #: Columns of the official export (matal.mod.gov.il, seizure orders, VS-20): one row per order,
 #: its wallets in `Assets`. The export's other lists (organisations, operatives) hold no wallets.
 OFFICIAL_COLUMNS = ("Name en", "Order Type", "Is Canceled", "Assets")
+#: The export as XLSX has other columns, with no order name (VS-20): read as one file, it would
+#: lose the orders and list cancelled ones, so it is refused.
+_XLSX_EXPORT = {"Order Type", "Is Canceled", "Assets"}
+_CELL_TEXT = re.compile(r"<t(?:\s[^>]*)?>([^<]*)</t>")
 
 
 @dataclass(frozen=True)
@@ -285,6 +289,11 @@ def read_file(path: Path) -> FileImport:
                 for i in sorted(z.infolist(), key=lambda i: i.filename)
                 if i.filename.lower().endswith((".xml", ".csv")) and i.file_size <= MAX_FILE_BYTES
             ]
+        if any(_XLSX_EXPORT.issubset(_CELL_TEXT.findall(t)) for t in texts):
+            raise ValueError(
+                f"{path.name}: the official export as XLSX can't be read order by order; "
+                "export it as CSV"
+            )
     else:
         texts = [_decode(data)]
     official: list[OrderImport] = []
