@@ -304,43 +304,96 @@ class TraceEngine:
                 st,
             )
         )
+        # Read ahead (D-088): the reads of the next queued items run while one is taken, so several
+        # are in flight at once and the provider's limiter paces them. Items are still taken one at
+        # a time, in the same order, each reading through the cache: only the speed changes.
+        ahead: dict[tuple[str, datetime, datetime], asyncio.Task[_Ahead | None]] = {}
+        skipped: set[tuple[str, datetime, datetime]] = set()
+        reads: list[asyncio.Task[_Ahead | None]] = []
+
+        def read_ahead() -> None:
+            pending = {k[0] for k in ahead if k[0] not in st.read}
+            room = self._t.max_nodes - len(st.read) - len(pending)
+            for *_, nxt in heapq.nsmallest(self._parallel(chain), queue):
+                key = (nxt.address, *nxt.window)
+                if key in ahead or key in skipped:
+                    continue
+                if nxt.hop >= self._max_hops(chain) or self._local_terminal(nxt, chain):
+                    skipped.add(key)  # it ends without a read
+                    continue
+                if nxt.address not in st.read and nxt.address not in pending:
+                    if room <= 0:
+                        continue  # over the node budget: it ends without a read
+                    room -= 1
+                    pending.add(nxt.address)
+                ahead[key] = asyncio.create_task(self._warm(chain, nxt))
+                reads.append(ahead[key])
+
         done = 0
-        while queue:
-            if left() <= 0:
-                stopped.append("time")
-                self._stop([q[-1] for q in sorted(queue)], chain, in_t, st)
-                break
-            item = heapq.heappop(queue)[-1]
-            try:
-                # Cancelling is safe: a step only changes the partition after its last await.
-                async with asyncio.timeout(left()):
-                    children = await self._step(item, chain, in_t, direction, st)
-            except TimeoutError:
-                # D-080: out of time is the budget's end, not a failure; the item's edge is in.
-                stopped.append("time")
-                self._end(item, "untraced:budget", 7, None, False, in_t, st)
-                self._stop([q[-1] for q in sorted(queue)], chain, in_t, st)
-                break
-            except SourceError as e:
-                rest = item.weight + sum((q[-1].weight for q in queue), Decimal(0))
-                st.buckets[UNFINISHED] += rest
-                reason = f"could not read {item.address} (hop {item.hop}): {e.reason}"
-                raise TraceFailed(trace(False, reason, in_t), reason) from None
-            push(children)
-            done += 1
-            if progress is not None:
-                progress(
-                    TraceProgress(
-                        item.hop,
-                        done,
-                        len(queue),
-                        len(st.read),
-                        self._queries() - q0,
-                        self._monotonic() - started,
+        try:
+            while queue:
+                if left() <= 0:
+                    stopped.append("time")
+                    self._stop([q[-1] for q in sorted(queue)], chain, in_t, st)
+                    break
+                if self._parallel(chain) > 1:
+                    read_ahead()
+                item = heapq.heappop(queue)[-1]
+                pre = ahead.pop((item.address, *item.window), None)
+                try:
+                    # Cancelling is safe: a step only changes the partition after its last await.
+                    async with asyncio.timeout(left()):
+                        children = await self._step(item, chain, in_t, direction, st, pre)
+                except TimeoutError:
+                    # D-080: out of time is the budget's end, not a failure; the item's edge is in.
+                    stopped.append("time")
+                    self._end(item, "untraced:budget", 7, None, False, in_t, st)
+                    self._stop([q[-1] for q in sorted(queue)], chain, in_t, st)
+                    break
+                except SourceError as e:
+                    rest = item.weight + sum((q[-1].weight for q in queue), Decimal(0))
+                    st.buckets[UNFINISHED] += rest
+                    reason = f"could not read {item.address} (hop {item.hop}): {e.reason}"
+                    raise TraceFailed(trace(False, reason, in_t), reason) from None
+                push(children)
+                done += 1
+                if progress is not None:
+                    progress(
+                        TraceProgress(
+                            item.hop,
+                            done,
+                            len(queue),
+                            len(st.read),
+                            self._queries() - q0,
+                            self._monotonic() - started,
+                        )
                     )
-                )
+        finally:
+            for task in reads:
+                task.cancel()  # reads no item needs any more: the budget or the trace ended
+            await asyncio.gather(*reads, return_exceptions=True)
         coverage = sum((v for k, v in st.buckets.items() if k not in UNTRACED), Decimal(0))
         return trace(in_t=in_t, coverage=coverage)
+
+    def _parallel(self, chain: Chain) -> int:
+        """Reads in flight at once per direction (D-088); one at a time on BSC by default."""
+        return self._t.bsc_parallel_reads if chain is Chain.BSC else self._t.parallel_reads
+
+    async def _warm(self, chain: Chain, item: _Item) -> _Ahead | None:
+        """Read ahead (D-088): what `_step` will read for the item; the step uses the answer, so
+        nothing is read twice. A failure is left to the step, which reads again and reports it as
+        before."""
+        before = self._queries()
+        try:
+            h = await self._cache.history(
+                item.address, item.window[0], item.window[1], self._t.hub_transfers
+            )
+            hit = self._queries() == before
+            if h.complete:
+                await self._contracts.is_contract(chain, item.address)
+        except SourceError:
+            return None
+        return _Ahead(h, hit)
 
     def _max_hops(self, chain: Chain) -> int:
         """5 on TRON, 3 on BSC (D-082): BSC reads are slow on HyperSync's free plan (VS-16)."""
@@ -365,7 +418,13 @@ class TraceEngine:
     # --- one item ---------------------------------------------------------------------------------
 
     async def _step(
-        self, item: _Item, chain: Chain, in_t: Decimal, direction: Direction, st: _State
+        self,
+        item: _Item,
+        chain: Chain,
+        in_t: Decimal,
+        direction: Direction,
+        st: _State,
+        pre: asyncio.Task[_Ahead | None] | None = None,
     ) -> list[_Item]:
         st.edges.append(item.edge)
         terminal = self._local_terminal(item, chain)
@@ -377,7 +436,7 @@ class TraceEngine:
         if item.address not in st.read and len(st.read) >= self._t.max_nodes:
             return self._end(item, "untraced:budget", 7, None, False, in_t, st)
         transfers, complete = await self._read(
-            item.address, item.window[0], item.window[1], self._t.hub_transfers, st
+            item.address, item.window[0], item.window[1], self._t.hub_transfers, st, pre
         )
         if not complete:  # test 8: too many transfers in the window → a hub
             category = self._entity_kind(chain, item.address) or "service_unattributed"
@@ -639,14 +698,33 @@ class TraceEngine:
     # --- reading ----------------------------------------------------------------------------------
 
     async def _read(
-        self, address: str, since: datetime, until: datetime, limit: int, st: _State
+        self,
+        address: str,
+        since: datetime,
+        until: datetime,
+        limit: int,
+        st: _State,
+        pre: asyncio.Task[_Ahead | None] | None = None,
     ) -> tuple[list[Transfer], bool]:
-        before = self._queries()
-        h = await self._cache.history(address, since, until, limit)
+        ahead = await pre if pre is not None else None
+        if ahead is not None:
+            h, hit = ahead.history, ahead.hit
+        else:  # none read ahead, or it failed: read now (a failure is reported as before)
+            before = self._queries()
+            h = await self._cache.history(address, since, until, limit)
+            hit = self._queries() == before
         st.read.add(address)
-        if self._queries() == before:
+        if hit:
             st.cache_hits += 1
         return list(h.transfers), h.complete
+
+
+@dataclass(frozen=True)
+class _Ahead:
+    """A read ahead's answer (D-088), and whether it came from the cache."""
+
+    history: History
+    hit: bool
 
 
 def hop1_local(trace: Trace) -> dict[str, Decimal]:

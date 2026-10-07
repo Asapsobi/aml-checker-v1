@@ -648,6 +648,7 @@ own 90-day window (§5).
 | `max_hops` | 3 | **5** on TRON | D-075 |
 | `bsc_max_hops` | 3 | **3** on BSC | HyperSync's free plan can't reach 5 in 3 minutes (D-082) |
 | `max_nodes` | 40 | **50 per direction** | Bounds requests; reaching it is `untraced:budget` (§7.7) |
+| `parallel_reads` | 1 | **4** on TRON, 1 on BSC (`bsc_parallel_reads`) | Reads run ahead; order and result unchanged (D-088) |
 | `time_budget_seconds` | 300, a failure | **180 for both directions**, not a failure | D-079, D-080 |
 | `min_attributed_usdt` | 100, on the proportional estimate | 100, on the **path volume** | D-081 |
 
@@ -661,6 +662,13 @@ priority(item) = bottleneck(item) × (1 − [score] decay)^(hop − 1)        ti
 The money closest to the target and largest comes first, so the node and time budgets are spent where
 an exposure can matter most. The partition still sums to 1: every unit of flow ends in exactly one
 bucket (§7.8).
+
+**Reads ahead** (D-088). While one item is taken, the reads of the next queued items (up to
+`parallel_reads` in all) run at once, paced by the provider's limiter. Only items that will need a
+read get one: not past `max_hops`, not ended by a local test, within the node budget. Items are still
+taken one at a time in the order above, and each uses its read's answer. So the trace, and the number
+of requests, are those of reading one at a time; it only comes sooner. A read ahead that fails is
+read again by its step, which reports a failure as before.
 
 **Pruning (§7.4) criterion (c)** becomes: the sender's path bottleneck `min(parent bottleneck, a_j)`
 ≥ `min_attributed_usdt`. A large payment through a busy middle address is followed even when its
