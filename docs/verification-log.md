@@ -27,6 +27,7 @@ VS-07 (P6) and VS-11 to VS-14 (later phases) are not P0 items. VS-15 was redone 
 | VS-20 | Confirmed with the official export: 38 orders, 694 addresses | New site with a CSV export; one address typed with Cyrillic letters; validity dates | Q-38 |
 | VS-21 | Confirmed with the owner's key: works, but no risk tags on any sanctioned or frozen address tried | Tags name only famous entities | — |
 | VS-22 | Confirmed with the owner's key: `only_to=true` gives incoming transfers only | No | — |
+| VS-23 | Confirmed: 20 designated entities in the OFAC and UK lists; Tronscan tags HTX's wallets `HTX 4`, `HTX 5` | Lists name entities without wallets; Tronscan doesn't tag Nobitex | Q-40 |
 
 ---
 
@@ -475,6 +476,27 @@ rate-limit headers, no refusals. The endpoint's limits are not published in its 
 **What this changes:** TRON `is_contract` = the answer has `contract_address`.
 **Fixtures:** `tests/fixtures/trongrid/getcontract_contract.json`, `getcontract_created_by_contract.json`,
 `getcontract_wallet.json`, `getcontract_never_used.json` (bytecode and ABI trimmed)
+
+## VS-23 · Designated entities and their tags (2.1)
+**Checked:** 2026-10-10. OFAC SDN.XML and the UK Sanctions List XML, downloaded that day; Tronscan's
+`/api/account/tag` with the owner's key, never printed.
+**Found:**
+- OFAC designates as entities: Nobitex 56981, Wallex 57091, Ramzinex 57092, Bitpin 57090 (IRAN,
+  IRAN-EO13902), Aban Tether 58239, Zedcex 56865 (7 TRON addresses), Garantex 36025 (3), Grinex
+  55045 (7), Cryptex 50641 (1), SUEX 33151, Chatex 33854, Bitpapa 48096, Xinbi Guarantee 58361 (52).
+  Most have no TRON address in the list.
+- The UK designates HUOBI GLOBAL S.A. ("HTX (formerly Huobi)", RUS3619, 26/05/2026), EXMO RUS3602,
+  ABCEX RUS3603, Rapira RUS3605, Aifory RUS3611 (all 26/05/2026), Tokenspot RUS3758 (08/10/2026),
+  Byex GHR0174, Grinex RUS2983, Garantex RUS1421, Xinbi GHR0190.
+- Not in either list: Huione Pay (FinCEN §311), Payeer, Ariomex, Haowang (hwdb.la).
+- Tronscan tags: `TFTWNgDB…` "HTX 4", `TK86Qm97…` "HTX 5" (HTX's proof-of-reserves wallets);
+  of 340 busy wallets our traces stopped at, only famous exchanges are tagged (Binance, OKX, Bybit,
+  KuCoin, MEXC, FixedFloat). MistTrack's Nobitex hot wallet `TS4htjaS…` has no tag. An untagged
+  address has no `publicTag` key. No rate-limit headers; one batch of 300 calls hit a read timeout
+  after about 30.
+
+**What this changes:** D-100, methodology §13.3–13.4. **Fixture:**
+`tests/fixtures/tronscan/account_tag_htx.json` (the real answer for `TFTWNgDB…`).
 
 ## VS-22 · TronGrid one-sided transfer reads (2.0.2)
 **Checked:** 2026-10-07 with the owner's key, never printed. The call was `GET /v1/accounts/{a}/transactions/trc20`

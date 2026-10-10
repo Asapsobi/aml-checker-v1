@@ -24,6 +24,7 @@
 | BSC contract detection | Public BSC JSON-RPC `eth_getCode` at `bsc-dataseed.bnbchain.org`, no key | Free | Use (VS-12): no published limits; amlcheck paces 2/s and caches forever |
 | Attribution | Commercial vendor (Chainalysis, TRM, Elliptic, Crystal) | Paid | Not in v1. Adapter point only |
 | Labels | Own `labels.csv`, operator labels, licensed label packs | — | Use; packs need a recorded licence |
+| Designated entities' wallets | Tronscan public tags (`/api/account/tag`, owner's key; terms: their API only) | Free with key | Use (2.1, D-100, VS-23): busy wallets a trace stops at, cached 7 days |
 
 ---
 
@@ -155,3 +156,4 @@ as a fixture) in `docs/verification-log.md`, and raises a question for any chang
 | VS-20 | NBCTF seizure orders: the official export (matal.mod.gov.il), its format and where wallets are | P14 |
 | VS-21 | Tronscan account-tag API: path, fields, rate limit, with the owner's key | P14 |
 | VS-22 | TronGrid `only_to` / `only_from` on the TRC20 transfer endpoint: one side of an address's transfers | 2.0.2 |
+| VS-23 | Designated entities in the OFAC and UK lists, and Tronscan's public tags on their wallets | 2.1 |

@@ -17,6 +17,7 @@
 | `0008_cases.sql` | P9 | `cases`, `decisions`, `inference_feedback` |
 | `0009_monitor_api.sql` | P10 | `own_wallets`, `monitor_state`, `api_requests` |
 | `0010_risk_v2.sql` | P12 | `counterparties.last_score_version`, `checks.label_json` |
+| `0011_explorer_tags.sql` | 2.1 | `explorer_tags` |
 
 `storage/db.py` keeps the applied version in `PRAGMA user_version` and applies missing files in order,
 each in one transaction.
@@ -411,6 +412,26 @@ ALTER TABLE checks ADD COLUMN label_json TEXT;
 
 Exposures need no column: they are in the sources' evidence. The v2 score is in `score_json` with
 `"score_version": 2`.
+
+---
+
+## 0011_explorer_tags.sql (2.1)
+
+```sql
+-- Each address's public tag as the explorer last gave it: '' when it has none (methodology §13.3,
+-- D-100). A cache: looked up again after `[intel] tag_days`; a failed lookup stores nothing.
+CREATE TABLE explorer_tags (
+    chain         TEXT NOT NULL,
+    address_norm  TEXT NOT NULL,
+    public_tag    TEXT NOT NULL,
+    source        TEXT NOT NULL,               -- 'tronscan'
+    fetched_at    TEXT NOT NULL,
+    PRIMARY KEY (chain, address_norm)
+);
+```
+
+A trace node ended by a designated entity's tag carries `entity` in the trace JSON (trace version 4),
+only when set, so older traces read and hash as before.
 
 ---
 

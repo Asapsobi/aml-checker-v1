@@ -38,6 +38,13 @@ def summary(
         "partition": {k: dec(v) for k, v in sorted(trace.partition.items(), key=lambda kv: -kv[1])},
         "coverage": dec(trace.coverage) if trace.coverage is not None else None,
         "layering": dec(trace.annotations.get("layering", Decimal(0))),
+        # §13.3: tag lookups that failed or were skipped; only when some did, so records without
+        # it hash as before.
+        **(
+            {"tag_failures": int(trace.annotations["tag_failures"])}
+            if trace.annotations.get("tag_failures")
+            else {}
+        ),
         "target_inflow_usdt": dec(trace.target_inflow),
         "top_paths": [
             {

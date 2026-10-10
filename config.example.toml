@@ -163,6 +163,13 @@ min_kept_share = 0.8
 [intel]
 neighbour_share = 0.2
 neighbour_min_usdt = 1000
+# Methodology §13.3–13.4 (D-100): the public Tronscan tag of the busy wallets a trace stops at and of
+# the checked address, so a designated entity's wallet (HTX, Nobitex…) is named. Needs
+# AMLCHECK_TRONSCAN_API_KEY; without it no tag is looked up.
+tags = true
+tag_days = 7
+tronscan_url = "https://apilist.tronscanapi.com"
+tronscan_requests_per_second = 3.0
 
 # Data sources §3, §6. TronGrid limits are per key and unpublished: set them here.
 [tron]

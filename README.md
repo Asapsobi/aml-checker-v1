@@ -4,7 +4,7 @@
 address classification, risk scoring and a recorded decision trail. Local-first, built on RPC
 providers and indexers, no own nodes.
 
-> **Status:** P15 (benchmark & 2.0) ready for review, release **v2.0.0**. Released: v0.1.0 – v1.0.0, v2.0.0a1, v2.0.0a2, v2.0.0b1. Next to MistTrack's free check, 9 of 10 wallets get the same level; see [docs/benchmark.md](docs/benchmark.md). The product is built from these docs with Claude Code,
+> **Status:** 2.1 (designated entities) ready for review. Released: v0.1.0 – v2.0.2. Next to MistTrack's free check, 23 of 31 wallets get the same level; see [docs/benchmark.md](docs/benchmark.md). The product is built from these docs with Claude Code,
 > phase by phase.
 
 ## Setup

@@ -17,6 +17,7 @@ from amlcheck.core.models import Finding, Severity, SourceResult, SourceStatus
 #: rules are INFO and feed the score. `[rules] severity` can set any of them back.
 DEFAULT_SEVERITY: dict[str, Severity] = {
     "R-SAN-01": Severity.BLOCK,
+    "R-SAN-02": Severity.REVIEW,  # 2.1: a designated entity's wallet, by its public tag (D-100)
     "R-FRZ-01": Severity.BLOCK,
     "R-FRZ-02": Severity.REVIEW,
     "R-SYS-01": Severity.INCOMPLETE,
@@ -47,7 +48,7 @@ NEVER_BLOCK: frozenset[str] = frozenset({"R-HEU-07", "R-TRC-05", "R-SCR-01"})
 NEVER_INFO: frozenset[str] = frozenset({"R-SAN-01", "R-FRZ-01"})
 
 #: Stored with every check (methodology: "Screening + behaviour rules").
-RULES_VERSION = 2  # D-072: the v2 default severities
+RULES_VERSION = 3  # D-072: the v2 default severities; 2.1: R-SAN-02 (D-100)
 
 SYSTEM_SOURCE = "engine"
 

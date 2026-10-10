@@ -6,12 +6,12 @@
 
 | Component | Version | Stored with |
 |---|---|---|
-| Screening + behaviour rules | `rules_version = 1` | each check |
+| Screening + behaviour rules | `rules_version = 3` from 2.1 (R-SAN-02); `2` from v2 (§11.5); `1` before | each check |
 | Profiler + classifier | `classifier_version = 1` | each classification |
-| Source-of-funds trace | `trace_version = 2` from P13 (§12); `1` before | each trace |
-| Category list + weights | `category_version = 1` | each label, score components |
+| Source-of-funds trace | `trace_version = 4` from 2.1 (§13.4); `3` from 2.0.1; `2` from P13 (§12); `1` before | each trace |
+| Category list + weights | `category_version = 3` from 2.1 (`sanctioned_entity`); `2` from P14; `1` before | each label |
 | Score | `score_version = 2` from v2 (§11); `1` for checks made by v1 (§9) | each check |
-| Risk policy (exposures, levels, verdict defaults) | `risk_version = 2` (§11) | each check |
+| Risk policy (exposures, levels, verdict defaults) | `risk_version = 3` from 2.1 (§13.4); `2` from v2 (§11) | each check |
 
 ---
 
@@ -433,6 +433,7 @@ Order matters: it breaks ties in terminal test 4.
 | 16 | `payment_processor` | 0.0 | operator, import | no | |
 | 17 | `own_or_trusted` | 0.0 | operator, import | no | `labels.csv` tag `allowlist`, own wallets |
 | 18 | `suspected_malicious` | 0.6 | inferred | no | a freeze neighbour (§13.2); `category_version` 2 |
+| 19 | `sanctioned_entity` | 0.9 | operator, import (and a trace's tag match, §13.4) | yes | a designated entity's wallet that its list doesn't name; never an entity kind; `category_version` 3 |
 | — | `layering` | 0.5 | inferred | no (R-TRC-05) | annotation only (§6.1) |
 
 Entity kinds are the categories 3–17 that the operator may assign.
@@ -529,6 +530,7 @@ from the chain, so it is shown as itself.
 | Category (§8) | `risk_type` | Weight `w` |
 |---|---|---|
 | `sanctioned` | `sanctioned_entity` | 1.0 |
+| `sanctioned_entity` (§13.4) | `sanctioned_entity` | 0.9 (× confidence for a deposit address) |
 | `frozen` | `frozen` | 0.9 |
 | `stolen_funds`, `darknet` | `illicit_activity` | 0.9 |
 | `mixer` | `mixer` | 0.8 |
@@ -604,6 +606,7 @@ A new severity, `INFO`: the finding is shown and explains the score, but never c
 | R-SAN-01, R-FRZ-01 | BLOCK | BLOCK |
 | R-SYS-01 | INCOMPLETE (fixed) | INCOMPLETE (fixed) |
 | R-EXP-01 (a counterparty is sanctioned or frozen), R-FRZ-02, R-HEU-06 (look-alike) | REVIEW | REVIEW |
+| R-SAN-02 (the address is a designated entity's, by its public tag; 2.1, §13.4) | — | REVIEW |
 | R-SCR-01 (score ≥ `review_at`) | off | REVIEW from 31 |
 | R-EXP-02, R-HEU-01 to R-HEU-05, R-HEU-07, R-TRC-01 to R-TRC-05 | REVIEW | INFO |
 
@@ -735,13 +738,67 @@ inferred exposure `suspected_malicious` at its hop (§11.1: path volume up to it
 exposures behind it at the first-hop edge). §11.2: risk type `illicit_activity`, weight 0.6 ×
 confidence. Not stored: it is judged again whenever the address is read. Never BLOCK.
 
-### 13.3 Tronscan tags (when the owner's key is set, D-087)
+### 13.3 Explorer tags (Tronscan, with the owner's key; D-087, D-100)
 
-**Deferred** (D-087). VS-21 found no risk tag on any sanctioned or frozen address tried, and the API
-takes one call per address a check reaches (100+ per check). The design, if revisited: look up only
-addresses a check reaches, cached for `[intel] tag_days` (7); red tags → `scam`, `stolen_funds` or
-`high_risk`; exchange tags → a named entity.
+A public name tag from Tronscan's own API (`/api/account/tag` → `publicTag`; its terms forbid other
+automated means, VS-21). Looked up only for:
 
+- the checked address (TRON), once per check;
+- a busy wallet a trace stops at (HUB, terminal tests 5, 8 and 9);
+- a deposit address's sweep target, its top recipient (DEPOSIT, tests 5 and 9).
+
+Cached in `explorer_tags` for `[intel] tag_days` (7); a failed refresh keeps the stored tag. A failed
+lookup is no tag: the wallet stays `service_unattributed` and the trace counts it in its
+`tag_failures` annotation, which the check record shows. After 2 failures a lookup cache (the
+check's own, and each trace direction's) asks no more, so a hanging provider can't eat the time
+budget; what it then skips counts as failed too. A trace records `"tags": true` in its settings when
+tags were looked up. Tags are not a required source: they only name what the trace already
+found. Without `AMLCHECK_TRONSCAN_API_KEY`, or with `[intel] tags = false`, nothing is looked up and
+checks are as before 2.1. Red (risk) tags are not used: VS-21 found none on any listed address.
+
+### 13.4 Designated entities (`sanctioned_entity`, 2.1, D-100)
+
+Sanctions lists designate whole exchanges and services but publish few of their wallets: OFAC lists
+Nobitex with no address, the UK lists HTX with none. `intel/designations.py` holds each such entity
+with the list entries that designate it (VS-23) and the words that name it in a public tag:
+
+| Entity | Basis | | Entity | Basis |
+|---|---|---|---|---|
+| HTX (Huobi) | UK RUS3619 | | Nobitex | OFAC 56981 |
+| Garantex | OFAC 36025, UK RUS1421 | | Wallex | OFAC 57091 |
+| Grinex | OFAC 55045, UK RUS2983 | | Ramzinex | OFAC 57092 |
+| Cryptex | OFAC 50641 | | Bitpin | OFAC 57090 |
+| SUEX | OFAC 33151 | | Aban Tether | OFAC 58239 |
+| Chatex | OFAC 33854 | | Zedcex | OFAC 56865 |
+| Bitpapa | OFAC 48096 | | EXMO | UK RUS3602 |
+| Xinbi Guarantee | OFAC 58361, UK GHR0190 | | ABCEX | UK RUS3603 |
+| Rapira | UK RUS3605 | | Aifory | UK RUS3611 |
+| Tokenspot | UK RUS3758 | | Byex | UK GHR0174 |
+
+A wallet is a designated entity's (`sanctioned_entity`):
+
+- **by its tag**: a busy wallet whose public tag names one, as a whole word (`HTX 4`, `Huobi-Hot 12`
+  → HTX). A fact about attribution, not an inference: weight 0.9, no confidence.
+- **by its sweep target**: a deposit address whose top recipient's tag names one. Inferred, at the
+  DEPOSIT classification's confidence.
+- **by the operator**: an intelligence label `sanctioned_entity`, its note naming the entity
+  (`intel label … sanctioned_entity --note Nobitex`), or a pack. Local, like every label: also a
+  direct exposure in a quick check.
+
+A category that weighs 0.9 or more is kept. The exposure names the entity and its first basis:
+`HTX (UK sanctions RUS3619)`. `risk_type` is `sanctioned_entity`, MistTrack's "Sanctioned Entity".
+The checked address itself labelled `sanctioned_entity` (decides first, local, any chain) or tagged
+by one (TRON) is **R-SAN-02**, REVIEW (the attribution is the operator's or the explorer's, not the
+list's; `[rules] severity` may raise it to BLOCK), plus a direct exposure at 100%, as MistTrack shows
+one. An address the list itself names stays `sanctioned`, R-SAN-01, BLOCK.
+
+Limits: a busy wallet the trace reaches only after its time ran out is `untraced:budget`, not
+looked up. An operator's own label on the same address (say `own_or_trusted`) wins a trace's tie
+(test 4); at hop 1 the exposure source still reports a labelled `sanctioned_entity` counterparty.
+
+A list that drops an entity is dropped here by hand, with a decision. MistTrack also calls some
+services "sanctioned" that no list we sync names (Huione Pay, under a FinCEN §311 rule; Payeer;
+Ariomex; Haowang Guarantee): left out (Q-40).
 
 ---
 

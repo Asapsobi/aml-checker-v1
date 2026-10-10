@@ -843,7 +843,8 @@
 - **Consequences:** More of MistTrack's "suspected" cases found, with a confidence shown.
 
 ### D-087 · Tronscan tags, through the official API with the owner's key
-- **Status:** Deferred (VS-21: no risk tags on any sanctioned or frozen address tried)
+- **Status:** Deferred (VS-21: no risk tags on any sanctioned or frozen address tried). Revived in
+  part by D-100 (2026-10-10): exchange tags name designated entities' wallets.
 - **Date:** 2026-10-05 · **Phase:** P14
 - **Context:** Tronscan's Terms of Service (2022-01-04) forbid scraping and "automated means or
   interface not provided by us"; its own API is such an interface and needs a key. The API returns
@@ -980,6 +981,14 @@
   `k` = 4, `decay` = 0.6 and `sanctioned` = 0.5 each broke 1 or 2 wallets that agree now.
 - **Alternatives:** The closest fit (rejected by D-092).
 - **Consequences:** Score version 2 and risk version 2 are unchanged in 2.0.0.
+- **Update (2026-10-10, 2.1):** Tested again with MistTrack's numeric scores for 20 more wallets
+  (Deep Analysis, owner's account): 54 settings re-scored offline (`k` 2–8, `decay` 0.4–0.6, hops
+  counted 3–5). Today's settings are best: 6 of 20 at the same level, a mean gap of 31.6 points,
+  23 of 31 at the same Low/Risky. Counting hops 1–3 only gives 21 of 31; `k` = 6 gives 18–20; `k` = 3
+  gives 13. 11 of the 14 mismatches are wallets MistTrack scores *higher* through labels we lack
+  (Guarantee Merchant, untagged Nobitex and Wallex wallets, Huione Pay); softening would push them
+  further off to fix the 3 we score higher (direct NBCTF money; Tether-frozen money 4–5 hops away).
+  The settings stay.
 
 ### D-096 · A small wallet's trace follows small amounts
 - **Status:** Accepted
@@ -1047,3 +1056,29 @@
   - A few more TronGrid calls per busy service a trace stops at.
   - The owner's wallet now shows "Tether-frozen address: indirect received 5.4% (inferred)",
     behind `TKaR2oCp…`, matching MistTrack's line from public data. Its score went from 0 to 11.
+
+### D-100 · Designated entities: their wallets by public tag, `sanctioned_entity` (owner's choice)
+- **Status:** Accepted
+- **Date:** 2026-10-10 · **Phase:** 2.1
+- **Context:** MistTrack's paid Deep Analysis, read for 20 wallets (owner's account), names the
+  entity behind each "Sanctioned Entity" row: HTX, Huione Pay, Garantex, Grinex, ABCEX, Rapira,
+  Nobitex, Wallex and others. Our lists designate most of them by name, without their wallets: the
+  UK designated HTX (Huobi Global S.A., RUS3619) on 2026-05-26; OFAC designated Nobitex, Wallex,
+  Ramzinex, Bitpin and Aban Tether (IRAN-EO13902) with no TRON address. So three of our four "clean"
+  controls were Risky to MistTrack, through a few dollars from a Nobitex or Wallex wallet. Tronscan's
+  public tags name some of these wallets (`HTX 4`, `HTX 5`, VS-23); not Nobitex's.
+- **Decision:** A curated list of designated entities, each with its list entries
+  (`intel/designations.py`, methodology §13.4). A wallet is one's when its public Tronscan tag names
+  it (busy wallets a trace stops at; a deposit address by its sweep target, inferred), or when the
+  operator labels it `sanctioned_entity`. New category `sanctioned_entity` (weight 0.9, risk type
+  `sanctioned_entity`); the checked address itself tagged by one is R-SAN-02, REVIEW. Tags are
+  looked up through Tronscan's API with the owner's key, cached 7 days, never required.
+- **Alternatives:** Copy MistTrack's labels (not allowed: no third-party AML data, D-033); treat
+  only the lists' own addresses as sanctioned (misses HTX, Nobitex); BLOCK a tagged wallet (the
+  attribution is the explorer's, not the list's: the owner can raise R-SAN-02 to BLOCK).
+- **Consequences:**
+  - Checks with a trace make a few Tronscan calls (one per busy wallet or sweep target not cached).
+  - HTX's tagged wallets now count as a sanctioned entity, as on MistTrack. HTX is a large exchange:
+    many ordinary wallets will show a small "Sanctioned entity" exposure.
+  - Nobitex and other untagged entities' wallets need the owner's labels (Q-40).
+

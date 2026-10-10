@@ -31,8 +31,10 @@ from amlcheck.chain.cache import ContractCache, TransferCache
 from amlcheck.config import Settings
 from amlcheck.core.clock import Clock, from_iso, utcnow
 from amlcheck.core.models import Address, Chain
+from amlcheck.core.risk import RISK
 from amlcheck.intel.categories import BY_NAME
 from amlcheck.intel.store import IntelStore
+from amlcheck.intel.tags import TagCache
 from amlcheck.net.http import SourceError
 from amlcheck.profile import classifier as clf
 from amlcheck.profile.adapter import SERVICE_CATEGORIES
@@ -111,6 +113,7 @@ class _State:
     read: set[str] = field(default_factory=set)
     cache_hits: int = 0
     floor: Decimal = Decimal(0)  # the path volume a sender needs to be followed (D-081, D-096)
+    tag_failures: int = 0  # explorer tags that couldn't be looked up (§13.3)
 
 
 def flows(address: str, transfers: Iterable[Transfer], direction: Direction) -> dict[str, _Flow]:
@@ -172,8 +175,10 @@ class TraceEngine:
         clock: Clock = utcnow,
         monotonic: Callable[[], float] = time.monotonic,
         queries: Callable[[], int] = lambda: 0,
+        tags: TagCache | None = None,
     ) -> None:
         self._conn = conn
+        self._tags = tags if settings.intel.tags else None
         self._cache = cache
         self._contracts = contracts
         self._store = store
@@ -222,7 +227,11 @@ class TraceEngine:
                 nodes=tuple(st.nodes),
                 edges=tuple(st.edges),
                 partition=partition,
-                annotations={"layering": layering(st.nodes)},
+                annotations={
+                    "layering": layering(st.nodes),
+                    # Only when some failed, so traces without tags read as before (§13.3).
+                    **({"tag_failures": Decimal(st.tag_failures)} if st.tag_failures else {}),
+                },
                 coverage=coverage,
                 paths=tuple(
                     sorted(
@@ -241,6 +250,7 @@ class TraceEngine:
                     "lookback_days": self._s.exposure.lookback_days,
                     "max_transfers": self._s.exposure.max_transfers,
                     "decay": str(self._s.score.decay),
+                    "tags": self._tags is not None,  # §13.3: were explorer tags looked up?
                 },
                 stopped=stopped[0] if stopped else None,
             )
@@ -466,7 +476,13 @@ class TraceEngine:
         terminal = self._local_terminal(item, chain)
         if terminal is not None:
             category, test, cls = terminal
-            return self._end(item, category, test, cls, False, in_t, st)
+            top = (
+                clf.top_recipient(self._conn, chain, item.address, self._clock())
+                if cls is not None and cls.type == "DEPOSIT"
+                else None
+            )
+            category, entity = await self._designated(chain, item.address, category, cls, top, st)
+            return self._end(item, category, test, cls, False, in_t, st, entity=entity)
         if item.hop >= self._max_hops(chain):
             return self._end(item, "untraced:depth", 6, None, False, in_t, st)
         if item.address not in st.read and len(st.read) >= self._max_nodes(chain):
@@ -478,14 +494,16 @@ class TraceEngine:
             category = self._entity_kind(chain, item.address) or "service_unattributed"
             behind = await self._behind(chain, item, transfers, direction)
             hub = NodeClass("HUB", Decimal("0.95"))
-            return self._end(item, category, 8, hub, True, in_t, st, behind)
+            category, entity = await self._designated(chain, item.address, category, hub, None, st)
+            return self._end(item, category, 8, hub, True, in_t, st, behind, entity)
         read_terminal = await self._classify(item, chain, transfers)
         if read_terminal is not None:
-            category, cls = read_terminal
+            category, cls, top = read_terminal
             behind = (
                 await self._behind(chain, item, transfers, direction) if cls.type == "HUB" else ()
             )
-            return self._end(item, category, 9, cls, True, in_t, st, behind)
+            category, entity = await self._designated(chain, item.address, category, cls, top, st)
+            return self._end(item, category, 9, cls, True, in_t, st, behind, entity)
         # §13.2 (D-086): a freeze neighbour is noted on the node, not an end: the trace goes on
         # through it, so facts behind it (a sanctioned sender) are still found.
         suspect = self._neighbour(chain, item.address, transfers, direction)
@@ -591,6 +609,7 @@ class TraceEngine:
         in_t: Decimal,
         st: _State,
         behind: tuple[tuple[str, Decimal], ...] = (),
+        entity: str | None = None,
     ) -> list[_Item]:
         st.buckets[category] += item.weight
         st.nodes.append(
@@ -606,6 +625,7 @@ class TraceEngine:
                 path=item.path,
                 bottleneck=item.bottleneck,
                 behind=behind,
+                entity=entity,
             )
         )
         if category not in UNTRACED:
@@ -653,9 +673,10 @@ class TraceEngine:
 
     async def _classify(
         self, item: _Item, chain: Chain, transfers: list[Transfer]
-    ) -> tuple[str, NodeClass] | None:
+    ) -> tuple[str, NodeClass, str | None] | None:
         """Test 9: profile + classify over the item's window; CONTRACT, HUB, DEPOSIT or COLLECTOR
-        end the item (HUB as in test 5: a hub found by its counterparties is a service)."""
+        end the item (HUB as in test 5: a hub found by its counterparties is a service). With the
+        end, the address's top recipient (a deposit address's sweep target, §13.4)."""
         now = self._clock()
         h = History(tuple(transfers), item.window[0], item.window[1], True, None, 0)
         p = profile(
@@ -673,9 +694,37 @@ class TraceEngine:
             clf.suppressed(self._conn, chain, item.address),
         )
         clf.save(self._conn, chain, p, cs, self._s.classifier, now)
-        return self._class_terminal(
+        hit = self._class_terminal(
             chain, item.address, cs, ("CONTRACT", "HUB", "DEPOSIT", "COLLECTOR")
         )
+        return (*hit, p.top_recipient) if hit is not None else None
+
+    async def _designated(
+        self,
+        chain: Chain,
+        address: str,
+        category: str,
+        cls: NodeClass | None,
+        top: str | None,
+        st: _State,
+    ) -> tuple[str, str | None]:
+        """§13.4 (D-100): a busy wallet whose public tag names an entity a sanctions list
+        designates is that entity's (`sanctioned_entity`); a deposit address is, when its sweep
+        target is. A category that weighs as much or more stays, and so does an entity the
+        operator named. Returns (category, entity)."""
+        if self._tags is None or cls is None or cls.type not in ("HUB", "DEPOSIT"):
+            return category, None
+        if RISK.get(category, ("", Decimal(0)))[1] >= RISK["sanctioned_entity"][1]:
+            return category, None
+        if self._entity_kind(chain, address) is not None:
+            return category, None  # the operator named it: their call stands (D-100)
+        wallet = address if cls.type == "HUB" else top
+        if wallet is None:
+            return category, None
+        failed = self._tags.failures
+        found = await self._tags.designation(chain, wallet)
+        st.tag_failures += self._tags.failures - failed
+        return ("sanctioned_entity", found.text) if found is not None else (category, None)
 
     def _stored_context(self, chain: Chain, top: str | None, now: datetime) -> ClassifyContext:
         """D-045: what is already known about the top recipient, without reading it."""

@@ -11,6 +11,7 @@ from typing import Any
 
 from amlcheck.core.models import Chain
 from amlcheck.intel.store import IntelStore
+from amlcheck.intel.tags import stored_designation
 from amlcheck.profile import classifier as clf
 from amlcheck.screening.lists import NAMES, ORDER
 
@@ -41,10 +42,38 @@ def entity_name(conn: sqlite3.Connection, chain: Chain, address: str, category: 
         return sanctions_entry(conn, address) or "sanctioned"
     if category == "frozen":
         return "Tether-frozen"
+    if category == "sanctioned_entity":
+        return designated_name(conn, chain, address) or "labelled sanctioned_entity"
     entity = IntelStore(conn).entity_for(chain, address)
     if entity is not None and entity.named_by is not None:
         return entity.name
     return f"labelled {category}"
+
+
+def designated_label(
+    conn: sqlite3.Connection, chain: Chain, address: str
+) -> tuple[str, str, int] | None:
+    """The operator's (or a pack's) active `sanctioned_entity` label (methodology §13.4): (entity,
+    provenance, label id). One with a note first, the note naming the entity; then the oldest."""
+    labels = sorted(
+        (not x.note, x.note or "", x.provenance, x.id)
+        for x in IntelStore(conn).labels(chain, address)
+        if x.category == "sanctioned_entity"
+    )
+    if not labels:
+        return None
+    _, note, provenance, label_id = labels[0]
+    return note or "labelled sanctioned_entity", provenance, label_id
+
+
+def designated_name(conn: sqlite3.Connection, chain: Chain, address: str) -> str | None:
+    """A designated entity's wallet (methodology §13.4): the operator's label decides first, as in
+    R-SAN-02; else its stored public tag, `HTX (UK sanctions RUS3619)`."""
+    label = designated_label(conn, chain, address)
+    if label is not None:
+        return label[0]
+    found = stored_designation(conn, chain, address)
+    return found.text if found is not None else None
 
 
 def _frozen_now(conn: sqlite3.Connection, chain: Chain, address: str) -> bool:

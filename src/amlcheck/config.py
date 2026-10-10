@@ -265,10 +265,15 @@ class Bsc(_Section):
 
 
 class Intel(_Section):
-    """Methodology §13.2 (D-086): freeze neighbours, inferred while tracing."""
+    """Methodology §13.2 (D-086): freeze neighbours, inferred while tracing. §13.3–13.4 (D-100):
+    explorer tags of the busy wallets a trace stops at, with the owner's Tronscan key."""
 
     neighbour_share: Share = Decimal("0.2")
     neighbour_min_usdt: PosDec = Decimal("1000")
+    tags: bool = True  # off, or no AMLCHECK_TRONSCAN_API_KEY: no tag is looked up
+    tag_days: PosInt = 7  # a cached tag is looked up again after this
+    tronscan_url: str = "https://apilist.tronscanapi.com"
+    tronscan_requests_per_second: PosFloat = 3.0  # unpublished (VS-21): kept low
 
 
 class Lists(_Section):

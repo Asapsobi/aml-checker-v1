@@ -1,0 +1,44 @@
+{
+ "blueTag": "",
+ "greyTag": "",
+ "redTag": "",
+ "publicTag": "HTX 4",
+ "chainTags": {
+  "Assets": [
+   {
+    "tagNameKey": "n_tag_high_balance",
+    "tagDescKey": "n_tag_high_balance_tip",
+    "tagName": "High Balance",
+    "tagDesc": "Total assets over $10k"
+   }
+  ],
+  "Activity": [
+   {
+    "tagNameKey": "n_tag_large_trader",
+    "tagDescKey": "n_tag_large_trader_tip",
+    "tagName": "Large Trader",
+    "tagDesc": "Have made large transactions over $10k"
+   },
+   {
+    "tagNameKey": "n_tag_high_activity",
+    "tagDescKey": "n_tag_high_activity_tip",
+    "tagName": "High Activity",
+    "tagDesc": "Over 100 transactions in the last 6 months"
+   }
+  ],
+  "DeFi": [],
+  "NFT": [
+   {
+    "tagNameKey": "n_tag_nft_collector",
+    "tagDescKey": "n_tag_nft_collector_tip",
+    "tagName": "NFT Collector",
+    "tagDesc": "Currently holding at least one NFT"
+   }
+  ],
+  "Governance": []
+ },
+ "refreshTimeInfo": {
+  "type": "realtime",
+  "lastUpdateTime": 1791623184
+ }
+}

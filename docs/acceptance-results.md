@@ -563,3 +563,27 @@ Live: the wallet now shows "Tether-frozen address: indirect received 5.4% (infer
 `TKaR2oCp…`, 773.69 USDT, score 11 · low. Coverage went from 66% to 89.5% in, and from 39.5% to 77.1%
 out. The check took 66 s cold.
 
+## 2.1 · Designated entities (D-100)
+
+MistTrack's paid Deep Analysis, read for 20 wallets near sanctioned or frozen money (owner's
+account), names the entity behind each "Sanctioned Entity" row. Most are exchanges our lists
+designate without their wallets: HTX (UK, 26/05/2026), Nobitex and Wallex (OFAC), Garantex, Grinex
+and others (VS-23).
+
+| What | Test |
+|---|---|
+| 20 designated entities, each with its list entries; a tag names one by a whole word | `test_designated.py::test_a_tag_names_a_designated_entity_by_a_whole_word`, `::test_every_designation_cites_a_list_entry` |
+| Tronscan's public tag (recorded answer for `HTX 4`), cached 7 days; a failure is no tag; 2 failures stop a cache's lookups | `::test_tronscan_public_tag`, `::test_a_tag_is_cached_for_tag_days`, `::test_a_failed_lookup_is_no_tag_and_keeps_what_was_stored`, `::test_after_two_failures_a_check_asks_no_more` |
+| A busy wallet tagged by one ends the trace as `sanctioned_entity`; a deposit address by its sweep target, inferred; an operator-named entity stays | `::test_a_busy_wallet_tagged_by_a_designated_entity`, `::test_a_deposit_address_is_the_entity_of_its_sweep_target`, `::test_an_operator_named_wallet_keeps_its_name` |
+| The checked address tagged or labelled: R-SAN-02, REVIEW, a 100% direct exposure | `::test_the_checked_address_is_a_designated_wallet`, `::test_the_operators_label_on_the_checked_address_decides_first` |
+
+AT-74 passed. Live: `TFTWNgDB…` ("HTX 4") gives R-SAN-02 naming `HTX (UK sanctions RUS3619)`.
+
+**Benchmark, 31 wallets** (the 20 joined, [benchmark.md](benchmark.md)). Re-recorded with the
+entity list, HTX was found in 4 of the 20 (up to 12.2% indirect); Low/Risky agreement on the 20 went
+from 13 to 14. On all 31: 23 at the same level (74%), **under AT-70's 80%**, every mismatch and gap
+explained. The 20 were chosen near risk, and 11 of the 14 mismatches rest on labels no public source
+has (MistTrack's Guarantee Merchant, untagged Nobitex and Wallex wallets, Huione Pay). The score
+settings were tested against MistTrack's numeric scores and stay (D-095 update). The owner's labels
+are the way to close the rest (Q-40).
+

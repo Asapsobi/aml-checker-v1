@@ -75,15 +75,23 @@ Light) on 9 ([benchmark](benchmark.md), P15):
   orders. It can BLOCK a wallet that MistTrack only calls Risky.
 - amlcheck's traces stop at exchanges, where funds mix; MistTrack follows money through them. So an
   exchange's or an issuer's own wallets may be Risky there and `low` here.
+- **Designated exchanges (2.1).** MistTrack's "Sanctioned Entity" rows are mostly whole exchanges a
+  sanctions list designates without listing their wallets: HTX (UK), Nobitex, Wallex and other
+  Iranian exchanges (OFAC), Garantex, Grinex, ABCEX, Rapira… amlcheck now counts a wallet as one of
+  theirs when Tronscan's public tag names it (`HTX 4`), or when you label it. Shown as
+  `Sanctioned entity` with the entity and its list entry, e.g. `HTX (UK sanctions RUS3619)`.
+  Tronscan doesn't tag Nobitex's wallets: label the ones you know (below).
 
 ### Findings
 
-REVIEW comes from R-EXP-01, R-FRZ-02, R-HEU-06 and R-SCR-01; BLOCK from R-SAN-01 and R-FRZ-01. The
+REVIEW comes from R-EXP-01, R-FRZ-02, R-HEU-06, R-SAN-02 and R-SCR-01; BLOCK from R-SAN-01 and
+R-FRZ-01. The
 others are INFO: they explain the score (D-072; `[rules] severity` can change that).
 
 | Rule | Means | Look at |
 |---|---|---|
 | R-SAN-01 | On a sanctions list: OFAC, UK, EU or NBCTF (P14) | The list and entry named in the finding |
+| R-SAN-02 | A wallet of an exchange a list designates, by its public Tronscan tag (2.1). REVIEW | The entity and list entry named; whether you may deal with it |
 | R-FRZ-01 / 02 | Frozen by Tether now / frozen before and released | When; why it was released |
 | R-EXP-01 | Dealt directly with a sanctioned or frozen address | The counterparty table: amounts and dates |
 | R-EXP-02 | 5% or more of what it received came from flagged addresses | Which ones, how much |
@@ -144,6 +152,7 @@ amlcheck case decide <case> approved --note "known OTC client; source of funds m
 | Register your own wallets (trusted, monitored, protected from look-alikes) | `amlcheck wallets add <address> --name "TRON hot wallet"` |
 | Your own tags (`mixer`, `bridge`, `high_risk`, `allowlist`) | `amlcheck labels import labels.csv` |
 | A label on one address | `amlcheck intel label <address> scam --note …` |
+| A designated exchange's wallet Tronscan doesn't tag (Nobitex…): the note names it | `amlcheck intel label <address> sanctioned_entity --note Nobitex` |
 | A licensed third-party pack | `amlcheck intel import-pack file.csv --name … --licence "…"` |
 | Name an exchange's entity (its deposits then resolve locally in traces) | `amlcheck intel entity name <id> Binance --kind exchange_regulated` |
 | Watch an address daily | `amlcheck watch add <address> --client acme` |
