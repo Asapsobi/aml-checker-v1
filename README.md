@@ -4,7 +4,7 @@
 address classification, risk scoring and a recorded decision trail. Local-first, built on RPC
 providers and indexers, no own nodes.
 
-> **Status:** 2.1 (designated entities) ready for review. Released: v0.1.0 – v2.0.2. Next to MistTrack's free check, 23 of 31 wallets get the same level; see [docs/benchmark.md](docs/benchmark.md). The product is built from these docs with Claude Code,
+> **Status:** 2.2 (Nobitex hack index) ready for review. Released: v0.1.0 – v2.0.2; 2.1.0 merged (untagged). Next to MistTrack's free check, 38 of 51 wallets get the same level; see [docs/benchmark.md](docs/benchmark.md). The product is built from these docs with Claude Code,
 > phase by phase.
 
 ## Setup

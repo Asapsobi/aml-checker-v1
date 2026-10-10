@@ -274,6 +274,7 @@ class Intel(_Section):
     tag_days: PosInt = 7  # a cached tag is looked up again after this
     tronscan_url: str = "https://apilist.tronscanapi.com"
     tronscan_requests_per_second: PosFloat = 3.0  # unpublished (VS-21): kept low
+    incidents: bool = True  # §13.5 (D-101): public incidents that reveal designated wallets
 
 
 class Lists(_Section):

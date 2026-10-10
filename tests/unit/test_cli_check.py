@@ -187,8 +187,19 @@ def test_sync_end_to_end_with_fixtures(home: Path) -> None:
             else {"data": [], "success": True, "meta": {}},
         )
     )
+    drain = json.loads((tg / "nobitex_drain_sample.json").read_text())  # VS-24, 5 real rows
+    respx.get(
+        url__regex=r"https://api\.trongrid\.io/v1/accounts/TKFuckiRGC.*/transactions/trc20.*"
+    ).respond(json=drain)
     r = runner.invoke(app, ["sync"])
     assert r.exit_code == 0, r.output
+    assert (
+        "Nobitex wallets drained in Nobitex's June 2025 hack: 4 addresses, 4 transfers" in r.output
+    )
+    again = runner.invoke(app, ["sync"])
+    assert (
+        "Nobitex wallets drained in Nobitex's June 2025 hack: 4 addresses (built)" in again.output
+    )
     assert "OFAC SDN list: " in r.output
     assert "addresses (list of 2026-09-30)" in r.output
     assert "Tether TRON freeze index: 3 new events" in r.output

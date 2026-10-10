@@ -140,6 +140,8 @@ SUSPECTED_CLASS = "SUSPECTED_MALICIOUS"
 _LOCAL_TESTS = (2, 3, 4)
 
 
+#: The node class of a wallet a public incident reveals (§13.5, D-101): inferred.
+INCIDENT = "INCIDENT"
 #: The entity named for what sits behind a busy service (D-097).
 BEHIND = "behind a busy service"
 
@@ -170,8 +172,8 @@ def from_trace(
             continue
         inferred = BY_NAME[category].provenances == frozenset({"inferred"})
         confidence = (cls.confidence if cls else Decimal(1)) if inferred else None
-        if n.entity and cls is not None and cls.type == "DEPOSIT":
-            confidence = cls.confidence  # §13.4: a deposit address is the entity's by inference
+        if n.entity and cls is not None and cls.type in ("DEPOSIT", INCIDENT):
+            confidence = cls.confidence  # §13.4–13.5: the entity's by inference
         estimate = n.weight * total
         volume = n.bottleneck if method == "path" and n.bottleneck is not None else estimate
         path = (*n.path, n.address)
