@@ -407,6 +407,22 @@ def cached(
     return out
 
 
+def top_recipient(
+    conn: sqlite3.Connection, chain: Chain, address: str, now: datetime
+) -> str | None:
+    """Where the latest unexpired classification's profile says the address sent most: a deposit
+    address's sweep target (methodology §13.4)."""
+    row = conn.execute(
+        "SELECT features_json FROM classifications WHERE chain = ? AND address_norm = ? "
+        "AND classifier_version = ? AND expires_at > ? ORDER BY computed_at DESC, id LIMIT 1",
+        (chain.value, address, CLASSIFIER_VERSION, to_db(now)),
+    ).fetchone()
+    if row is None:
+        return None
+    top = json.loads(row[0]).get("profile", {}).get("top_recipient")
+    return top if isinstance(top, str) else None
+
+
 def computed_at(conn: sqlite3.Connection, chain: Chain, address: str) -> datetime | None:
     row = conn.execute(
         "SELECT max(computed_at) FROM classifications WHERE chain = ? AND address_norm = ?",

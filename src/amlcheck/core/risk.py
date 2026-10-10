@@ -16,12 +16,13 @@ from amlcheck.chain.base import canonical_amount
 from amlcheck.intel.categories import BY_NAME, LABELS_CSV_CATEGORY
 from amlcheck.trace.model import Trace, dec, pct
 
-RISK_VERSION = 2
+RISK_VERSION = 3  # 2.1: sanctioned_entity, weight 0.9 (§13.4, D-100)
 
 #: §11.2: category → (risk type, weight). A category that isn't here is not a risk (weight 0):
 #: an unknown service is not a risk in itself (D-071).
 RISK: dict[str, tuple[str, Decimal]] = {
     "sanctioned": ("sanctioned_entity", Decimal("1.0")),
+    "sanctioned_entity": ("sanctioned_entity", Decimal("0.9")),  # §13.4: a designated wallet
     "frozen": ("frozen", Decimal("0.9")),
     "stolen_funds": ("illicit_activity", Decimal("0.9")),
     "darknet": ("illicit_activity", Decimal("0.9")),
@@ -168,6 +169,9 @@ def from_trace(
         else:
             continue
         inferred = BY_NAME[category].provenances == frozenset({"inferred"})
+        confidence = (cls.confidence if cls else Decimal(1)) if inferred else None
+        if n.entity and cls is not None and cls.type == "DEPOSIT":
+            confidence = cls.confidence  # §13.4: a deposit address is the entity's by inference
         estimate = n.weight * total
         volume = n.bottleneck if method == "path" and n.bottleneck is not None else estimate
         path = (*n.path, n.address)
@@ -179,11 +183,11 @@ def from_trace(
                     n.hop,
                     n.address,
                     category,
-                    cls.type if inferred and cls else name(n.address, category),
+                    n.entity or (cls.type if inferred and cls else name(n.address, category)),
                     volume,
                     volume / total,
                     path,
-                    (cls.confidence if cls else Decimal(1)) if inferred else None,
+                    confidence,
                     estimate,
                 ),
             )

@@ -31,12 +31,14 @@ from amlcheck.core.clock import Clock, from_iso, utcnow
 from amlcheck.core.models import Chain
 from amlcheck.intel.lookalike import LookalikeSource
 from amlcheck.intel.store import IntelStore
+from amlcheck.intel.tags import TagCache, TagLookup, TronscanTags
 from amlcheck.net.http import Http, Limiter, Mode, SourceError
 from amlcheck.net.limits import BudgetPacer, TokenBucket
 from amlcheck.profile.adapter import ClassifierSource, Profiler
 from amlcheck.screening import lists
 from amlcheck.screening.base import SourceAdapter
 from amlcheck.screening.bsc_freeze import BscFreezeSource
+from amlcheck.screening.designated import DesignatedSource
 from amlcheck.screening.exposure import ExposureSource
 from amlcheck.screening.sanctions import SanctionsSource
 from amlcheck.screening.tron_freeze import (
@@ -110,6 +112,24 @@ def trongrid_limiter(rt: Runtime) -> Limiter:
         rate = rt.settings.tron.requests_per_second if key else KEYLESS_TRONGRID_RPS
         rt.limiters["trongrid"] = TokenBucket(rate)
     return rt.limiters["trongrid"]
+
+
+def tronscan_limiter(rt: Runtime) -> Limiter:
+    if "tronscan" not in rt.limiters:
+        rt.limiters["tronscan"] = TokenBucket(rt.settings.intel.tronscan_requests_per_second)
+    return rt.limiters["tronscan"]
+
+
+def make_tags(rt: Runtime, conn: sqlite3.Connection, http: Http) -> TagCache | None:
+    """Explorer tags (methodology §13.3, D-100): only with `[intel] tags` on and the owner's
+    Tronscan key; TRON only."""
+    key = rt.secrets.tronscan_api_key
+    if not rt.settings.intel.tags or not key:
+        return None
+    lookups: dict[Chain, TagLookup] = {
+        Chain.TRON: TronscanTags(http, rt.settings.intel, api_key=key, limiter=tronscan_limiter(rt))
+    }
+    return TagCache(conn, lookups, rt.settings.intel, clock=rt.clock)
 
 
 def bsc_rpc_limiter(rt: Runtime) -> Limiter:
@@ -220,6 +240,7 @@ def make_screening_sources(
             sanctions,
             *more_lists,
             BscFreezeSource(clock=rt.clock),
+            DesignatedSource(conn, None, clock=rt.clock),  # labels only: tags are TRON's (§13.3)
             exposure,
             lookalike,
             classifier,
@@ -227,11 +248,13 @@ def make_screening_sources(
         ]
     tether = make_tether(rt, http, trongrid_limiter(rt))
     index = TronFreezeIndex(tether, conn, clock=rt.clock)
+    designated = DesignatedSource(conn, make_tags(rt, conn, http), clock=rt.clock)
     return [
         sanctions,
         *more_lists,
         TronFreezeSource(index, rt.settings.freshness, clock=rt.clock),
         TronBlacklistSource(tether, clock=rt.clock),
+        designated,
         exposure,
         lookalike,
         classifier,
@@ -255,6 +278,7 @@ def make_trace_engine(
         rt.settings,
         clock=rt.clock,
         queries=lambda: sum(http.sent.values()),
+        tags=make_tags(rt, conn, http),
     )
 
 

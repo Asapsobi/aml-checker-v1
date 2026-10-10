@@ -33,7 +33,7 @@ TYPES: dict[str, frozenset[str]] = {
     "Gambling": frozenset({"gambling"}),
     "Bridge": frozenset({"bridge"}),
 }
-OWN_RULES = frozenset({"R-SAN-01", "R-FRZ-01"})
+OWN_RULES = frozenset({"R-SAN-01", "R-SAN-02", "R-FRZ-01"})  # R-SAN-02: §13.4
 GAP_SHARE = Decimal(5)  # % of volume (D-093)
 SAME_TARGET = Decimal("0.8")  # D-093
 FIX_AT_LEAST = 2  # D-092
@@ -116,7 +116,8 @@ class Recorded:
 
     @property
     def own(self) -> bool:
-        """The address itself is listed or frozen (R-SAN-01, R-FRZ-01)."""
+        """The address itself is listed, a designated entity's or frozen (R-SAN-01, R-SAN-02,
+        R-FRZ-01)."""
         return bool(OWN_RULES & set(self.rules))
 
     def found(self) -> frozenset[str]:

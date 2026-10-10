@@ -15,7 +15,7 @@ from amlcheck.chain.base import canonical_amount
 from amlcheck.core.clock import from_iso, to_iso
 from amlcheck.core.models import Chain
 
-TRACE_VERSION = 3  # 2.0.1: a small wallet's floor (D-096); what sits behind a busy service (D-097)
+TRACE_VERSION = 4  # 2.1: a designated entity's wallet, by its public tag (D-100)
 _PLACES = Decimal("0.000001")
 
 UNTRACED = (
@@ -65,6 +65,8 @@ class Node:
     # A busy service the trace stopped at: the share of its own money, in the trace's direction,
     # from or to sanctioned or frozen addresses, by category (D-097). Empty for anything else.
     behind: tuple[tuple[str, Decimal], ...] = ()
+    # A `sanctioned_entity` end: the designated entity and its list entry (§13.4, D-100).
+    entity: str | None = None
 
 
 @dataclass(frozen=True)
@@ -149,6 +151,7 @@ class Trace:
                     "bottleneck_usdt": dec(n.bottleneck) if n.bottleneck is not None else None,
                     # Only when set, so traces without it read and hash as before.
                     **({"behind": {c: dec(s) for c, s in n.behind}} if n.behind else {}),
+                    **({"entity": n.entity} if n.entity else {}),
                 }
                 for n in self.nodes
             ],
@@ -219,6 +222,7 @@ class Trace:
                     n.get("fresh"),
                     Decimal(n["bottleneck_usdt"]) if n.get("bottleneck_usdt") is not None else None,
                     tuple((c, Decimal(s)) for c, s in sorted(n.get("behind", {}).items())),
+                    n.get("entity"),
                 )
                 for n in d["nodes"]
             ),

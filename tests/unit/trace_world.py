@@ -13,6 +13,7 @@ from amlcheck.config import Cache, Settings, Trace
 from amlcheck.core.clock import fixed, to_db
 from amlcheck.core.models import Chain
 from amlcheck.intel.store import IntelStore
+from amlcheck.intel.tags import TagCache
 from amlcheck.net.http import SourceError
 from amlcheck.trace.engine import TraceEngine
 
@@ -114,7 +115,10 @@ def example_settings(**trace: object) -> Settings:
 
 
 def engine(
-    conn: sqlite3.Connection, fake: Fake, settings: Settings | None = None
+    conn: sqlite3.Connection,
+    fake: Fake,
+    settings: Settings | None = None,
+    tags: TagCache | None = None,
 ) -> tuple[TraceEngine, IntelStore]:
     cache = TransferCache(conn, {Chain.BSC: fake}, Cache(), clock=fixed(NOW))
     store = IntelStore(conn, clock=fixed(NOW))
@@ -127,6 +131,7 @@ def engine(
         clock=fixed(NOW),
         monotonic=lambda: 0.0,
         queries=lambda: len(fake.asked),
+        tags=tags,
     )
     return eng, store
 
