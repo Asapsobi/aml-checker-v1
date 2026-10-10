@@ -171,7 +171,7 @@ async def test_a_busy_wallet_tagged_by_a_designated_entity(conn: sqlite3.Connect
     (node,) = [n for n in t.nodes if n.address == hub]
     assert (node.terminal, node.test, node.entity) == (
         "sanctioned_entity",
-        8,
+        12,  # 2.1.1: at hop 1 the tag decides before the read (test 8 did in 2.1.0)
         "HTX (UK sanctions RUS3619)",
     )
     (e,) = from_trace(t, lambda a, c: "not used")
@@ -354,3 +354,36 @@ async def test_the_operators_label_on_the_checked_address_decides_first(
     assert fake.asked == []
     plain = await DesignatedSource(conn, None, clock=fixed(NOW)).check(detect(HTX))
     assert (plain.status, plain.findings) == (SourceStatus.OK, ())
+
+
+# 2.1.1: test 12. HTX 4 went quiet after its designation; a wallet that paid it 34% of its outflow
+# was read straight through it, because only busy wallets were looked up.
+async def test_a_quiet_tagged_wallet_at_hop_1(conn: sqlite3.Connection) -> None:
+    quiet = addr("quiet")
+    xs = [tr(5, quiet, T, 1000), tr(9, addr("q1"), quiet, 1000)]
+    fake = FakeTags({quiet: "HTX 4"})
+    eng, _ = engine(conn, Fake(xs), Settings(), tags=cache(conn, fake))
+    t = await eng.run(detect(T))
+    (node,) = [n for n in t.nodes if n.address == quiet]
+    assert (node.terminal, node.test, node.read, node.entity) == (
+        "sanctioned_entity",
+        12,
+        False,
+        "HTX (UK sanctions RUS3619)",
+    )
+    (e,) = from_trace(t, lambda a, c: "not used")
+    assert (e.hop, e.exposure_type, e.percent, e.confidence) == (1, "direct", Decimal(1), None)
+
+
+async def test_deeper_only_a_stored_tag_counts(conn: sqlite3.Connection) -> None:
+    mid, quiet = addr("mid"), addr("quiet")
+    xs = [tr(5, mid, T, 1000), tr(7, quiet, mid, 1000), tr(9, addr("q1"), quiet, 1000)]
+    fake = FakeTags({quiet: "HTX 4"})
+    eng, _ = engine(conn, Fake(xs), Settings(), tags=cache(conn, fake))
+    t = await eng.run(detect(T))
+    assert [n.terminal for n in t.nodes if n.address == quiet] != ["sanctioned_entity"]
+    assert fake.asked == [mid]  # hop 1 only: no lookup deeper
+    await cache(conn, fake).public_tag(Chain.BSC, quiet)  # now stored
+    t = await eng.run(detect(T))
+    (node,) = [n for n in t.nodes if n.address == quiet]
+    assert (node.hop, node.terminal, node.test) == (2, "sanctioned_entity", 12)

@@ -14,6 +14,8 @@ import httpx
 import typer
 
 from amlcheck.cli import runtime
+from amlcheck.core.models import Chain
+from amlcheck.intel import incidents
 from amlcheck.net.http import Http, Mode, SourceError
 from amlcheck.screening import lists, sanctions
 from amlcheck.screening.tron_freeze import TronFreezeIndex
@@ -86,4 +88,34 @@ async def _sync(rt: runtime.Runtime, conn: sqlite3.Connection) -> bool:
         except SourceError as e:
             typer.echo(f"error: {e}", err=True)
             ok = False
+        if rt.settings.intel.incidents:
+            ok = await _incidents(rt, conn, client) and ok
+    return ok
+
+
+async def _incidents(
+    rt: runtime.Runtime, conn: sqlite3.Connection, client: httpx.AsyncClient
+) -> bool:
+    """Methodology §13.5 (D-101): build each incident's index once; the event is over."""
+    tron = runtime.make_sources(rt, client, Mode.BACKGROUND)[Chain.TRON]
+    ok = True
+    for incident in incidents.INCIDENTS:
+        done = incidents.built(conn, incident)
+        name = f"{incident.entity} wallets {incident.what}"
+        if done is not None:
+            typer.echo(f"{name}: {done.addresses:,} addresses (built)")
+            continue
+        typer.echo(f"{name}: building, once (about 600 TronGrid reads)…")
+        try:
+            got = await tron.fetch_side(  # type: ignore[attr-defined]
+                incident.sink, incident.since, incident.until, 1_000_000, "in"
+            )
+        except SourceError as e:
+            typer.echo(f"error: {e}", err=True)
+            ok = False
+            continue
+        b = incidents.build(conn, incident, got, rt.clock)
+        typer.echo(
+            f"{name}: {b.addresses:,} addresses, {b.transfers:,} transfers, USDT {b.usdt:,.0f}"
+        )
     return ok

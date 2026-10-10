@@ -18,6 +18,7 @@ from amlcheck.core.models import Address, SourceResult, SourceStatus
 from amlcheck.core.risk import Exposure
 from amlcheck.core.rules import finding
 from amlcheck.intel.designations import designation_for
+from amlcheck.intel.incidents import incident_for
 from amlcheck.intel.names import designated_label
 from amlcheck.intel.tags import TagCache
 from amlcheck.screening.base import SourceHealth
@@ -40,12 +41,17 @@ class DesignatedSource:
         self._clock = clock
 
     def _result(
-        self, address: Address, entity: str, summary: str, evidence: dict[str, object]
+        self,
+        address: Address,
+        entity: str,
+        summary: str,
+        evidence: dict[str, object],
+        confidence: Decimal | None = None,
     ) -> SourceResult:
         now = self._clock()
         exposure = Exposure(
             "in", 1, address.norm, "sanctioned_entity", entity, Decimal(0), Decimal(1),
-            (address.norm,),
+            (address.norm,), confidence,
         )  # fmt: skip
         return SourceResult(
             self.source,
@@ -68,6 +74,22 @@ class DesignatedSource:
                 entity,
                 f"Labelled a designated entity's wallet by the {provenance}: {entity}",
                 {"entity": entity, "label_id": label_id, "provenance": provenance},
+            )
+        incident = incident_for(self._conn, address.chain, address.norm)
+        if incident is not None:  # §13.5 (D-101): local, inferred
+            d = incident.designation
+            return self._result(
+                address,
+                d.text,
+                f"A wallet of {d.entity} (inferred, {incident.confidence}): {incident.what}; "
+                f"{', '.join(d.basis)} designates {d.entity}",
+                {
+                    "entity": d.entity,
+                    "basis": list(d.basis),
+                    "incident": incident.id,
+                    "confidence": str(incident.confidence),
+                },
+                incident.confidence,
             )
         if self._tags is None:
             return SourceResult(
