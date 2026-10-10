@@ -128,6 +128,9 @@ def address_label(
         return _label(entity.name, "entity", entity.kind if entity.kind != "unknown" else None)
     terminal = store.best_terminal(chain, address)
     if terminal is not None and terminal.provenance != "inferred":
+        if terminal.category == "sanctioned_entity":  # §13.4: the note names the entity
+            name = designated_name(conn, chain, address) or "labelled sanctioned_entity"
+            return _label(name, "label", terminal.category)
         return _label(f"labelled {terminal.category}", "label", terminal.category)
     primary = next((t for t in types if t.get("primary")), None)
     if primary is not None:

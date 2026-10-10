@@ -19,7 +19,7 @@ from amlcheck.core.clock import fixed, to_db
 from amlcheck.core.models import Chain, Severity, SourceStatus
 from amlcheck.core.risk import from_trace
 from amlcheck.intel.designations import DESIGNATIONS, designation_for
-from amlcheck.intel.names import entity_name
+from amlcheck.intel.names import address_label, entity_name, label_text
 from amlcheck.intel.store import IntelStore, NewLabel
 from amlcheck.intel.tags import TagCache, TronscanTags
 from amlcheck.net.http import Http, Mode, SourceError
@@ -324,6 +324,7 @@ async def test_names_by_stored_tag_or_operator_label(conn: sqlite3.Connection) -
         )
     )
     assert entity_name(conn, Chain.TRON, known, "sanctioned_entity") == "Nobitex"
+    assert label_text(address_label(conn, Chain.TRON, known)) == "Nobitex"  # the "Who" line
 
 
 async def test_the_operators_label_on_the_checked_address_decides_first(
