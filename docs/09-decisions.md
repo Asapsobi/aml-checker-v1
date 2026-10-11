@@ -1123,3 +1123,21 @@
 - **Consequences:** `intel import-pack` once per data folder; re-import when HTX publishes a new
   snapshot. Small effect on agreement with MistTrack: most of its extra findings rest on labels these
   sources don't have either.
+
+### D-103 · What to take from the owner's research report on free TRON labels (owner's choice)
+- **Status:** Accepted
+- **Date:** 2026-10-11 · **Phase:** 2.3
+- **Context:** The owner shared a report: free TRON label sets are almost only exchange wallets;
+  risk labels exist only in per-address APIs (Tronscan, GoPlus, Chainabuse) or paid products
+  (MistTrack, Bitquery, MetaSleuth). Its ten-item ranking was checked (VS-25).
+- **Decision:** Take Spellbook's HTX wallets (BSL 1.1) and the two "suspected Haowang Guarantee"
+  addresses from SlowMist's public analysis, as the owner's own `high_risk` labels with source and
+  date (no licence to record). Leave out `TZ1Ssapy…` (it backs USDD). Not built: Tronscan's security
+  endpoint (nothing beyond Tether's list, VS-25). Not used: GoPlus, Chainabuse and MistTrack's API
+  (third-party risk APIs, D-033; GoPlus also forbids commercial use of its data), DefiLlama, Binance
+  and Bybit lists (no licence; exchanges only), other exchange labels (a labelled exchange ends a trace
+  before D-097/D-099 read what sits behind it), Mendeley, Codatta, CryptoScamDB, CryptoLabel (no
+  files, no licence, stale or unknown).
+- **Consequences:** Two more risk wallets, each a busy escrow hub: many counterparties of Haowang's
+  wallets will show a direct `high_risk` exposure, as MistTrack's Guarantee Merchant rows do.
+

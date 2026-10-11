@@ -614,7 +614,9 @@ Four repositories the owner pointed to were read (VS-14 2026-10-11). Three small
 | OpenAML BSC "Fraud" | 149 BSC | `scam` |
 
 Their files and import commands are in `packs/`. Live: an HTX wallet with no Tronscan tag
-(`TCiRCBNF…`) is now R-SAN-02 · 99 severe.
+(`TCiRCBNF…`) is now R-SAN-02 · 99 severe. From the owner's research report (D-103, VS-25): 8 more HTX
+wallets from Dune Spellbook, and SlowMist's two "suspected Haowang Guarantee" wallets as the owner's
+`high_risk` labels; `TZ1Ssapy…` (it backs USDD) left out of the HTX pack.
 
 | Finding | Fix | Test |
 |---|---|---|
