@@ -325,6 +325,14 @@ async def test_names_by_stored_tag_or_operator_label(conn: sqlite3.Connection) -
     )
     assert entity_name(conn, Chain.TRON, known, "sanctioned_entity") == "Nobitex"
     assert label_text(address_label(conn, Chain.TRON, known)) == "Nobitex"  # the "Who" line
+    haowang = "TL8TBpubVzBr1UWPXBXU8Pci5ZAip9SwEf"
+    IntelStore(conn, clock=fixed(NOW)).add_label(
+        NewLabel(Chain.TRON, haowang, "high_risk", "operator", "operator:sobhan",
+                 note="suspected Haowang Guarantee (SlowMist), 2025-06-23")
+    )  # fmt: skip
+    note = "suspected Haowang Guarantee (SlowMist), 2025-06-23"
+    assert entity_name(conn, Chain.TRON, haowang, "high_risk") == note  # not "labelled high_risk"
+    assert label_text(address_label(conn, Chain.TRON, haowang)) == note
 
 
 async def test_the_operators_label_on_the_checked_address_decides_first(

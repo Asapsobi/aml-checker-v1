@@ -48,7 +48,18 @@ def entity_name(conn: sqlite3.Connection, chain: Chain, address: str, category: 
     entity = IntelStore(conn).entity_for(chain, address)
     if entity is not None and entity.named_by is not None:
         return entity.name
-    return f"labelled {category}"
+    return label_note(conn, chain, address, category) or f"labelled {category}"
+
+
+def label_note(conn: sqlite3.Connection, chain: Chain, address: str, category: str) -> str | None:
+    """The note of the operator's (or a pack's) active label of `category` on the address: who it
+    is, in the labeller's words (`suspected Haowang Guarantee (SlowMist), 2025-06-23`)."""
+    notes = sorted(
+        (x.id, x.note)
+        for x in IntelStore(conn).labels(chain, address)
+        if x.category == category and x.note and x.provenance != "inferred"
+    )
+    return notes[0][1] if notes else None
 
 
 def designated_label(
@@ -135,7 +146,8 @@ def address_label(
         if terminal.category == "sanctioned_entity":  # §13.4: the note names the entity
             name = designated_name(conn, chain, address) or "labelled sanctioned_entity"
             return _label(name, "label", terminal.category)
-        return _label(f"labelled {terminal.category}", "label", terminal.category)
+        note = label_note(conn, chain, address, terminal.category)
+        return _label(note or f"labelled {terminal.category}", "label", terminal.category)
     primary = next((t for t in types if t.get("primary")), None)
     if primary is not None:
         return _label(str(primary["type"]), "classifier", None, str(primary["confidence"]))
