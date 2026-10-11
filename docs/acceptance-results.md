@@ -603,3 +603,18 @@ AT-75 passed. On the 20: same Low/Risky as MistTrack 8 → **14**. All 51 benchm
 with 2.2: 38 at the same level (75%, under AT-70's 80%), every mismatch and gap explained. The 6 left rest on wallets no
 public source names (MistTrack's own labels), each with its reason in [benchmark.md](benchmark.md).
 
+### Benchmark round: Iranian exchanges (2026-10-11)
+
+17 wallets 1–3 hops from Bitpin, Ramzinex, Wallex and Ariomex joined the benchmark. The starting
+wallets came from MistTrack Deep Analysis paths; the rest from our own TronGrid reads. MistTrack's
+scores came from Deep Analysis. Same Low/Risky on 12 of 17; one wallet that MistTrack sees as
+Tether-frozen (`TKsfwyn…`) is BLOCK here too. The 5 misses:
+
+| Cause | Wallets |
+|---|---|
+| TRX, not USDT (out of scope) | 1 |
+| MistTrack's own labels | 2 |
+| Close to the line, or we score higher | 2 |
+
+All 68 wallets: 50 at the same level (74%), every mismatch and gap explained. TRX: Q-41.
+
