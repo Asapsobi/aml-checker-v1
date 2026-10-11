@@ -446,6 +446,26 @@ events via HyperSync (`<chain>.hypersync.xyz`, owner's token) with topic0 for
 
 ---
 
+## VS-14 · Label packs from public sources (2026-10-11, D-102)
+**Checked:** 2026-10-11, by reading each repository through the GitHub API (nothing run).
+
+| Pack | Licence and source | Rows | Found |
+|---|---|---|---|
+| `htx-por-20260901` | MIT. `huobiapi/Tool-Node.js-VerifyAddress` `snapshot/huobi_por.csv`, HTX's own proof-of-reserves (updated 2026-09-08, snapshot 2026-09-01, each row signed) | 15 TRON | Internal screening allowed; attribution: the licence string. 11 of 15 also carry a Tronscan `HTX` tag |
+| `wallet-attribution-exmo` | MIT. `prettydeath/wallet-attribution` `data/tron.csv` (2026-10-01); upstream EXMO's TRON owner in `DefiLlama/DefiLlama-Adapters` `cex/index.js` (checked there) | 1 TRON | The aggregator's other HTX rows: 3 of 6 not in HTX's current file; one "Huobi reserve" wallet DefiLlama itself excludes ("backing USDD"): not used |
+| `openaml-bsc-fraud` | Apache-2.0. `finos-labs/dtcch-2025-OpenAML` `Data/address_fraud.csv.gz` (README: March 2026; sources "public intelligence and threat reports", e.g. HashDit) | 149 BSC | Labels are bare ("Fraud"); no TRON in any OpenAML file |
+
+**Not used:** wallet-attribution's BSC rows (about 3,000 scraped from BscScan via eth-labels and
+etherscan-labels: BscScan's terms forbid scraping; "burgerswap" as a mixer, "bscswap" as a scam), its
+TRON Tether-frozen (7,373) and OFAC (334) rows (we read both at source, fresher);
+`Blockchainwatch/blockchain-intelligence-datasets` (288 "sanctioned" wallets with no entity or source,
+its own risk score of 95: a third-party risk feed, D-033); `Wafouturians/evm-labels` (Ethereum only,
+scraped from Etherscan in 2022); OpenAML's 396,280 "Flagged" wallets (community flags, "not necessarily
+part of regulatory blocklists") and its models (`.joblib`/`.pkl` pickles: loading one runs code).
+**Licence strings recorded:** as in `packs/README.md`.
+**What this changes:** 16 more `sanctioned_entity` wallets (HTX, EXMO) and 149 BSC `scam` wallets,
+local labels (direct exposures in any check; terminal test 4 in traces).
+
 ## VS-14 · Label pack licence (template; fill in before every `intel import-pack`)
 **Checked:** YYYY-MM-DD, against <the provider's licence / terms URL or contract reference>
 **Pack:** name (as passed to `--name`), provider, version/date, row count

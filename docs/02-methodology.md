@@ -6,7 +6,7 @@
 
 | Component | Version | Stored with |
 |---|---|---|
-| Screening + behaviour rules | `rules_version = 3` from 2.1 (R-SAN-02); `2` from v2 (§11.5); `1` before | each check |
+| Screening + behaviour rules | `rules_version = 4` from 2.3 (R-LBL-01); `3` from 2.1 (R-SAN-02); `2` from v2 (§11.5); `1` before | each check |
 | Profiler + classifier | `classifier_version = 1` | each classification |
 | Source-of-funds trace | `trace_version = 5` from 2.2 (test 12); `4` from 2.1 (§13.4); `3` from 2.0.1; `2` from P13 (§12); `1` before | each trace |
 | Category list + weights | `category_version = 3` from 2.1 (`sanctioned_entity`); `2` from P14; `1` before | each label |
@@ -608,6 +608,7 @@ A new severity, `INFO`: the finding is shown and explains the score, but never c
 | R-SYS-01 | INCOMPLETE (fixed) | INCOMPLETE (fixed) |
 | R-EXP-01 (a counterparty is sanctioned or frozen), R-FRZ-02, R-HEU-06 (look-alike) | REVIEW | REVIEW |
 | R-SAN-02 (the address is a designated entity's, by its public tag; 2.1, §13.4) | — | REVIEW |
+| R-LBL-01 (the address itself carries a risk label; 2.3, §13.6) | — | REVIEW |
 | R-SCR-01 (score ≥ `review_at`) | off | REVIEW from 31 |
 | R-EXP-02, R-HEU-01 to R-HEU-05, R-HEU-07, R-TRC-01 to R-TRC-05 | REVIEW | INFO |
 
@@ -828,6 +829,18 @@ link. Terminal test 12 checks the index first (local, any hop): `sanctioned_enti
 `INCIDENT` with the incident's confidence, so the exposure is inferred at 0.9. The checked address
 itself in an index is R-SAN-02, REVIEW, with an inferred 100% direct exposure. Only addresses that
 existed in June 2025 are covered.
+
+
+### 13.6 A risk label on the checked address itself (R-LBL-01; 2.3, D-102)
+
+A label is local and says who an address is. Until 2.3 only a `sanctioned_entity` label on the
+checked address made a finding (R-SAN-02); a wallet labelled `scam` itself was NO_HITS · 0. Now the
+most severe risk label (§8 order, then the oldest) that the operator or a pack put on the checked
+address is **R-LBL-01**, REVIEW, with a direct exposure of its category at 100% (`scam` → illicit
+activity, weight 0.7). Categories a list or our inference decides (`sanctioned`, `frozen`,
+`sanctioned_entity`, `suspected_malicious`, `suspicious_collector`), inferred labels and non-risk
+categories (`own_or_trusted`, `exchange_regulated`…) make none. A designated wallet that also carries
+a risk label gets both findings.
 
 ---
 

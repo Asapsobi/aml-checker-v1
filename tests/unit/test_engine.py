@@ -146,5 +146,5 @@ async def test_inputs_recorded(conn: sqlite3.Connection) -> None:
     row = conn.execute(
         "SELECT amount, client, operator_note, rules_version, config_hash FROM checks"
     ).fetchone()
-    assert row == ("50000", "ACME", "pre-trade", 3, Settings().hash())  # 2.1: R-SAN-02 (D-100)
+    assert row == ("50000", "ACME", "pre-trade", 4, Settings().hash())  # 2.3: R-LBL-01 (D-102)
     assert r.amount == Decimal("50000.00")

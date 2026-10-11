@@ -387,3 +387,48 @@ async def test_deeper_only_a_stored_tag_counts(conn: sqlite3.Connection) -> None
     t = await eng.run(detect(T))
     (node,) = [n for n in t.nodes if n.address == quiet]
     assert (node.hop, node.terminal, node.test) == (2, "sanctioned_entity", 12)
+
+
+# §13.6 (D-102): a risk label on the checked address itself. Before 2.3 a wallet labelled `scam`
+# (by the operator or a pack) was NO_HITS · 0 when checked itself.
+async def test_a_risk_label_on_the_checked_address(conn: sqlite3.Connection) -> None:
+    bsc = "0x00070c222abeaa4f2f8dda30a3e53a269902a0e6"
+    store = IntelStore(conn, clock=fixed(NOW))
+    store.add_label(
+        NewLabel(Chain.BSC, bsc, "scam", "import", "pack:openaml-bsc-fraud", note="OpenAML: Fraud",
+                 licence="Apache-2.0")
+    )  # fmt: skip
+    store.add_label(NewLabel(Chain.BSC, bsc, "gambling", "operator", "operator:sobhan"))
+    r = await DesignatedSource(conn, None, clock=fixed(NOW)).check(detect(bsc))
+    (f,) = r.findings  # the most severe label: scam (§8 order) over gambling
+    assert (f.rule_id, f.severity, f.evidence["category"]) == ("R-LBL-01", Severity.REVIEW, "scam")
+    assert f.evidence["licence"] == "Apache-2.0"
+    (e,) = r.evidence["exposures"]
+    assert (e["category"], e["risk_type"], e["percent"], e["entity"], e["inferred"]) == (
+        "scam",
+        "illicit_activity",
+        "1",
+        "OpenAML: Fraud",
+        False,
+    )
+
+
+async def test_trusted_or_inferred_labels_are_not_findings(conn: sqlite3.Connection) -> None:
+    bsc = "0x00070c222abeaa4f2f8dda30a3e53a269902a0e6"
+    IntelStore(conn, clock=fixed(NOW)).add_label(
+        NewLabel(Chain.BSC, bsc, "own_or_trusted", "operator", "operator:sobhan")
+    )
+    r = await DesignatedSource(conn, None, clock=fixed(NOW)).check(detect(bsc))
+    assert (r.findings, r.status) == ((), SourceStatus.OK)
+
+
+async def test_a_designated_wallet_with_a_risk_label_gets_both(conn: sqlite3.Connection) -> None:
+    IntelStore(conn, clock=fixed(NOW)).add_label(
+        NewLabel(Chain.TRON, HTX, "scam", "operator", "operator:sobhan", note="drainer")
+    )
+    src = DesignatedSource(
+        conn, cache(conn, FakeTags({HTX: "HTX 4"}), Chain.TRON), clock=fixed(NOW)
+    )
+    r = await src.check(detect(HTX))
+    assert [f.rule_id for f in r.findings] == ["R-SAN-02", "R-LBL-01"]
+    assert [e["category"] for e in r.evidence["exposures"]] == ["sanctioned_entity", "scam"]

@@ -603,3 +603,22 @@ AT-75 passed. On the 20: same Low/Risky as MistTrack 8 → **14**. All 51 benchm
 with 2.2: 38 at the same level (75%, under AT-70's 80%), every mismatch and gap explained. The 6 left rest on wallets no
 public source names (MistTrack's own labels), each with its reason in [benchmark.md](benchmark.md).
 
+## 2.3 · Label packs from public sources; a label on the checked address (D-102)
+
+Four repositories the owner pointed to were read (VS-14 2026-10-11). Three small packs were kept:
+
+| Pack | Rows | Category |
+|---|---|---|
+| HTX's own proof-of-reserves | 15 TRON | `sanctioned_entity` |
+| EXMO | 1 TRON | `sanctioned_entity` |
+| OpenAML BSC "Fraud" | 149 BSC | `scam` |
+
+Their files and import commands are in `packs/`. Live: an HTX wallet with no Tronscan tag
+(`TCiRCBNF…`) is now R-SAN-02 · 99 severe.
+
+| Finding | Fix | Test |
+|---|---|---|
+| A wallet labelled `scam` by a pack was NO_HITS · 0 when checked itself | R-LBL-01: a risk label on the checked address is REVIEW with a 100% direct exposure (§13.6) | `test_designated.py::test_a_risk_label_on_the_checked_address`, `::test_trusted_or_inferred_labels_are_not_findings`, `::test_a_designated_wallet_with_a_risk_label_gets_both` |
+
+AT-76 passed.
+
