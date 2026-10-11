@@ -170,6 +170,9 @@ tags = true
 tag_days = 7
 tronscan_url = "https://apilist.tronscanapi.com"
 tronscan_requests_per_second = 3.0
+# Methodology §13.5 (D-101): wallets a public incident reveals (Nobitex's June 2025 hack: 110,626
+# deposit addresses), built once by `sync` from TronGrid; inferred, never BLOCK.
+incidents = true
 
 # Data sources §3, §6. TronGrid limits are per key and unpublished: set them here.
 [tron]

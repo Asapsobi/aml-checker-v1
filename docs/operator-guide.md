@@ -80,7 +80,8 @@ Light) on 9 ([benchmark](benchmark.md), P15):
   Iranian exchanges (OFAC), Garantex, Grinex, ABCEX, Rapira… amlcheck now counts a wallet as one of
   theirs when Tronscan's public tag names it (`HTX 4`), or when you label it. Shown as
   `Sanctioned entity` with the entity and its list entry, e.g. `HTX (UK sanctions RUS3619)`.
-  Tronscan doesn't tag Nobitex's wallets: label the ones you know (below).
+  Tronscan doesn't tag Nobitex's wallets. Since 2.2, the 110,626 Nobitex addresses drained in its
+  June 2025 hack are known (inferred, built once by `sync`); label others you know (below).
 
 ### Findings
 

@@ -1082,3 +1082,25 @@
     many ordinary wallets will show a small "Sanctioned entity" exposure.
   - Nobitex and other untagged entities' wallets need the owner's labels (Q-40).
 
+### D-101 · Wallets a public incident reveals: the Nobitex hack index (owner's choice)
+- **Status:** Accepted
+- **Date:** 2026-10-10 · **Phase:** 2.2
+- **Context:** 20 more wallets, picked 1–5 hops from Nobitex: MistTrack rates 18 Risky through
+  "Sanctioned Entity", we rated 10 of those low. OFAC designates Nobitex (56981) without a wallet,
+  Tronscan tags none, and Nobitex kept balances in its deposit addresses, so our deposit inference
+  (a sweep to a tagged hot wallet) never fires: the trace reads them as personal wallets with no
+  outflow. Public reports name the address Nobitex's TRON wallets were drained into on 2025-06-18;
+  on chain that drain is 110,626 senders in four hours, in same-second batches (VS-24).
+- **Decision:** `intel/incidents.py` lists public incidents that reveal a designated entity's
+  wallets; `sync` builds each index once from TronGrid, keeping only senders in scripted batches
+  (3 or more transfers into the sink in one block; 109,840 of 110,626 for Nobitex). An indexed
+  address is `sanctioned_entity`,
+  inferred at the incident's confidence (Nobitex: 0.9): terminal test 12 at any hop, R-SAN-02 for
+  the checked address. Never BLOCK.
+- **Alternatives:** The owner's labels only (thousands of addresses); MistTrack's or Arkham's labels
+  (not allowed, D-033; Arkham's terms also forbid automated use); leave Nobitex out.
+- **Consequences:** `sync` reads about 560 TronGrid pages once (6 minutes). Addresses Nobitex made
+  after June 2025 are not covered. Also in 2.2: terminal test 12 looks up the public tag of every
+  first-hop counterparty, busy or quiet (a wallet that paid a quiet HTX 4 34% of its outflow was
+  read straight through it in 2.1.0).
+

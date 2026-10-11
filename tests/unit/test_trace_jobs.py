@@ -53,7 +53,7 @@ async def test_job_runs_and_stores_its_result(conn: sqlite3.Connection) -> None:
     assert done.result == trace
     assert q.latest(Chain.BSC, T) == done
     settings = conn.execute("SELECT settings_json FROM traces").fetchone()[0]
-    assert '"trace_version": 4' in settings
+    assert '"trace_version": 5' in settings
     assert '"max_nodes": 100' in settings
     assert '"bsc_max_nodes": 50' in settings
 

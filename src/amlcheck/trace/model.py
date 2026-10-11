@@ -15,7 +15,9 @@ from amlcheck.chain.base import canonical_amount
 from amlcheck.core.clock import from_iso, to_iso
 from amlcheck.core.models import Chain
 
-TRACE_VERSION = 4  # 2.1: a designated entity's wallet, by its public tag (D-100)
+TRACE_VERSION = (
+    5  # 2.2: test 12, a designated wallet by tag or public incident ends a path (D-100, D-101)
+)
 _PLACES = Decimal("0.000001")
 
 UNTRACED = (

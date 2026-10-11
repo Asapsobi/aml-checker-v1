@@ -31,10 +31,11 @@ from amlcheck.chain.cache import ContractCache, TransferCache
 from amlcheck.config import Settings
 from amlcheck.core.clock import Clock, from_iso, utcnow
 from amlcheck.core.models import Address, Chain
-from amlcheck.core.risk import RISK
+from amlcheck.core.risk import INCIDENT, RISK
 from amlcheck.intel.categories import BY_NAME
+from amlcheck.intel.incidents import incident_for
 from amlcheck.intel.store import IntelStore
-from amlcheck.intel.tags import TagCache
+from amlcheck.intel.tags import TagCache, stored_designation
 from amlcheck.net.http import SourceError
 from amlcheck.profile import classifier as clf
 from amlcheck.profile.adapter import SERVICE_CATEGORIES
@@ -483,6 +484,10 @@ class TraceEngine:
             )
             category, entity = await self._designated(chain, item.address, category, cls, top, st)
             return self._end(item, category, test, cls, False, in_t, st, entity=entity)
+        tagged = await self._tagged(chain, item, st)  # test 12 (§13.4, §13.5)
+        if tagged is not None:
+            entity, cls = tagged
+            return self._end(item, "sanctioned_entity", 12, cls, False, in_t, st, entity=entity)
         if item.hop >= self._max_hops(chain):
             return self._end(item, "untraced:depth", 6, None, False, in_t, st)
         if item.address not in st.read and len(st.read) >= self._max_nodes(chain):
@@ -698,6 +703,30 @@ class TraceEngine:
             chain, item.address, cs, ("CONTRACT", "HUB", "DEPOSIT", "COLLECTOR")
         )
         return (*hit, p.top_recipient) if hit is not None else None
+
+    async def _tagged(
+        self, chain: Chain, item: _Item, st: _State
+    ) -> tuple[str, NodeClass | None] | None:
+        """Test 12 (§13.4–13.5): a designated entity's wallet ends the path, busy or quiet (an
+        exchange wallet can be quiet: HTX 4 after its designation). A public incident's index
+        (local, any hop) says so, inferred at its confidence; else the public tag: a first-hop
+        counterparty is looked up, deeper only a tag already stored counts, so a trace costs at
+        most its first hop in lookups. The operator's named entity stands."""
+        if self._entity_kind(chain, item.address) is not None:
+            return None
+        if self._s.intel.incidents:
+            incident = incident_for(self._conn, chain, item.address)
+            if incident is not None:
+                return incident.designation.text, NodeClass(INCIDENT, incident.confidence)
+        if self._tags is None:
+            return None
+        if item.hop == 1:
+            failed = self._tags.failures
+            found = await self._tags.designation(chain, item.address)
+            st.tag_failures += self._tags.failures - failed
+        else:
+            found = stored_designation(self._conn, chain, item.address)
+        return (found.text, None) if found is not None else None
 
     async def _designated(
         self,

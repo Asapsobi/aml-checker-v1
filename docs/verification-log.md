@@ -28,6 +28,7 @@ VS-07 (P6) and VS-11 to VS-14 (later phases) are not P0 items. VS-15 was redone 
 | VS-21 | Confirmed with the owner's key: works, but no risk tags on any sanctioned or frozen address tried | Tags name only famous entities | — |
 | VS-22 | Confirmed with the owner's key: `only_to=true` gives incoming transfers only | No | — |
 | VS-23 | Confirmed: 20 designated entities in the OFAC and UK lists; Tronscan tags HTX's wallets `HTX 4`, `HTX 5` | Lists name entities without wallets; Tronscan doesn't tag Nobitex | Q-40 |
+| VS-24 | Confirmed: the Nobitex drain on TRON, 110,626 senders in a 4-hour window | Nobitex's deposit addresses keep balances (no sweep) | — |
 
 ---
 
@@ -476,6 +477,20 @@ rate-limit headers, no refusals. The endpoint's limits are not published in its 
 **What this changes:** TRON `is_contract` = the answer has `contract_address`.
 **Fixtures:** `tests/fixtures/trongrid/getcontract_contract.json`, `getcontract_created_by_contract.json`,
 `getcontract_wallet.json`, `getcontract_never_used.json` (bytecode and ABI trimmed)
+
+## VS-24 · The Nobitex hack drain on TRON (2.2)
+**Checked:** 2026-10-10 with amlcheck's TronGrid reader and the owner's key, never printed. Public
+reports (The Defiant, OODA Loop; SlowMist's post was not reachable) name
+`TKFuckiRGCTerroristsNoBiTEXy2r7mNX` as the address Nobitex's TRON USDT was sent to on 2025-06-18.
+**Found:** all of its incoming USDT on 2025-06-18 falls between 04:28:06 and 08:45:33 UTC: 110,641
+transfers from 110,626 addresses, USDT 49.4M (reports: $48.6M). 99% sit in same-second batches of 5
+or more (keys used by a script). Nothing else came in until 2025-06-25 at least. The first sender,
+`TCFnNHJw…`, sent 1 USDT, then 7,004,321 USDT a minute later. Picked wallets that paid such
+addresses had no sweep after: the addresses kept balances. 788 transfers sat in blocks with fewer
+than 3 transfers into the sink; one was a busy service's 0.5 USDT (it has 17,672 transfers, active
+into 2026). Indexing only batches of 3 or more: 109,840 addresses, USDT 49.3M.
+**What this changes:** D-101, methodology §13.5. **Fixture:**
+`tests/fixtures/trongrid/nobitex_drain_sample.json` (the first 5 real rows).
 
 ## VS-23 · Designated entities and their tags (2.1)
 **Checked:** 2026-10-10. OFAC SDN.XML and the UK Sanctions List XML, downloaded that day; Tronscan's

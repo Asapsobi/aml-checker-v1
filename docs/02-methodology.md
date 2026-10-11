@@ -8,7 +8,7 @@
 |---|---|---|
 | Screening + behaviour rules | `rules_version = 3` from 2.1 (R-SAN-02); `2` from v2 (§11.5); `1` before | each check |
 | Profiler + classifier | `classifier_version = 1` | each classification |
-| Source-of-funds trace | `trace_version = 4` from 2.1 (§13.4); `3` from 2.0.1; `2` from P13 (§12); `1` before | each trace |
+| Source-of-funds trace | `trace_version = 5` from 2.2 (test 12); `4` from 2.1 (§13.4); `3` from 2.0.1; `2` from P13 (§12); `1` before | each trace |
 | Category list + weights | `category_version = 3` from 2.1 (`sanctioned_entity`); `2` from P14; `1` before | each label |
 | Score | `score_version = 2` from v2 (§11); `1` for checks made by v1 (§9) | each check |
 | Risk policy (exposures, levels, verdict defaults) | `risk_version = 3` from 2.1 (§13.4); `2` from v2 (§11) | each check |
@@ -296,6 +296,7 @@ smallest edge amount on it.
 | 3 | Latest Tether event is `AddedBlackList` (TRON), or `DestroyedBlackFunds` | local | `frozen` |
 | 4 | Has an active label or entity kind with a terminal category (§8), lists/operator/import first, then highest confidence, ties by category order in §8 | local | that category |
 | 5 | Cached unexpired classification `CONTRACT`, `HUB`, `DEPOSIT` or `COLLECTOR` | local | §6 mapping |
+| 12 | (2.2, runs here) A designated entity's wallet: in a public incident's index (§13.5, local, any hop, inferred), or its public tag names one (§13.4: looked up at hop 1, stored tags only deeper) | local, tag | `sanctioned_entity` |
 | 6 | `hop == max_hops` | — | `untraced:depth` |
 | 7 | `max_nodes` already read | — | `untraced:budget` |
 | 8 | Read history for the window. Too many transfers → classify `HUB` | read | `service_unattributed` (or entity kind) |
@@ -744,6 +745,8 @@ A public name tag from Tronscan's own API (`/api/account/tag` → `publicTag`; i
 automated means, VS-21). Looked up only for:
 
 - the checked address (TRON), once per check;
+- every first-hop counterparty a trace reaches, busy or quiet (terminal test 12, 2.1.1); deeper,
+  only a tag already stored is used, so a trace costs at most its first hop in lookups;
 - a busy wallet a trace stops at (HUB, terminal tests 5, 8 and 9);
 - a deposit address's sweep target, its top recipient (DEPOSIT, tests 5 and 9).
 
@@ -777,8 +780,11 @@ with the list entries that designate it (VS-23) and the words that name it in a 
 
 A wallet is a designated entity's (`sanctioned_entity`):
 
-- **by its tag**: a busy wallet whose public tag names one, as a whole word (`HTX 4`, `Huobi-Hot 12`
-  → HTX). A fact about attribution, not an inference: weight 0.9, no confidence.
+- **by its tag**: a wallet whose public tag names one, as a whole word (`HTX 4`, `Huobi-Hot 12`
+  → HTX), busy or quiet (test 12 at hop 1, or any hop once stored; a busy one at tests 5, 8, 9). A
+  fact about attribution, not an inference: weight 0.9, no confidence. A quiet exchange wallet is
+  why test 12 exists: HTX 4 went quiet after its designation, and a wallet that paid it 34% of its
+  outflow was read through it (2.1.0).
 - **by its sweep target**: a deposit address whose top recipient's tag names one. Inferred, at the
   DEPOSIT classification's confidence.
 - **by the operator**: an intelligence label `sanctioned_entity`, its note naming the entity
@@ -799,6 +805,29 @@ looked up. An operator's own label on the same address (say `own_or_trusted`) wi
 A list that drops an entity is dropped here by hand, with a decision. MistTrack also calls some
 services "sanctioned" that no list we sync names (Huione Pay, under a FinCEN §311 rule; Payeer;
 Ariomex; Haowang Guarantee): left out (Q-40).
+
+
+### 13.5 Public incidents (`sanctioned_entity`, inferred; 2.2, D-101)
+
+Some public events reveal a designated entity's wallets where no list or tag does. Each is in
+`intel/incidents.py`: the entity, the sink, the window, the public reports, a confidence. `sync`
+builds an incident's index once, with our own TronGrid reads (the event is over), into
+`incident_addresses`; `[intel] incidents = false` turns it off.
+
+| Incident | What happened | On chain (VS-24) | Confidence |
+|---|---|---|---|
+| `nobitex_2025_06` | Attackers with Nobitex's keys emptied its TRON wallets into `TKFuckiRGCTerroristsNoBiTEXy2r7mNX` (The Defiant, OODA Loop, SlowMist) | 2025-06-18 04:28–08:46 UTC: 110,641 USDT transfers from 110,626 addresses, USDT 49.4M; 99% in same-second batches; nothing else into it that week. Indexed: **109,840** addresses in batches of 3 or more | 0.9 |
+
+The drain was scripted, many wallets per block. A sender counts only when one of its transfers
+shares its block with at least `min_batch` − 1 (2) others: that leaves out lone outsiders (a busy
+service sent 0.5 USDT twice, each alone, and was first read as Nobitex's). Each address left is
+Nobitex's (OFAC SDN 56981): inferred, never BLOCK. The index stores its rule; a build under another
+rule is built again. Nobitex kept balances in its deposit addresses instead of sweeping them, so a
+trace reads one as a personal wallet with no outflow, and no tag names it: this is the only public
+link. Terminal test 12 checks the index first (local, any hop): `sanctioned_entity`, node class
+`INCIDENT` with the incident's confidence, so the exposure is inferred at 0.9. The checked address
+itself in an index is R-SAN-02, REVIEW, with an inferred 100% direct exposure. Only addresses that
+existed in June 2025 are covered.
 
 ---
 

@@ -10,6 +10,7 @@ from datetime import datetime
 from typing import Any
 
 from amlcheck.core.models import Chain
+from amlcheck.intel.incidents import incident_for
 from amlcheck.intel.store import IntelStore
 from amlcheck.intel.tags import stored_designation
 from amlcheck.profile import classifier as clf
@@ -73,7 +74,10 @@ def designated_name(conn: sqlite3.Connection, chain: Chain, address: str) -> str
     if label is not None:
         return label[0]
     found = stored_designation(conn, chain, address)
-    return found.text if found is not None else None
+    if found is not None:
+        return found.text
+    incident = incident_for(conn, chain, address)
+    return incident.designation.text if incident is not None else None
 
 
 def _frozen_now(conn: sqlite3.Connection, chain: Chain, address: str) -> bool:

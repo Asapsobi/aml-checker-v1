@@ -18,6 +18,7 @@
 | `0009_monitor_api.sql` | P10 | `own_wallets`, `monitor_state`, `api_requests` |
 | `0010_risk_v2.sql` | P12 | `counterparties.last_score_version`, `checks.label_json` |
 | `0011_explorer_tags.sql` | 2.1 | `explorer_tags` |
+| `0012_incidents.sql` | 2.2 | `incident_addresses`, `incident_index` |
 
 `storage/db.py` keeps the applied version in `PRAGMA user_version` and applies missing files in order,
 each in one transaction.
@@ -433,6 +434,13 @@ CREATE TABLE explorer_tags (
 A trace node ended by a designated entity's tag carries `entity` in the trace JSON (trace version 4),
 only when set, so older traces read and hash as before.
 
+
+## 0012_incidents.sql (2.2)
+
+`src/amlcheck/storage/migrations/0012_incidents.sql`: `incident_addresses (incident, chain,
+address_norm, first_time, usdt)`, one row per wallet a public incident reveals (methodology §13.5,
+D-101), and `incident_index (incident, built_at, transfers, addresses, usdt)`, one per built
+incident. `sync` builds a missing one; nothing else writes them.
 ---
 
 ## Retention

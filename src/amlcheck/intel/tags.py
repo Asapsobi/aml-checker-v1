@@ -78,6 +78,7 @@ class TagCache:
         self._clock = clock
         self.lookups = 0
         self.failures = 0
+        self._failed: set[tuple[Chain, str]] = set()  # asked once per cache: no retry, no recount
 
     def cached(self, chain: Chain, address: str) -> tuple[str, str] | None:
         """(tag, fetched_at) as last stored, however old. Local data only."""
@@ -104,7 +105,7 @@ class TagCache:
         if stored is not None and now - from_iso(stored[1]) < self._max_age:
             return stored[0]
         lookup = self._lookups.get(chain)
-        if lookup is None:
+        if lookup is None or (chain, address) in self._failed:
             return stored[0] if stored else None
         if self.failures >= MAX_FAILURES:
             self.failures += 1  # skipped: a gap like a failure
@@ -114,6 +115,7 @@ class TagCache:
             tag = await lookup.public_tag(address)
         except SourceError:
             self.failures += 1
+            self._failed.add((chain, address))
             return stored[0] if stored else None
         with transaction(self._conn):
             self._conn.execute(

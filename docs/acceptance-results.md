@@ -587,3 +587,19 @@ has (MistTrack's Guarantee Merchant, untagged Nobitex and Wallex wallets, Huione
 settings were tested against MistTrack's numeric scores and stay (D-095 update). The owner's labels
 are the way to close the rest (Q-40).
 
+## 2.2 · Nobitex's drained wallets; tags at the first hop (D-101)
+
+20 more wallets, picked with our own TronGrid reads 1–5 hops from Nobitex (from the addresses drained
+in its June 2025 hack) and next to HTX's tagged wallets; MistTrack Light looked up for each (18 Risky,
+2 Low). Arkham was not used: its terms forbid automated use.
+
+| Finding | Fix | Test |
+|---|---|---|
+| A wallet that paid HTX 4 34% of its outflow was 10 · low: HTX 4 went quiet after its designation, and 2.1.0 looked up tags only for busy wallets | Terminal test 12 looks up every first-hop counterparty's tag, busy or quiet; deeper, stored tags | `test_designated.py::test_a_quiet_tagged_wallet_at_hop_1`, `::test_deeper_only_a_stored_tag_counts` |
+| Nobitex's deposit addresses keep balances (no sweep), have no tag, and OFAC lists none: 10 of the 20 were low where MistTrack shows "Sanctioned Entity" | The Nobitex hack index (D-101, VS-24): 109,840 addresses drained in scripted batches on 2025-06-18, built once by `sync`; inferred at 0.9 | `test_incidents.py` (all), `test_cli_check.py::test_sync_end_to_end_with_fixtures` |
+| A busy service's lone 0.5 USDT to the burn address made 3 wallets "Nobitex" (one of them Low on MistTrack) | Only senders in batches of 3 or more count | `test_incidents.py::test_the_drain_is_indexed_once_per_sender` |
+
+AT-75 passed. On the 20: same Low/Risky as MistTrack 8 → **14**. All 51 benchmark wallets re-recorded
+with 2.2: 38 at the same level (75%, under AT-70's 80%), every mismatch and gap explained. The 6 left rest on wallets no
+public source names (MistTrack's own labels), each with its reason in [benchmark.md](benchmark.md).
+
