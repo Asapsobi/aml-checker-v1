@@ -85,7 +85,7 @@ Light) on 9 ([benchmark](benchmark.md), P15):
 
 ### Findings
 
-REVIEW comes from R-EXP-01, R-FRZ-02, R-HEU-06, R-SAN-02 and R-SCR-01; BLOCK from R-SAN-01 and
+REVIEW comes from R-EXP-01, R-FRZ-02, R-HEU-06, R-SAN-02, R-LBL-01 and R-SCR-01; BLOCK from R-SAN-01 and
 R-FRZ-01. The
 others are INFO: they explain the score (D-072; `[rules] severity` can change that).
 
@@ -93,6 +93,7 @@ others are INFO: they explain the score (D-072; `[rules] severity` can change th
 |---|---|---|
 | R-SAN-01 | On a sanctions list: OFAC, UK, EU or NBCTF (P14) | The list and entry named in the finding |
 | R-SAN-02 | A wallet of an exchange a list designates, by its public Tronscan tag (2.1). REVIEW | The entity and list entry named; whether you may deal with it |
+| R-LBL-01 | The address itself carries a risk label, yours or a pack's (`scam`, `mixer`…) (2.3). REVIEW | Who labelled it and why (the note, the pack and its licence) |
 | R-FRZ-01 / 02 | Frozen by Tether now / frozen before and released | When; why it was released |
 | R-EXP-01 | Dealt directly with a sanctioned or frozen address | The counterparty table: amounts and dates |
 | R-EXP-02 | 5% or more of what it received came from flagged addresses | Which ones, how much |
@@ -155,6 +156,7 @@ amlcheck case decide <case> approved --note "known OTC client; source of funds m
 | A label on one address | `amlcheck intel label <address> scam --note …` |
 | A designated exchange's wallet Tronscan doesn't tag (Nobitex…): the note names it | `amlcheck intel label <address> sanctioned_entity --note Nobitex` |
 | A licensed third-party pack | `amlcheck intel import-pack file.csv --name … --licence "…"` |
+| The packs from public sources in `packs/` (HTX, EXMO, OpenAML BSC fraud; D-102) | the three commands in `packs/README.md` |
 | Name an exchange's entity (its deposits then resolve locally in traces) | `amlcheck intel entity name <id> Binance --kind exchange_regulated` |
 | Watch an address daily | `amlcheck watch add <address> --client acme` |
 | Israel's NBCTF seizure orders, monthly or when NBCTF announces new ones: export "צווי תפיסה - מטבעות קריפטו" as CSV on matal.mod.gov.il | `amlcheck lists import-nbctf <file>.csv` |

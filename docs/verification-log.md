@@ -29,6 +29,7 @@ VS-07 (P6) and VS-11 to VS-14 (later phases) are not P0 items. VS-15 was redone 
 | VS-22 | Confirmed with the owner's key: `only_to=true` gives incoming transfers only | No | — |
 | VS-23 | Confirmed: 20 designated entities in the OFAC and UK lists; Tronscan tags HTX's wallets `HTX 4`, `HTX 5` | Lists name entities without wallets; Tronscan doesn't tag Nobitex | Q-40 |
 | VS-24 | Confirmed: the Nobitex drain on TRON, 110,626 senders in a 4-hour window | Nobitex's deposit addresses keep balances (no sweep) | — |
+| VS-25 | Tronscan's security endpoint adds nothing beyond Tether's list; SlowMist's two Haowang addresses and Spellbook's HTX rows check out | `TZ1Ssapy…` backs USDD | — |
 
 ---
 
@@ -445,6 +446,43 @@ events via HyperSync (`<chain>.hypersync.xyz`, owner's token) with topic0 for
 **Fixtures:** none saved (not used by code).
 
 ---
+
+## VS-25 · The owner's research report on free TRON labels (2026-10-11, D-103)
+**Checked:** 2026-10-11, live with the owner's Tronscan key (never printed) and through the GitHub API.
+**Found:**
+- Tronscan `/api/security/account/data` answers `is_black_list`, `has_fraud_transaction`,
+  `fraud_token_creator`, `send_ad_by_memo`. On a Tether-frozen and an OFAC address `is_black_list`
+  is true (Tether's list, which our freeze index reads at source); on a MistTrack Guarantee Merchant,
+  Nobitex's drained hot wallet, a suspected Haowang wallet and a dust wallet, all four are false.
+  Nothing new: not built.
+- SlowMist's HuionePay analysis (2025-06-23) calls two TRON addresses "suspected to be controlled by
+  Haowang Guarantee": `TL8TBpub…` (top deposit address) and `T9yFi9yx…` (a top withdrawal address).
+  Both pass their checksum; `TL8TBpub…` moved over 36M USDT before 2025, `T9yFi9yx…` 7.9M+ in the
+  first half of 2025. Its other addresses are exchange hot wallets or users: not labelled.
+- Dune Spellbook `cex_tron_addresses.sql` (@9f61b0dd, 2026-01-28, BSL 1.1): 151 TRON exchange
+  wallets, 18 HTX. 8 HTX wallets are not in HTX's current file; one row is `TZ1Ssapy…` (backs USDD).
+**What this changes:** D-103: the Spellbook HTX pack, the two Haowang labels, `TZ1Ssapy…` out of the
+HTX pack. Fixture: none (no code relies on the security endpoint).
+
+## VS-14 · Label packs from public sources (2026-10-11, D-102)
+**Checked:** 2026-10-11, by reading each repository through the GitHub API (nothing run).
+
+| Pack | Licence and source | Rows | Found |
+|---|---|---|---|
+| `htx-por-20260901` | MIT. `huobiapi/Tool-Node.js-VerifyAddress` `snapshot/huobi_por.csv`, HTX's own proof-of-reserves (updated 2026-09-08, snapshot 2026-09-01, each row signed) | 15 TRON | Internal screening allowed; attribution: the licence string. 11 of 15 also carry a Tronscan `HTX` tag |
+| `wallet-attribution-exmo` | MIT. `prettydeath/wallet-attribution` `data/tron.csv` (2026-10-01); upstream EXMO's TRON owner in `DefiLlama/DefiLlama-Adapters` `cex/index.js` (checked there) | 1 TRON | The aggregator's other HTX rows: 3 of 6 not in HTX's current file; one "Huobi reserve" wallet DefiLlama itself excludes ("backing USDD"): not used |
+| `openaml-bsc-fraud` | Apache-2.0. `finos-labs/dtcch-2025-OpenAML` `Data/address_fraud.csv.gz` (README: March 2026; sources "public intelligence and threat reports", e.g. HashDit) | 149 BSC | Labels are bare ("Fraud"); no TRON in any OpenAML file |
+
+**Not used:** wallet-attribution's BSC rows (about 3,000 scraped from BscScan via eth-labels and
+etherscan-labels: BscScan's terms forbid scraping; "burgerswap" as a mixer, "bscswap" as a scam), its
+TRON Tether-frozen (7,373) and OFAC (334) rows (we read both at source, fresher);
+`Blockchainwatch/blockchain-intelligence-datasets` (288 "sanctioned" wallets with no entity or source,
+its own risk score of 95: a third-party risk feed, D-033); `Wafouturians/evm-labels` (Ethereum only,
+scraped from Etherscan in 2022); OpenAML's 396,280 "Flagged" wallets (community flags, "not necessarily
+part of regulatory blocklists") and its models (`.joblib`/`.pkl` pickles: loading one runs code).
+**Licence strings recorded:** as in `packs/README.md`.
+**What this changes:** 16 more `sanctioned_entity` wallets (HTX, EXMO) and 149 BSC `scam` wallets,
+local labels (direct exposures in any check; terminal test 4 in traces).
 
 ## VS-14 · Label pack licence (template; fill in before every `intel import-pack`)
 **Checked:** YYYY-MM-DD, against <the provider's licence / terms URL or contract reference>
