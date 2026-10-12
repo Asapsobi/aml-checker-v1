@@ -36,6 +36,7 @@ from fastapi import BackgroundTasks, FastAPI, Form, Request, Response
 from fastapi.responses import HTMLResponse, PlainTextResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
 from jinja2 import Environment, FileSystemLoader, select_autoescape
+from markupsafe import Markup, escape
 from starlette.middleware.trustedhost import TrustedHostMiddleware
 
 from amlcheck.cases import cases as store_cases
@@ -47,7 +48,8 @@ from amlcheck.cli import runtime
 from amlcheck.core import risk
 from amlcheck.core.address import AddressError, detect
 from amlcheck.core.models import Address, Chain, Verdict
-from amlcheck.core.score import decay_of, from_json, shown, shown_stored
+from amlcheck.core.rules import severity_for
+from amlcheck.core.score import BEHAVIOUR, decay_of, from_json, shown, shown_stored
 from amlcheck.core.verdict import ACTION
 from amlcheck.intel import registry
 from amlcheck.intel.categories import CATEGORIES
@@ -56,7 +58,7 @@ from amlcheck.intel.names import counterparty_text, label_text
 from amlcheck.intel.store import IntelStore
 from amlcheck.monitor import watchlist
 from amlcheck.net.http import Mode
-from amlcheck.report import case_report
+from amlcheck.report import case_report, rules_help
 from amlcheck.report import export as exporter
 from amlcheck.trace.engine import TraceFailed
 from amlcheck.trace.graph import render, short
@@ -107,9 +109,18 @@ def _env() -> Environment:
         shown=shown,
         shown_stored=shown_stored,
         verdict_class=lambda v: VERDICT_CLASS.get(str(v), ""),
+        rule_title=lambda r: rules_help.BY_ID[r].title if r in rules_help.BY_ID else "",
+        ticks=_ticks,
         action=lambda v: ACTION[Verdict(v)],
     )
     return env
+
+
+def _ticks(text: str) -> Markup:
+    """Help text with `backticked` names as <code>; everything else escaped."""
+    parts = text.split("`")
+    code = Markup("<code>{}</code>")
+    return Markup("").join(code.format(p) if i % 2 else escape(p) for i, p in enumerate(parts))
 
 
 def create_app(rt: runtime.Runtime, token: str) -> FastAPI:
@@ -255,6 +266,28 @@ def create_app(rt: runtime.Runtime, token: str) -> FastAPI:
             "SELECT chain, address_norm FROM checks WHERE check_id = ?", (check_id,)
         ).fetchone()
         return detect(row[1], Chain(row[0])) if row else None
+
+    @app.get("/rules", response_class=HTMLResponse)
+    async def rules_page(request: Request) -> HTMLResponse:
+        """Every rule in plain words, with its severity under this config (§11.5) and the
+        behaviour points it adds to the score (§11.3)."""
+        overrides = rt.settings.rules.severity
+        groups = [
+            (
+                g,
+                [
+                    (
+                        r,
+                        severity_for(r.rule_id, overrides).value,
+                        r.rule_id in overrides,
+                        BEHAVIOUR.get(r.rule_id),
+                    )
+                    for r in g.rules
+                ],
+            )
+            for g in rules_help.GROUPS
+        ]
+        return page(request, "rules.html", groups=groups, review_at=rt.settings.score.review_at)
 
     @app.get("/checks/{check_id}", response_class=HTMLResponse)
     async def check_detail(request: Request, check_id: str) -> HTMLResponse:

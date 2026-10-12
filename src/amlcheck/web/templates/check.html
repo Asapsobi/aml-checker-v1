@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% from "_macros.html" import verdict, addr %}
+{% from "_macros.html" import verdict, addr, rule %}
 {% set r = d.record %}
 {% block title %}{{ r.verdict }} · {{ short(d.address.norm) }}{% endblock %}
 {% block body %}
@@ -57,7 +57,7 @@
   <thead><tr><th>Rule</th><th>Severity</th><th>What was found</th></tr></thead>
   <tbody>
   {% for f in r.findings | sort(attribute="rule_id") %}
-    <tr><td>{{ f.rule_id }}</td><td>{{ f.severity }}</td><td>{{ f.summary }}{% if f.evidence.get("priority") == "low" %} <span class="muted">(low priority)</span>{% endif %}</td></tr>
+    <tr><td>{{ rule(f.rule_id) }}</td><td>{{ f.severity }}</td><td>{{ f.summary }}{% if f.evidence.get("priority") == "low" %} <span class="muted">(low priority)</span>{% endif %}</td></tr>
   {% else %}
     <tr><td colspan="3" class="muted">None: nothing was found in the sources checked, as of the times shown.</td></tr>
   {% endfor %}

@@ -85,6 +85,10 @@ Light) on 9 ([benchmark](benchmark.md), P15):
 
 ### Findings
 
+The web UI's **Rules** page (`/rules`) explains every rule in plain words: what it means, when it
+fires, what to look at, its severity under your config and its behaviour points. Every rule tag in
+the UI links to its entry.
+
 REVIEW comes from R-EXP-01, R-FRZ-02, R-HEU-06, R-SAN-02, R-LBL-01 and R-SCR-01; BLOCK from R-SAN-01 and
 R-FRZ-01. The
 others are INFO: they explain the score (D-072; `[rules] severity` can change that).

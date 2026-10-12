@@ -58,3 +58,16 @@ button { font: inherit; padding: 7px 16px; border: 0; border-radius: 6px; backgr
   main, header.top, footer { padding-left: 16px; padding-right: 16px; }
   table { display: block; overflow-x: auto; }
 }
+/* Rules page and rule links (rules.html, _macros.rule) */
+a.rule { text-decoration: none; font-family: ui-monospace, Menlo, Consolas, monospace; }
+a.rule:hover { text-decoration: underline; }
+.rulecard { scroll-margin-top: 12px; }
+.rulecard:target { border-color: var(--accent); box-shadow: 0 0 0 2px var(--accent); }
+.rulehead { display: flex; flex-wrap: wrap; align-items: baseline; gap: 10px; }
+.rid { font-weight: 700; }
+.sev { font-size: 11px; font-weight: 700; padding: 1px 6px; border-radius: 4px; color: #fff; background: var(--muted); }
+.sev-block { background: var(--block); }
+.sev-review { background: var(--review); }
+.sev-incomplete { background: var(--incomplete); }
+.ruletable { margin: 4px 0 0; }
+.ruletable th { width: 110px; white-space: nowrap; }
