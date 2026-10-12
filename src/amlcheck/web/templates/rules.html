@@ -1,0 +1,49 @@
+{% extends "base.html" %}
+{% from "_macros.html" import verdict %}
+{% block title %}Rules{% endblock %}
+{% block body %}
+<h1>Rules: what each finding means</h1>
+
+<div class="card">
+  <p>A check runs every rule below. Each rule that fires is a <b>finding</b>, and the most serious
+  finding sets the <b>verdict</b>:</p>
+  <table class="narrow">
+    <tbody>
+      <tr><td>{{ verdict("BLOCK") }}</td><td>A fact about the address itself (a sanctions listing, a Tether freeze). Do not transact.</td></tr>
+      <tr><td>{{ verdict("REVIEW") }}</td><td>Look at it by hand before transacting: the finding says what to check.</td></tr>
+      <tr><td>{{ verdict("INCOMPLETE") }}</td><td>A required source failed or is stale: the check couldn't finish. Retry, or treat as REVIEW.</td></tr>
+      <tr><td>{{ verdict("NO_HITS") }}</td><td>Nothing was found in the sources checked. Not a clearance.</td></tr>
+    </tbody>
+  </table>
+  <p class="small muted">An <b>INFO</b> finding is shown and explains the score but never changes the verdict.
+  The <b>score</b> (0–100) adds up everything: low 0–30, moderate 31–70, high 71–90, severe 91–100;
+  from {{ review_at }} it is a REVIEW (R-SCR-01). The severities below are this installation's: the
+  owner can change most of them in <code>config.toml</code> (<code>[rules] severity</code>).</p>
+</div>
+
+<p class="small">
+{% for g, rows in groups %}<a href="#group-{{ loop.index }}">{{ g.name }}</a>{% if not loop.last %} · {% endif %}{% endfor %}
+</p>
+
+{% for g, rows in groups %}
+<h2 id="group-{{ loop.index }}">{{ g.name }}</h2>
+{% if g.about %}<p class="muted small">{{ g.about }}</p>{% endif %}
+{% for r, severity, overridden, points in rows %}
+<div class="card rulecard" id="{{ r.rule_id }}">
+  <div class="rulehead">
+    <span class="mono rid">{{ r.rule_id }}</span>
+    <b>{{ r.title }}</b>
+    <span class="sev sev-{{ severity | lower }}">{{ severity }}{% if overridden %} (changed in config){% endif %}</span>
+    {% if points %}<span class="small muted">+{{ points }} behaviour points</span>{% endif %}
+  </div>
+  <p>{{ ticks(r.means) }}</p>
+  <table class="ruletable">
+    <tbody>
+      <tr><th>Fires when</th><td>{{ ticks(r.fires) }}</td></tr>
+      <tr><th>Look at</th><td>{{ ticks(r.check) }}</td></tr>
+    </tbody>
+  </table>
+</div>
+{% endfor %}
+{% endfor %}
+{% endblock %}

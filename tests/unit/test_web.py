@@ -7,7 +7,9 @@ from fastapi.testclient import TestClient
 
 from amlcheck.cli import runtime
 from amlcheck.core.models import Address, Chain
+from amlcheck.core.rules import DEFAULT_SEVERITY
 from amlcheck.net.http import Mode
+from amlcheck.report import rules_help
 from amlcheck.trace.engine import TraceEngine
 from amlcheck.trace.jobs import TraceJobs
 from amlcheck.web.app import COOKIE, create_app
@@ -251,3 +253,26 @@ async def test_check_page_shows_exposures(web: TestClient, home: Path) -> None:
     assert "<h2>Exposures</h2>" in page
     assert "OFAC SDN: Bad Co" in page
     assert "sanctioned_entity" in page
+
+
+def test_rules_page_explains_every_rule(web: TestClient, world: World) -> None:
+    """The Rules page (FAQ): every rule, its severity under this config, and its behaviour points;
+    rule tags elsewhere link to it."""
+    page = web.get("/rules")
+    assert page.status_code == 200
+    for rule_id in DEFAULT_SEVERITY:
+        assert f'id="{rule_id}"' in page.text, rule_id
+    assert 'href="/rules"' in page.text  # in the menu
+    assert "+10 behaviour points" in page.text  # R-HEU-02 (§11.3)
+    assert "<script" not in page.text  # the CSP forbids scripts
+    world.rules[TRON] = ("R-HEU-06",)
+    r = web.post("/check", data={"address": TRON, "token": TOKEN})
+    assert 'href="/rules#R-HEU-06"' in web.get(r.headers["location"]).text
+    assert 'href="/rules#R-HEU-06"' in web.get("/").text  # recent checks table
+
+
+def test_every_rule_has_help() -> None:
+    """A new rule can't ship without its plain-English explanation."""
+    assert set(rules_help.BY_ID) == set(DEFAULT_SEVERITY)
+    for r in rules_help.BY_ID.values():
+        assert all((r.title, r.means, r.fires, r.check)), r.rule_id
